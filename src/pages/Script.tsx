@@ -47,7 +47,7 @@ const Script = () => {
     console.log("Generating script for topic:", topic);
     
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/837c4cfe-e8c9-4243-9e02-2d2872b87417', {
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/3205b796-624b-450a-b2e5-54dec2d3a73e', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,16 +142,16 @@ const Script = () => {
         </div>
 
         {scriptData && (
-          <div className="max-w-4xl mx-auto animate-fade-in">
+          <div className="max-w-6xl mx-auto animate-fade-in">
             <h2 className="text-3xl font-bold text-white text-center mb-8">
               {scriptData.title}
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
-                  className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 transition-all duration-300"
+                  className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 transition-all duration-300 h-full"
                 >
                   <CardHeader>
                     <CardTitle className="text-white text-xl flex items-center">
@@ -159,15 +159,15 @@ const Script = () => {
                       {script.label}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 pt-0">
-                    <div className="bg-black/20 rounded-lg p-4 mb-4 max-h-64 overflow-y-auto">
+                  <CardContent className="p-6 pt-0 flex flex-col h-full">
+                    <div className="bg-black/20 rounded-lg p-4 mb-4 flex-grow overflow-y-auto max-h-80">
                       <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
                         {script.content}
                       </p>
                     </div>
                     <Button
                       onClick={() => selectScript(script.content)}
-                      className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white border-0"
+                      className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white border-0 mt-auto"
                     >
                       Use this script to generate video
                       <ArrowRight className="w-4 h-4 ml-2" />
