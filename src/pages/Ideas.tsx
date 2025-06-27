@@ -16,7 +16,7 @@ const Ideas = () => {
     console.log("Generating ideas via webhook...");
     
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/837c4cfe-e8c9-4243-9e02-2d2872b87417', {
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/3205b796-624b-450a-b2e5-54dec2d3a73e', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
