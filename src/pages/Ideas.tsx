@@ -29,16 +29,30 @@ const Ideas = () => {
       const data = await response.json();
       console.log("Webhook response:", data);
       
-      // Parse ideas using regex
-      const ideaMatches = data.output.match(/topic:\s*(.+)/g);
+      // Parse ideas from the formatted output
+      // Extract numbered ideas using regex pattern for "*1. Title*", "*2. Title*", etc.
+      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
       if (ideaMatches) {
         const parsedIdeas = ideaMatches.map((match: string) => 
-          match.replace(/topic:\s*/, '').trim()
+          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
         );
         setIdeas(parsedIdeas);
         toast({
           title: "Ideas Generated!",
           description: `Found ${parsedIdeas.length} creative ideas for you.`,
+        });
+      } else {
+        // Fallback: if no numbered format found, try to extract any meaningful content
+        const lines = data.output.split('\n').filter((line: string) => 
+          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
+          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
+          !line.startsWith('👉') && line.includes('*')
+        );
+        const fallbackIdeas = lines.slice(0, 10); // Take first 10 meaningful lines
+        setIdeas(fallbackIdeas);
+        toast({
+          title: "Ideas Generated!",
+          description: `Found ${fallbackIdeas.length} ideas for you.`,
         });
       }
     } catch (error) {
