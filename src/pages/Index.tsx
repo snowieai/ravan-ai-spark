@@ -2,7 +2,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Video, Lightbulb, ArrowRight, Zap, Brain, Diamond } from 'lucide-react';
+import { Video, Lightbulb, ArrowRight, Zap, Brain, Diamond } from 'lucide-react';
+import { SparklesCore } from '@/components/ui/sparkles';
+import AnimatedText from '@/components/AnimatedText';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -13,45 +15,49 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 relative overflow-hidden">
+      {/* Sparkles Background */}
+      <div className="absolute inset-0 w-full h-full">
+        <SparklesCore
+          id="tsparticlesfullpage"
+          background="transparent"
+          minSize={0.6}
+          maxSize={2}
+          particleDensity={50}
+          className="w-full h-full"
+          particleColor="#ff8c00"
+          speed={1}
+        />
+      </div>
+
       {/* Decorative elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-32 h-32 bg-orange-300/20 rounded-full blur-2xl"></div>
         <div className="absolute bottom-40 right-32 w-48 h-48 bg-orange-400/15 rounded-full blur-3xl"></div>
         <div className="absolute top-1/3 right-20 w-24 h-24 bg-amber-300/25 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 left-32 w-36 h-36 bg-orange-200/20 rounded-full blur-2xl"></div>
-        
-        {/* Sparkle decorations */}
-        <Sparkles className="absolute top-32 right-1/4 w-8 h-8 text-orange-400/40" />
-        <Sparkles className="absolute bottom-1/3 left-1/4 w-6 h-6 text-amber-400/50" />
-        <Sparkles className="absolute top-1/2 right-1/3 w-5 h-5 text-orange-300/60" />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-20">
         <div className="text-center max-w-6xl mx-auto">
-          {/* Header with logo */}
+          {/* Header with Ravan logo */}
           <div className="mb-16">
             <div className="flex items-center justify-center mb-8">
-              <div className="bg-orange-500 p-3 rounded-2xl mr-4">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-              <div className="text-4xl font-bold text-gray-800">
-                Ravan.ai
-              </div>
+              <img 
+                src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
+                alt="Ravan.ai Logo" 
+                className="h-16 w-auto"
+              />
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-              One AI to
-              <br />
-              <span className="text-6xl md:text-8xl">
-                Sell them <span className="text-orange-500">ALL</span>
-              </span>
-            </h1>
+            <AnimatedText />
             
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
               <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
                 Meet <span className="text-orange-500 font-semibold">Kaira</span>, your AI video generation assistant powered by <span className="text-orange-500 font-semibold">Ravan AI</span>.
                 <br />
-                Transform your creative vision into stunning, professional-quality videos in minutes.
+                <span className="bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent font-semibold">
+                  Transform your creative vision into stunning, professional-quality videos in minutes.
+                </span>
               </p>
             </div>
           </div>
