@@ -37,24 +37,21 @@ const Index = () => {
         <div className="absolute bottom-20 left-32 w-36 h-36 bg-orange-200/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4">
-        {/* Hero Section with Large Ravan Logo */}
+      <div className="relative z-10 container mx-auto px-4 py-20">
         <div className="text-center max-w-6xl mx-auto">
-          <div className="min-h-screen flex flex-col justify-center items-center">
-            {/* Large Ravan Logo */}
-            <div className="mb-8">
+          {/* Header with Ravan logo */}
+          <div className="mb-16">
+            <div className="flex items-center justify-center mb-8">
               <img 
                 src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
                 alt="Ravan.ai Logo" 
-                className="h-32 md:h-48 w-auto mx-auto"
+                className="h-16 w-auto"
               />
             </div>
             
-            {/* Animated Text */}
             <AnimatedText />
             
-            {/* Description with fade effect */}
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100 relative">
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
               <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
                 Meet <span className="text-orange-500 font-semibold">Kaira</span>, your AI video generation assistant powered by <span className="text-orange-500 font-semibold">Ravan AI</span>.
                 <br />
@@ -62,35 +59,32 @@ const Index = () => {
                   Transform your creative vision into stunning, professional-quality videos in minutes.
                 </span>
               </p>
-              
-              {/* Fade effect at the bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white/70 to-transparent rounded-b-3xl"></div>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col md:flex-row gap-6 justify-center items-center mt-12 mb-20">
-              <Button
-                onClick={() => navigate('/ideas')}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
-              >
-                <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
-                Generate Ideas
-                <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              
-              <Button
-                onClick={handleVideoRedirect}
-                className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
-              >
-                <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-                Create AI Video with Kaira
-                <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
-              </Button>
             </div>
           </div>
 
+          {/* CTA Buttons */}
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
+            <Button
+              onClick={() => navigate('/ideas')}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+            >
+              <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
+              Generate Ideas
+              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            
+            <Button
+              onClick={handleVideoRedirect}
+              className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+            >
+              <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
+              Create AI Video with Kaira
+              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+
           {/* Feature Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 pb-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
               <div className="bg-blue-500 p-4 rounded-2xl w-fit mx-auto mb-6">
                 <Zap className="w-8 h-8 text-white" />
@@ -123,7 +117,7 @@ const Index = () => {
           </div>
 
           {/* Footer */}
-          <div className="text-gray-500 text-sm pb-10">
+          <div className="mt-20 text-gray-500 text-sm">
             © 2024 Ravan AI. One AI to Sell them ALL.
           </div>
         </div>
