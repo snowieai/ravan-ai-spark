@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lightbulb, ArrowRight, Loader2 } from 'lucide-react';
+import { Lightbulb, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Ideas = () => {
@@ -30,7 +30,6 @@ const Ideas = () => {
       console.log("Webhook response:", data);
       
       // Parse ideas from the formatted output
-      // Extract numbered ideas using regex pattern for "*1. Title*", "*2. Title*", etc.
       const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
       if (ideaMatches) {
         const parsedIdeas = ideaMatches.map((match: string) => 
@@ -42,13 +41,12 @@ const Ideas = () => {
           description: `Found ${parsedIdeas.length} creative ideas for you.`,
         });
       } else {
-        // Fallback: if no numbered format found, try to extract any meaningful content
         const lines = data.output.split('\n').filter((line: string) => 
           line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
           !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
           !line.startsWith('👉') && line.includes('*')
         );
-        const fallbackIdeas = lines.slice(0, 10); // Take first 10 meaningful lines
+        const fallbackIdeas = lines.slice(0, 10);
         setIdeas(fallbackIdeas);
         toast({
           title: "Ideas Generated!",
@@ -69,29 +67,38 @@ const Ideas = () => {
 
   const selectIdea = (idea: string) => {
     console.log("Selected idea:", idea);
-    // Store the selected idea and navigate to script page
     localStorage.setItem('selectedIdea', idea);
     navigate('/script');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <div className="container mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-orange-300/20 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-40 right-32 w-48 h-48 bg-orange-400/15 rounded-full blur-3xl"></div>
+        <Sparkles className="absolute top-32 right-1/4 w-8 h-8 text-orange-400/40" />
+        <Sparkles className="absolute bottom-1/3 left-1/4 w-6 h-6 text-amber-400/50" />
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
-            <Lightbulb className="w-12 h-12 text-yellow-400 mr-4" />
-            <h1 className="text-4xl md:text-6xl font-bold text-white">
+            <div className="bg-orange-500 p-3 rounded-2xl mr-4">
+              <Lightbulb className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
               AI Ideas Generator
             </h1>
           </div>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
             Let AI spark your creativity with unique video ideas tailored for your content
           </p>
           
           <Button
             onClick={generateIdeas}
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
           >
             {isLoading ? (
               <>
@@ -112,25 +119,25 @@ const Ideas = () => {
             {ideas.map((idea, index) => (
               <Card 
                 key={index}
-                className="bg-white/10 backdrop-blur-lg border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer transform hover:scale-105 hover:shadow-2xl"
+                className="bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
                 onClick={() => selectIdea(idea)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold text-lg mb-2">
+                      <h3 className="text-gray-900 font-semibold text-lg mb-2">
                         Idea {index + 1}
                       </h3>
-                      <p className="text-gray-300 leading-relaxed">
+                      <p className="text-gray-600 leading-relaxed">
                         {idea}
                       </p>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-blue-400 ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight className="w-5 h-5 text-orange-500 ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="mt-4 pt-4 border-t border-orange-100">
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
+                      className="bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full"
                     >
                       Use This Idea
                     </Button>
@@ -142,7 +149,7 @@ const Ideas = () => {
         )}
 
         {ideas.length === 0 && !isLoading && (
-          <div className="text-center text-gray-400">
+          <div className="text-center text-gray-500">
             <div className="w-32 h-32 mx-auto mb-6 opacity-50">
               <Lightbulb className="w-full h-full" />
             </div>
