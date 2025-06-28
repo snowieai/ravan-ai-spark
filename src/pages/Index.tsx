@@ -15,6 +15,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 relative overflow-hidden">
+      {/* Header/Navigation Section */}
+      <header className="relative z-20 w-full py-4 bg-white/80 backdrop-blur-sm border-b border-orange-100">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
+              alt="Ravan.ai Logo" 
+              className="h-12 w-auto"
+            />
+          </div>
+        </div>
+      </header>
+
       {/* Sparkles Background */}
       <div className="absolute inset-0 w-full h-full">
         <SparklesCore
@@ -39,16 +52,8 @@ const Index = () => {
 
       <div className="relative z-10 container mx-auto px-4 py-20">
         <div className="text-center max-w-6xl mx-auto">
-          {/* Header with Ravan logo */}
+          {/* Main Content */}
           <div className="mb-16">
-            <div className="flex items-center justify-center mb-8">
-              <img 
-                src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
-                alt="Ravan.ai Logo" 
-                className="h-16 w-auto"
-              />
-            </div>
-            
             <AnimatedText />
             
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
