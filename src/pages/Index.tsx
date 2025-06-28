@@ -7,6 +7,10 @@ import { Sparkles, Video, Lightbulb, ArrowRight } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
 
+  const handleVideoRedirect = () => {
+    window.open('https://kaira-video-forge.lovable.app', '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
       {/* Animated background elements */}
@@ -49,7 +53,7 @@ const Index = () => {
             </Button>
             
             <Button
-              onClick={() => navigate('/video')}
+              onClick={handleVideoRedirect}
               className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white px-8 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center group"
             >
               <Video className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
