@@ -22,7 +22,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
               alt="Ravan.ai Logo" 
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
           </div>
         </div>
