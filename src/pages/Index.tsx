@@ -2,16 +2,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Video, Lightbulb, ArrowRight, Zap, Brain, Diamond } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
-import AnimatedText from '@/components/AnimatedText';
 
 const Index = () => {
   const navigate = useNavigate();
-
-  const handleVideoRedirect = () => {
-    window.open('https://kaira-video-forge.lovable.app', '_blank');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 relative overflow-hidden">
@@ -22,7 +17,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
               alt="Ravan.ai Logo" 
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
           </div>
         </div>
@@ -51,79 +46,56 @@ const Index = () => {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-20">
-        <div className="text-center max-w-6xl mx-auto">
-          {/* Main Content */}
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Welcome Message */}
           <div className="mb-16">
-            <AnimatedText />
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8">
+              Welcome to{' '}
+              <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                Ravan AI
+              </span>
+            </h1>
             
-            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
+            {/* Animated tagline */}
+            <div className="mb-8">
+              <p className="text-2xl md:text-3xl font-semibold text-gray-800 animate-fade-in opacity-90">
+                One AI to sell them, win them all!
+              </p>
+            </div>
+            
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-3xl mx-auto shadow-lg border border-orange-100">
               <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
-                Meet <span className="text-orange-500 font-semibold">Kaira</span>, your AI video generation assistant powered by <span className="text-orange-500 font-semibold">Ravan AI</span>.
+                Your AI-powered influencer management platform.
                 <br />
                 <span className="bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent font-semibold">
-                  Transform your creative vision into stunning, professional-quality videos in minutes.
+                  Manage your influencers and create stunning content with AI.
                 </span>
               </p>
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
+          {/* Login Buttons */}
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <Button
-              onClick={() => navigate('/ideas')}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+              onClick={() => navigate('/login')}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
-              <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
-              Generate Ideas
-              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+              <LogIn className="w-7 h-7 mr-3" />
+              Login
             </Button>
             
             <Button
-              onClick={handleVideoRedirect}
-              className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+              onClick={() => navigate('/login')}
+              className="bg-gray-800 hover:bg-gray-900 text-white px-12 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
-              <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-              Create AI Video with Kaira
-              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+              <UserPlus className="w-7 h-7 mr-3" />
+              Sign Up
             </Button>
-          </div>
-
-          {/* Feature Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="bg-blue-500 p-4 rounded-2xl w-fit mx-auto mb-6">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Lightning Fast</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Generate professional videos in minutes, not hours. Kaira works at the speed of thought.
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="bg-orange-500 p-4 rounded-2xl w-fit mx-auto mb-6">
-                <Brain className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">AI-Powered</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Advanced AI understands your content and creates engaging visuals that captivate your audience.
-              </p>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-10 shadow-lg border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-              <div className="bg-amber-500 p-4 rounded-2xl w-fit mx-auto mb-6">
-                <Diamond className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Studio Quality</h3>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Professional-grade output ready for any platform, from social media to presentations.
-              </p>
-            </div>
           </div>
 
           {/* Footer */}
           <div className="mt-20 text-gray-500 text-sm">
-            © 2024 Ravan AI. One AI to Sell them ALL.
+            © 2025 Ravan AI
           </div>
         </div>
       </div>
