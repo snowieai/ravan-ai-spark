@@ -30,7 +30,7 @@ const KairaIdeas = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          topic: "Generating ideas"
+          message: "Generating Ideas"
         }),
       });
 
