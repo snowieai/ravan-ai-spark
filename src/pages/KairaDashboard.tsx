@@ -88,17 +88,17 @@ const KairaDashboard = () => {
             
             {/* Kaira Image with Animated Borders */}
             <div className="mb-8">
-              <div className="relative w-48 h-48 mx-auto">
+              <div className="relative w-64 h-64 mx-auto">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 rounded-full animate-spin" style={{animationDuration: '3s'}}></div>
                 <div className="absolute inset-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 rounded-full"></div>
-                <div className="absolute inset-2 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                <div className="absolute inset-3 rounded-full overflow-hidden border-4 border-white shadow-2xl">
                   <img 
                     src="/lovable-uploads/9c231dbd-f179-4bb6-af40-8bd0521105e8.png" 
                     alt="Kaira - AI Video Generation Specialist" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover aspect-square"
                   />
                 </div>
-                <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full opacity-20 animate-pulse"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full opacity-30 animate-pulse"></div>
               </div>
             </div>
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
