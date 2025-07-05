@@ -73,32 +73,34 @@ const Script = () => {
     }
   };
 
-  const selectScript = (scriptContent: string) => {
-    console.log("Selected script:", scriptContent);
-    localStorage.setItem('selectedScript', scriptContent);
-    navigate('/video');
+  const selectScript = () => {
+    toast({
+      title: "Coming Soon! 🎬",
+      description: "Video generation will be available soon for you. Stay tuned!",
+    });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-purple-50">
       {/* Header */}
-      <header className="relative z-20 w-full py-4 bg-white/80 backdrop-blur-sm border-b border-blue-100">
+      <header className="relative z-20 w-full py-3 sm:py-4 bg-white/80 backdrop-blur-sm border-b border-blue-100">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <Button
               onClick={() => navigate('/aisha-dashboard')}
               variant="outline"
-              className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              className="border-blue-200 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-4"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Aisha's Studio
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Back to Aisha's Studio</span>
+              <span className="sm:hidden">Back</span>
             </Button>
             <img 
               src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
               alt="Ravan.ai Logo" 
-              className="h-12 w-auto"
+              className="h-8 sm:h-12 w-auto"
             />
-            <div className="w-32"></div>
+            <div className="w-16 sm:w-32"></div>
           </div>
         </div>
       </header>
@@ -111,27 +113,27 @@ const Script = () => {
         <Sparkles className="absolute bottom-1/3 left-1/4 w-6 h-6 text-purple-400/50" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <div className="bg-blue-500 p-3 rounded-2xl mr-4">
-              <FileText className="w-8 h-8 text-white" />
+      <div className="relative z-10 container mx-auto px-4 py-6 sm:py-12">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-4 sm:mb-6">
+            <div className="bg-blue-500 p-2 sm:p-3 rounded-2xl mb-3 sm:mb-0 sm:mr-4">
+              <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold text-gray-900 text-center">
               AI Script Generator
             </h1>
           </div>
-          <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Transform your ideas into compelling video scripts with multiple variations
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto mb-12">
-          <Card className="bg-white/80 backdrop-blur-sm border-blue-100 shadow-lg">
-            <CardContent className="p-6">
+        <div className="max-w-2xl mx-auto mb-8 sm:mb-12">
+          <Card className="bg-white/80 backdrop-blur-sm border-blue-100 shadow-lg mx-4 sm:mx-0">
+            <CardContent className="p-4 sm:p-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="topic" className="text-gray-900 text-lg font-medium">
+                  <Label htmlFor="topic" className="text-gray-900 text-base sm:text-lg font-medium">
                     Provide a topic or idea to generate a script
                   </Label>
                   <Input
@@ -139,22 +141,22 @@ const Script = () => {
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="Enter your video topic or idea..."
-                    className="mt-2 bg-white/50 border-blue-200 text-gray-900 placeholder:text-gray-500 text-lg p-4"
+                    className="mt-2 bg-white/50 border-blue-200 text-gray-900 placeholder:text-gray-500 text-base sm:text-lg p-3 sm:p-4"
                   />
                 </div>
                 <Button
                   onClick={generateScript}
                   disabled={isLoading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                      <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 animate-spin" />
                       Generating Scripts...
                     </>
                   ) : (
                     <>
-                      <FileText className="w-6 h-6 mr-2" />
+                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                       Generate Scripts
                     </>
                   )}
@@ -165,32 +167,32 @@ const Script = () => {
         </div>
 
         {scriptData && (
-          <div className="max-w-6xl mx-auto animate-fade-in">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
+          <div className="max-w-6xl mx-auto animate-fade-in px-4 sm:px-0">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center mb-6 sm:mb-8">
               {scriptData.title}
             </h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
                   className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-xl transition-all duration-300 h-full"
                 >
-                  <CardHeader>
-                    <CardTitle className="text-gray-900 text-xl flex items-center">
-                      <FileText className="w-6 h-6 mr-2 text-blue-500" />
-                      {script.label}
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center">
+                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-500 flex-shrink-0" />
+                      <span className="line-clamp-2">{script.label}</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 pt-0 flex flex-col h-full">
-                    <div className="bg-gray-50/80 rounded-lg p-4 mb-4 flex-grow overflow-y-auto max-h-80">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  <CardContent className="p-4 sm:p-6 pt-0 flex flex-col h-full">
+                    <div className="bg-gray-50/80 rounded-lg p-3 sm:p-4 mb-4 flex-grow overflow-y-auto max-h-60 sm:max-h-80">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
                         {script.content}
                       </p>
                     </div>
                     <Button
-                      onClick={() => selectScript(script.content)}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white border-0 mt-auto rounded-full"
+                      onClick={selectScript}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white border-0 mt-auto rounded-full py-3 px-4 text-sm sm:text-base font-medium"
                     >
                       Use this script to generate video
                       <ArrowRight className="w-4 h-4 ml-2" />
