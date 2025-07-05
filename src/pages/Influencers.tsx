@@ -94,7 +94,7 @@ const Influencers = () => {
       <div className="relative z-10 container mx-auto px-4 py-12">
         {/* Client Branding Section */}
         <div className="text-center mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-2xl mx-auto shadow-lg border border-white/40 mb-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 w-full mx-auto shadow-lg border border-white/40 mb-8">
             <div className="flex items-center justify-center mb-4">
               <img 
                 src="/lovable-uploads/a97fae0f-f382-4663-afe8-7491cbcc07c9.png" 
