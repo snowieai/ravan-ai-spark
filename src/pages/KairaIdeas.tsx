@@ -24,8 +24,14 @@ const KairaIdeas = () => {
     console.log("Generating ideas for Kaira...");
     
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/e4e806c4-0a3a-4fda-be88-25a7b3acc6ca', {
-        method: 'GET',
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: "Generating ideas"
+        }),
       });
 
       const data = await response.json();
