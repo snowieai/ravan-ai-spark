@@ -56,6 +56,13 @@ const Index = () => {
               </span>
             </h1>
             
+            {/* Animated tagline */}
+            <div className="mb-8">
+              <p className="text-2xl md:text-3xl font-semibold text-gray-800 animate-fade-in opacity-90">
+                One AI to sell them, win them all!
+              </p>
+            </div>
+            
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-3xl mx-auto shadow-lg border border-orange-100">
               <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
                 Your AI-powered influencer management platform.
@@ -88,7 +95,7 @@ const Index = () => {
 
           {/* Footer */}
           <div className="mt-20 text-gray-500 text-sm">
-            © 2024 Ravan AI. One AI to Sell them ALL.
+            © 2025 Ravan AI
           </div>
         </div>
       </div>
