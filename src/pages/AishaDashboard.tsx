@@ -21,7 +21,7 @@ const AishaDashboard = () => {
   };
 
   const handleIdeasRedirect = () => {
-    window.open('https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e', '_blank');
+    window.open('https://ravanai.app.n8n.cloud/webhook-test/3205b796-624b-450a-b2e5-54dec2d3a73e', '_blank');
   };
 
   return (
