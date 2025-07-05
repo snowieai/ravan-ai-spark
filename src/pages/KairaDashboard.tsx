@@ -85,19 +85,19 @@ const KairaDashboard = () => {
               </span>
             </h1>
             
-            {/* Kaira Image with Animated Borders */}
+            {/* Kaira Image with Simple Glow */}
             <div className="mb-8">
-              <div className="relative w-80 h-80 mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 rounded-2xl animate-spin" style={{animationDuration: '3s'}}></div>
-                <div className="absolute inset-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 rounded-2xl"></div>
-                <div className="absolute inset-4 rounded-xl overflow-hidden border-4 border-white shadow-2xl">
+              <div className="relative w-96 h-96 mx-auto">
+                {/* Simple glow effect behind the image */}
+                <div className="absolute inset-0 bg-orange-400/30 rounded-2xl blur-xl"></div>
+                {/* Plain image container */}
+                <div className="relative rounded-xl overflow-hidden border-4 border-white shadow-2xl">
                   <img 
                     src="/lovable-uploads/9c231dbd-f179-4bb6-af40-8bd0521105e8.png" 
                     alt="Kaira - AI Video Generation Specialist" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-400 rounded-2xl opacity-30 animate-pulse"></div>
               </div>
             </div>
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
