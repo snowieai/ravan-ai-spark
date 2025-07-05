@@ -23,7 +23,7 @@ const Influencers = () => {
       status: 'Active', 
       description: 'India\'s First AI Real Estate Agent',
       color: 'from-blue-500 to-purple-500',
-      image: '/lovable-uploads/41ad8b01-4cca-4e23-a2ea-cb07d820cd86.png'
+      image: '/lovable-uploads/3e0d7295-7862-4944-8077-740843b828a2.png'
     }
   ];
 
