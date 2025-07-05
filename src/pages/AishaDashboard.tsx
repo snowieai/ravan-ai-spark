@@ -21,8 +21,7 @@ const AishaDashboard = () => {
   };
 
   const handleIdeasRedirect = () => {
-    // Unresponsive for now - will add link later
-    console.log('Ideas generation will be available soon');
+    window.open('https://ravanai.app.n8n.cloud/webhook-test/3205b796-624b-450a-b2e5-54dec2d3a73e', '_blank');
   };
 
   return (
