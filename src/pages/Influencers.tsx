@@ -97,9 +97,9 @@ const Influencers = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 w-full mx-auto shadow-lg border border-white/40 mb-8">
             <div className="flex items-center justify-center mb-4">
               <img 
-                src="/lovable-uploads/a97fae0f-f382-4663-afe8-7491cbcc07c9.png" 
+                src="/lovable-uploads/e83030ec-55fb-417b-b36b-1c495b550304.png" 
                 alt="Danube Properties Logo" 
-                className="h-32 w-full object-contain filter drop-shadow-lg"
+                className="h-40 w-full object-contain filter drop-shadow-lg max-w-lg mx-auto"
               />
             </div>
             <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mx-auto mb-4"></div>
