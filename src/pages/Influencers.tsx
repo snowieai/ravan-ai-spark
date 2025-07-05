@@ -64,22 +64,24 @@ const Influencers = () => {
       <header className="relative z-20 w-full py-4 bg-white/80 backdrop-blur-sm border-b border-orange-100">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex-1"></div>
+            <div className="flex items-center justify-center">
               <img 
                 src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
                 alt="Ravan.ai Logo" 
-                className="h-12 w-auto mr-4"
+                className="h-12 w-auto"
               />
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center border-orange-200 text-orange-600 hover:bg-orange-50"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex-1 flex justify-end">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="flex items-center border-orange-200 text-orange-600 hover:bg-orange-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
