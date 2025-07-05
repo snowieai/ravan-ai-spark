@@ -25,25 +25,24 @@ const KairaDashboard = () => {
       <header className="relative z-20 w-full py-4 bg-white/80 backdrop-blur-sm border-b border-orange-100">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex-1">
               <Button
                 onClick={() => navigate('/influencers')}
                 variant="outline"
-                className="mr-4 border-orange-200 text-orange-600 hover:bg-orange-50"
+                className="border-orange-200 text-orange-600 hover:bg-orange-50"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Influencers
               </Button>
+            </div>
+            <div className="flex items-center justify-center">
               <img 
                 src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
                 alt="Ravan.ai Logo" 
-                className="h-12 w-auto mr-4"
+                className="h-12 w-auto"
               />
-              <div>
-                <p className="text-sm text-gray-600">AI Video Generation Specialist</p>
-              </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex-1 flex items-center justify-end">
               <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mr-3">
                 <User className="w-6 h-6 text-white" />
               </div>
@@ -88,17 +87,17 @@ const KairaDashboard = () => {
             
             {/* Kaira Image with Animated Borders */}
             <div className="mb-8">
-              <div className="relative w-64 h-64 mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 rounded-full animate-spin" style={{animationDuration: '3s'}}></div>
-                <div className="absolute inset-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 rounded-full"></div>
-                <div className="absolute inset-3 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+              <div className="relative w-80 h-80 mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 rounded-2xl animate-spin" style={{animationDuration: '3s'}}></div>
+                <div className="absolute inset-1 bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 rounded-2xl"></div>
+                <div className="absolute inset-4 rounded-xl overflow-hidden border-4 border-white shadow-2xl">
                   <img 
                     src="/lovable-uploads/9c231dbd-f179-4bb6-af40-8bd0521105e8.png" 
                     alt="Kaira - AI Video Generation Specialist" 
-                    className="w-full h-full object-cover aspect-square"
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full opacity-30 animate-pulse"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-400 rounded-2xl opacity-30 animate-pulse"></div>
               </div>
             </div>
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-4xl mx-auto shadow-lg border border-orange-100">
