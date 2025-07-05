@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LogIn, UserPlus } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
+import AnimatedText from '@/components/AnimatedText';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -58,9 +59,7 @@ const Index = () => {
             
             {/* Animated tagline */}
             <div className="mb-8">
-              <p className="text-2xl md:text-3xl font-semibold text-gray-800 animate-fade-in opacity-90">
-                One AI to sell them, win them all!
-              </p>
+              <AnimatedText />
             </div>
             
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-3xl mx-auto shadow-lg border border-orange-100">
