@@ -99,7 +99,7 @@ const Influencers = () => {
               <img 
                 src="/lovable-uploads/a97fae0f-f382-4663-afe8-7491cbcc07c9.png" 
                 alt="Danube Properties Logo" 
-                className="h-16 w-auto filter drop-shadow-lg"
+                className="h-32 w-full object-contain filter drop-shadow-lg"
               />
             </div>
             <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mx-auto mb-4"></div>
