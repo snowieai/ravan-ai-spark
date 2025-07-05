@@ -45,7 +45,7 @@ const Script = () => {
     console.log("Generating script for topic:", topic);
     
     try {
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=${encodeURIComponent(topic)}`, {
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}`, {
         method: 'GET',
       });
 
