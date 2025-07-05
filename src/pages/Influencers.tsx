@@ -110,18 +110,20 @@ const Influencers = () => {
           {influencers.map((influencer) => (
             <Card 
               key={influencer.id}
-              className={`bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group relative overflow-hidden`}
+              className="bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group relative overflow-hidden"
               onClick={() => handleInfluencerClick(influencer.id)}
-              style={{
-                boxShadow: `0 0 30px ${influencer.id === 'kaira' ? 'rgba(249, 115, 22, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-                animation: `pulse 3s ease-in-out infinite`
-              }}
             >
-              <div className={`absolute inset-0 bg-gradient-to-r ${influencer.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
+              <div 
+                className={`absolute inset-0 bg-gradient-to-r ${influencer.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}
+                style={{
+                  boxShadow: `inset 0 0 50px ${influencer.id === 'kaira' ? 'rgba(249, 115, 22, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+                  animation: `pulse 2s ease-in-out infinite alternate`
+                }}
+              ></div>
               <CardContent className="p-8 relative z-10">
                 <div className="text-center">
                   {/* Profile Image */}
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-lg overflow-hidden border-4 border-white shadow-lg">
                     <img 
                       src={influencer.image} 
                       alt={`${influencer.name} Profile`}
