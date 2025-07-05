@@ -34,23 +34,41 @@ const KairaIdeas = () => {
         }),
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+      
       const data = await response.json();
       console.log("Kaira ideas webhook response:", data);
+      console.log("Data structure:", JSON.stringify(data, null, 2));
       
-      if (data.output && Array.isArray(data.output.ideas)) {
+      // Check different possible response structures
+      if (data.ideas && Array.isArray(data.ideas)) {
+        setIdeas(data.ideas);
+        toast({
+          title: "Ideas Generated!",
+          description: `Kaira created ${data.ideas.length} creative ideas for you.`,
+        });
+      } else if (data.output && Array.isArray(data.output.ideas)) {
         setIdeas(data.output.ideas);
         toast({
           title: "Ideas Generated!",
           description: `Kaira created ${data.output.ideas.length} creative ideas for you.`,
         });
+      } else if (data.output && Array.isArray(data.output)) {
+        setIdeas(data.output);
+        toast({
+          title: "Ideas Generated!",
+          description: `Kaira created ${data.output.length} creative ideas for you.`,
+        });
       } else {
-        throw new Error('Invalid response format');
+        console.error('Unexpected response format:', data);
+        throw new Error(`Invalid response format. Received: ${JSON.stringify(data)}`);
       }
     } catch (error) {
       console.error('Error generating ideas:', error);
       toast({
         title: "Error",
-        description: "Failed to generate ideas. Please try again.",
+        description: `Failed to generate ideas: ${error.message}. Please try again.`,
         variant: "destructive",
       });
     } finally {
