@@ -39,6 +39,9 @@ const Influencers = () => {
     if (influencerId === 'kaira') {
       localStorage.setItem('selectedInfluencer', 'kaira');
       navigate('/kaira-dashboard');
+    } else if (influencerId === 'aisha') {
+      localStorage.setItem('selectedInfluencer', 'aisha');
+      navigate('/aisha-dashboard');
     } else {
       toast({
         title: "Coming Soon",

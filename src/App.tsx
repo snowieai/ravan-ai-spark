@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Influencers from "./pages/Influencers";
 import KairaDashboard from "./pages/KairaDashboard";
+import AishaDashboard from "./pages/AishaDashboard";
 import Ideas from "./pages/Ideas";
 import Script from "./pages/Script";
 import Video from "./pages/Video";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/influencers" element={<Influencers />} />
           <Route path="/kaira-dashboard" element={<KairaDashboard />} />
+          <Route path="/aisha-dashboard" element={<AishaDashboard />} />
           <Route path="/ideas" element={<Ideas />} />
           <Route path="/script" element={<Script />} />
           <Route path="/video" element={<Video />} />
