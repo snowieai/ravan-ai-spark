@@ -15,9 +15,9 @@ const AishaDashboard = () => {
     }
   }, [navigate]);
 
-  const handleVideoRedirect = () => {
+  const handleScriptRedirect = () => {
     // Unresponsive for now - will add link later
-    console.log('Video creation will be available soon');
+    console.log('Script generation will be available soon');
   };
 
   const handleIdeasRedirect = () => {
@@ -134,11 +134,11 @@ const AishaDashboard = () => {
             </Button>
             
             <Button
-              onClick={handleVideoRedirect}
+              onClick={handleScriptRedirect}
               className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
               <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-              Create AI Video with Aisha
+              Generate Script with Custom Idea
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
