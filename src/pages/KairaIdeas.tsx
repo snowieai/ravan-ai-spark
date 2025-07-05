@@ -61,7 +61,7 @@ const KairaIdeas = () => {
   const selectIdea = (idea: string) => {
     console.log("Selected idea:", idea);
     localStorage.setItem('selectedIdea', idea);
-    navigate('/script');
+    navigate('/kaira-script');
   };
 
   return (

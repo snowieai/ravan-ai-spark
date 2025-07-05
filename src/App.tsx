@@ -12,6 +12,7 @@ import AishaDashboard from "./pages/AishaDashboard";
 import Ideas from "./pages/Ideas";
 import KairaIdeas from "./pages/KairaIdeas";
 import Script from "./pages/Script";
+import KairaScript from "./pages/KairaScript";
 import Video from "./pages/Video";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/ideas" element={<Ideas />} />
           <Route path="/kaira-ideas" element={<KairaIdeas />} />
           <Route path="/script" element={<Script />} />
+          <Route path="/kaira-script" element={<KairaScript />} />
           <Route path="/video" element={<Video />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
