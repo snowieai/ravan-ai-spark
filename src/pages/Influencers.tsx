@@ -13,15 +13,17 @@ const Influencers = () => {
       id: 'kaira',
       name: 'Kaira',
       status: 'Active',
-      description: 'AI Video Generation Specialist',
-      color: 'from-orange-500 to-amber-500'
+      description: 'UAE\'s First AI Real Estate Agent',
+      color: 'from-orange-500 to-amber-500',
+      image: '/lovable-uploads/27be5644-7569-4e58-9fa0-9631b580b5fe.png'
     },
     {
       id: 'aisha',
       name: 'Aisha',
       status: 'Active', 
-      description: 'Content Creation Expert',
-      color: 'from-blue-500 to-purple-500'
+      description: 'India\'s First AI Real Estate Agent',
+      color: 'from-blue-500 to-purple-500',
+      image: '/lovable-uploads/41ad8b01-4cca-4e23-a2ea-cb07d820cd86.png'
     }
   ];
 
@@ -108,14 +110,23 @@ const Influencers = () => {
           {influencers.map((influencer) => (
             <Card 
               key={influencer.id}
-              className="bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
+              className={`bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group relative overflow-hidden`}
               onClick={() => handleInfluencerClick(influencer.id)}
+              style={{
+                boxShadow: `0 0 30px ${influencer.id === 'kaira' ? 'rgba(249, 115, 22, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                animation: `pulse 3s ease-in-out infinite`
+              }}
             >
-              <CardContent className="p-8">
+              <div className={`absolute inset-0 bg-gradient-to-r ${influencer.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}></div>
+              <CardContent className="p-8 relative z-10">
                 <div className="text-center">
-                  {/* Avatar placeholder */}
-                  <div className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-r ${influencer.color} flex items-center justify-center`}>
-                    <User className="w-12 h-12 text-white" />
+                  {/* Profile Image */}
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                    <img 
+                      src={influencer.image} 
+                      alt={`${influencer.name} Profile`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
