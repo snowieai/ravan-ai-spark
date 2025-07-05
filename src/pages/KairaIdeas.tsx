@@ -1,21 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface Idea {
-  title: string;
-  description: string;
-}
-
-interface IdeaResponse {
-  ideas: Idea[];
-}
-
 const KairaIdeas = () => {
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [ideas, setIdeas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -28,41 +19,38 @@ const KairaIdeas = () => {
         method: 'GET',
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
-      
       const data = await response.json();
       console.log("Kaira ideas webhook response:", data);
-      console.log("Data structure:", JSON.stringify(data, null, 2));
       
-      // Check different possible response structures
-      if (data.ideas && Array.isArray(data.ideas)) {
-        setIdeas(data.ideas);
+      // Parse ideas from the formatted output - same as Aisha's page
+      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      if (ideaMatches) {
+        const parsedIdeas = ideaMatches.map((match: string) => 
+          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
+        );
+        setIdeas(parsedIdeas);
         toast({
           title: "Ideas Generated!",
-          description: `Kaira created ${data.ideas.length} creative ideas for you.`,
-        });
-      } else if (data.output && Array.isArray(data.output.ideas)) {
-        setIdeas(data.output.ideas);
-        toast({
-          title: "Ideas Generated!",
-          description: `Kaira created ${data.output.ideas.length} creative ideas for you.`,
-        });
-      } else if (data.output && Array.isArray(data.output)) {
-        setIdeas(data.output);
-        toast({
-          title: "Ideas Generated!",
-          description: `Kaira created ${data.output.length} creative ideas for you.`,
+          description: `Kaira created ${parsedIdeas.length} creative ideas for you.`,
         });
       } else {
-        console.error('Unexpected response format:', data);
-        throw new Error(`Invalid response format. Received: ${JSON.stringify(data)}`);
+        const lines = data.output.split('\n').filter((line: string) => 
+          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
+          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
+          !line.startsWith('👉') && line.includes('*')
+        );
+        const fallbackIdeas = lines.slice(0, 10);
+        setIdeas(fallbackIdeas);
+        toast({
+          title: "Ideas Generated!",
+          description: `Kaira created ${fallbackIdeas.length} ideas for you.`,
+        });
       }
     } catch (error) {
       console.error('Error generating ideas:', error);
       toast({
         title: "Error",
-        description: `Failed to generate ideas: ${error.message}. Please try again.`,
+        description: "Failed to generate ideas. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -70,8 +58,9 @@ const KairaIdeas = () => {
     }
   };
 
-  const selectIdea = (idea: Idea) => {
-    localStorage.setItem('selectedIdea', `${idea.title}: ${idea.description}`);
+  const selectIdea = (idea: string) => {
+    console.log("Selected idea:", idea);
+    localStorage.setItem('selectedIdea', idea);
     navigate('/script');
   };
 
@@ -121,6 +110,13 @@ const KairaIdeas = () => {
           <p className="text-base sm:text-xl text-gray-700 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Let Kaira spark your creativity with AI-powered video content ideas
           </p>
+          
+          {isLoading && (
+            <div className="flex items-center justify-center">
+              <Loader2 className="w-8 h-8 mr-3 animate-spin text-orange-500" />
+              <span className="text-xl text-gray-700">Kaira is thinking...</span>
+            </div>
+          )}
         </div>
 
         <div className="max-w-md mx-auto mb-8 sm:mb-12">
@@ -157,25 +153,29 @@ const KairaIdeas = () => {
               {ideas.map((idea, index) => (
                 <Card 
                   key={index}
-                  className="bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer group h-full"
+                  className="bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
                   onClick={() => selectIdea(idea)}
                 >
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-start">
-                      <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-500 flex-shrink-0 mt-1" />
-                      <span className="line-clamp-2">{idea.title}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 sm:p-6 pt-0 flex flex-col h-full">
-                    <p className="text-gray-600 mb-4 flex-grow text-sm sm:text-base leading-relaxed">
-                      {idea.description}
-                    </p>
-                    <Button
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 mt-auto group-hover:scale-105 transition-transform rounded-full py-3 px-4 text-sm sm:text-base font-medium"
-                    >
-                      Use this idea
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-gray-900 font-semibold text-lg mb-2">
+                          Idea {index + 1}
+                        </h3>
+                        <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                          {idea}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-orange-500 ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-orange-100">
+                      <Button
+                        size="sm"
+                        className="bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full"
+                      >
+                        Use This Idea
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
