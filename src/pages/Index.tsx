@@ -50,12 +50,14 @@ const Index = () => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Welcome Message */}
           <div className="mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8">
-              Welcome to{' '}
-              <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-                Ravan AI
-              </span>
-            </h1>
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg border border-white/40">
+              <h1 className="text-5xl md:text-7xl font-bold text-gray-900">
+                Welcome to{' '}
+                <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+                  Ravan AI
+                </span>
+              </h1>
+            </div>
             
             {/* Animated tagline */}
             <div className="mb-8">
