@@ -10,6 +10,7 @@ import Influencers from "./pages/Influencers";
 import KairaDashboard from "./pages/KairaDashboard";
 import AishaDashboard from "./pages/AishaDashboard";
 import Ideas from "./pages/Ideas";
+import KairaIdeas from "./pages/KairaIdeas";
 import Script from "./pages/Script";
 import Video from "./pages/Video";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/kaira-dashboard" element={<KairaDashboard />} />
           <Route path="/aisha-dashboard" element={<AishaDashboard />} />
           <Route path="/ideas" element={<Ideas />} />
+          <Route path="/kaira-ideas" element={<KairaIdeas />} />
           <Route path="/script" element={<Script />} />
           <Route path="/video" element={<Video />} />
           <Route path="*" element={<NotFound />} />

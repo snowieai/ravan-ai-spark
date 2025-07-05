@@ -114,7 +114,7 @@ const KairaDashboard = () => {
           {/* CTA Buttons */}
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
             <Button
-              onClick={() => navigate('/ideas')}
+              onClick={() => navigate('/kaira-ideas')}
               className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
               <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
