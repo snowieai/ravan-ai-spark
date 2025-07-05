@@ -94,16 +94,16 @@ const Influencers = () => {
       <div className="relative z-10 container mx-auto px-4 py-12">
         {/* Client Branding Section */}
         <div className="text-center mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 w-full mx-auto shadow-lg border border-white/40 mb-8">
-            <div className="flex items-center justify-center mb-4">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 w-full mx-auto shadow-lg border border-white/40 mb-8">
+            <div className="flex items-center justify-center mb-3">
               <img 
                 src="/lovable-uploads/e83030ec-55fb-417b-b36b-1c495b550304.png" 
                 alt="Danube Properties Logo" 
-                className="h-40 w-full object-contain filter drop-shadow-lg max-w-lg mx-auto"
+                className="h-24 w-full object-contain filter drop-shadow-lg max-w-md mx-auto opacity-90"
               />
             </div>
-            <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Powered by AI Excellence</p>
+            <div className="h-1 w-24 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mx-auto mb-3"></div>
+            <p className="text-gray-600 font-medium text-sm">Powered by AI Excellence</p>
           </div>
         </div>
 
