@@ -58,6 +58,54 @@ const KairaIdeas = () => {
     }
   };
 
+  const regenerateIdeas = async () => {
+    setIsLoading(true);
+    console.log("Regenerating ideas for Kaira...");
+    
+    try {
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=Regenerate', {
+        method: 'GET',
+      });
+
+      const data = await response.json();
+      console.log("Kaira regenerate webhook response:", data);
+      
+      // Parse ideas from the formatted output - same as generate
+      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      if (ideaMatches) {
+        const parsedIdeas = ideaMatches.map((match: string) => 
+          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
+        );
+        setIdeas(parsedIdeas);
+        toast({
+          title: "Ideas Regenerated!",
+          description: `Kaira created ${parsedIdeas.length} fresh ideas for you.`,
+        });
+      } else {
+        const lines = data.output.split('\n').filter((line: string) => 
+          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
+          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
+          !line.startsWith('👉') && line.includes('*')
+        );
+        const fallbackIdeas = lines.slice(0, 10);
+        setIdeas(fallbackIdeas);
+        toast({
+          title: "Ideas Regenerated!",
+          description: `Kaira created ${fallbackIdeas.length} fresh ideas for you.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error regenerating ideas:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate ideas. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const selectIdea = (idea: string) => {
     console.log("Selected idea:", idea);
     localStorage.setItem('selectedIdea', idea);
@@ -179,6 +227,31 @@ const KairaIdeas = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Regenerate button */}
+            <div className="flex justify-center mt-8 sm:mt-12">
+              <Card className="bg-white/80 backdrop-blur-sm border-orange-100 shadow-lg">
+                <CardContent className="p-4 sm:p-6">
+                  <Button
+                    onClick={regenerateIdeas}
+                    disabled={isLoading}
+                    className="bg-orange-600 hover:bg-orange-700 text-white py-3 sm:py-4 px-6 sm:px-8 text-base sm:text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 animate-spin" />
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                        Regenerate AI-Ideas!
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
