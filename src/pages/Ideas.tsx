@@ -8,6 +8,8 @@ import { toast } from '@/hooks/use-toast';
 const Ideas = () => {
   const [ideas, setIdeas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const navigate = useNavigate();
 
   // Auto-generate ideas when component mounts
@@ -60,6 +62,92 @@ const Ideas = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const regenerateIdeas = async () => {
+    setIsRegenerating(true);
+    setLoadingProgress(0);
+    console.log("Regenerating ideas via webhook...");
+    
+    // Progress animation
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 95) return 95;
+        return prev + Math.random() * 10;
+      });
+    }, 2000);
+    
+    try {
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Regenerate', {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Aisha regenerate webhook response:", data);
+      
+      if (!data || !data.output) {
+        throw new Error('Invalid response format from webhook');
+      }
+      
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+      
+      // Parse ideas from the formatted output
+      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      if (ideaMatches) {
+        const parsedIdeas = ideaMatches.map((match: string) => 
+          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
+        );
+        
+        // Animate out old ideas first
+        setIdeas([]);
+        
+        // Then animate in new ideas after a brief delay
+        setTimeout(() => {
+          setIdeas(parsedIdeas);
+          toast({
+            title: "New Ideas Generated!",
+            description: `Generated ${parsedIdeas.length} fresh creative ideas for you.`,
+          });
+        }, 300);
+      } else {
+        const lines = data.output.split('\n').filter((line: string) => 
+          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
+          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
+          !line.startsWith('👉') && line.includes('*')
+        );
+        const fallbackIdeas = lines.slice(0, 10);
+        
+        // Animate out old ideas first
+        setIdeas([]);
+        
+        // Then animate in new ideas after a brief delay
+        setTimeout(() => {
+          setIdeas(fallbackIdeas);
+          toast({
+            title: "New Ideas Generated!",
+            description: `Generated ${fallbackIdeas.length} fresh ideas for you.`,
+          });
+        }, 300);
+      }
+    } catch (error) {
+      console.error('Error regenerating ideas:', error);
+      clearInterval(progressInterval);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate ideas. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setIsRegenerating(false);
+        setLoadingProgress(0);
+      }, 1000);
     }
   };
 
@@ -124,11 +212,15 @@ const Ideas = () => {
         </div>
 
         {ideas.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mb-32">
             {ideas.map((idea, index) => (
               <Card 
-                key={index}
-                className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105"
+                key={`${idea}-${index}`}
+                className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 animate-scale-in"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: 'both'
+                }}
                 onClick={() => selectIdea(idea)}
               >
                 <CardContent className="p-6">
@@ -154,6 +246,40 @@ const Ideas = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Fixed Regenerate Button */}
+        {ideas.length > 0 && !isLoading && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <Button
+              onClick={regenerateIdeas}
+              disabled={isRegenerating}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-4 text-lg rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border-0 min-w-[200px]"
+            >
+              {isRegenerating ? (
+                <>
+                  <div className="relative w-6 h-6">
+                    <div className="absolute inset-0 rounded-full border-2 border-white/30"></div>
+                    <div 
+                      className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"
+                      style={{
+                        borderTopColor: 'transparent',
+                        borderRightColor: 'white',
+                        borderBottomColor: 'white',
+                        borderLeftColor: 'white',
+                      }}
+                    ></div>
+                  </div>
+                  <span>Regenerating... {Math.round(loadingProgress)}%</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-6 h-6" />
+                  <span>Regenerate AI-Ideas!</span>
+                </>
+              )}
+            </Button>
           </div>
         )}
 
