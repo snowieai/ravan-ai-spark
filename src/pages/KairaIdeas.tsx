@@ -83,8 +83,16 @@ const KairaIdeas = () => {
         method: 'GET',
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       console.log("Kaira regenerate webhook response:", data);
+      
+      if (!data || !data.output) {
+        throw new Error('Invalid response format from webhook');
+      }
       
       clearInterval(progressInterval);
       setLoadingProgress(100);
