@@ -85,14 +85,29 @@ const BaileyIdeas = () => {
             console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
-          // Clean up the ideas
-          processedIdeas = splitIdeas.map(idea => 
-            idea.trim()
+          // Clean up the ideas - extract only the main title
+          processedIdeas = splitIdeas.map(idea => {
+            let cleanIdea = idea.trim()
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .trim()
-          ).filter(idea => idea.length > 15);
+              .trim();
+            
+            // Extract just the main title before any category or extra info
+            if (cleanIdea.includes('*Category:*')) {
+              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
+            }
+            
+            // Remove any trailing asterisks or metadata
+            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
+            
+            // If there's a pattern like "Title vs Title*" or "Title*", clean it
+            if (cleanIdea.endsWith('*')) {
+              cleanIdea = cleanIdea.slice(0, -1).trim();
+            }
+            
+            return cleanIdea;
+          }).filter(idea => idea.length > 15);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
@@ -200,14 +215,29 @@ const BaileyIdeas = () => {
             console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
-          // Clean up the ideas
-          processedIdeas = splitIdeas.map(idea => 
-            idea.trim()
+          // Clean up the ideas - extract only the main title
+          processedIdeas = splitIdeas.map(idea => {
+            let cleanIdea = idea.trim()
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .trim()
-          ).filter(idea => idea.length > 15);
+              .trim();
+            
+            // Extract just the main title before any category or extra info
+            if (cleanIdea.includes('*Category:*')) {
+              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
+            }
+            
+            // Remove any trailing asterisks or metadata
+            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
+            
+            // If there's a pattern like "Title vs Title*" or "Title*", clean it
+            if (cleanIdea.endsWith('*')) {
+              cleanIdea = cleanIdea.slice(0, -1).trim();
+            }
+            
+            return cleanIdea;
+          }).filter(idea => idea.length > 15);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));

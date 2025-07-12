@@ -55,9 +55,35 @@ const BaileyScript = () => {
       }
 
       const data = await response.json();
+      console.log('==================== BAILEY SCRIPT WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('======================================================================');
       
-      // Extract script from response
-      if (data && typeof data === 'object') {
+      // Handle script generation response similar to Kaira/Aisha
+      if (data && data.output && typeof data.output === 'object') {
+        // Check if it's multiple scripts format
+        if (data.output.scripts && Array.isArray(data.output.scripts)) {
+          // Use the first script if multiple are provided
+          const firstScript = data.output.scripts[0];
+          if (firstScript && firstScript.content) {
+            setScript(firstScript.content);
+          } else {
+            throw new Error('No script content found in scripts array');
+          }
+        } else {
+          // Check for single script content
+          const scriptContent = Object.values(data.output).find(value => 
+            typeof value === 'string' && value.trim().length > 100
+          ) as string;
+          
+          if (scriptContent) {
+            setScript(scriptContent);
+          } else {
+            throw new Error('No script content found in output');
+          }
+        }
+      } else if (data && typeof data === 'object') {
+        // Fallback: check entire response for script content
         const scriptContent = Object.values(data).find(value => 
           typeof value === 'string' && value.trim().length > 100
         ) as string;
