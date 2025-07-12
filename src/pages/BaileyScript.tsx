@@ -2,13 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, LogOut, FileText, Download, Sparkles, RefreshCw } from 'lucide-react';
+import { ArrowLeft, LogOut, FileText, Download, Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
+interface Script {
+  label: string;
+  content: string;
+}
+
+interface ScriptResponse {
+  title: string;
+  scripts: Script[];
+}
 
 const BaileyScript = () => {
   const navigate = useNavigate();
   const [selectedIdea, setSelectedIdea] = useState<string>('');
-  const [script, setScript] = useState<string>('');
+  const [scriptData, setScriptData] = useState<ScriptResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -61,48 +71,16 @@ const BaileyScript = () => {
       
       // Handle script generation response similar to Kaira/Aisha
       if (data && data.output && typeof data.output === 'object') {
-        // Check if it's multiple scripts format
-        if (data.output.scripts && Array.isArray(data.output.scripts)) {
-          // Use the first script if multiple are provided
-          const firstScript = data.output.scripts[0];
-          if (firstScript && firstScript.content) {
-            setScript(firstScript.content);
-          } else {
-            throw new Error('No script content found in scripts array');
-          }
-        } else {
-          // Check for single script content
-          const scriptContent = Object.values(data.output).find(value => 
-            typeof value === 'string' && value.trim().length > 100
-          ) as string;
-          
-          if (scriptContent) {
-            setScript(scriptContent);
-          } else {
-            throw new Error('No script content found in output');
-          }
-        }
-      } else if (data && typeof data === 'object') {
-        // Fallback: check entire response for script content
-        const scriptContent = Object.values(data).find(value => 
-          typeof value === 'string' && value.trim().length > 100
-        ) as string;
-        
-        if (scriptContent) {
-          setScript(scriptContent);
-        } else {
-          throw new Error('No script content found in response');
-        }
+        setScriptData(data.output);
+        toast({
+          title: "Scripts Generated!",
+          description: `Bailey created ${data.output.scripts?.length || 0} script variations for you.`,
+        });
       } else {
         throw new Error('Invalid response format');
       }
 
       setProgress(100);
-      
-      toast({
-        title: "Script Generated!",
-        description: "Your video script has been created successfully.",
-      });
       
     } catch (error) {
       console.error('Error generating script:', error);
@@ -112,25 +90,50 @@ const BaileyScript = () => {
         variant: "destructive",
       });
       
-      // Set fallback script
-      setScript(`
-        Hey everyone! Welcome back to Bailey's Real Estate Corner! 
-        
-        Today I want to talk about: ${idea}
-        
-        [INTRO HOOK]
-        Did you know that the Australian real estate market is constantly evolving? Today I'm sharing some insights that could help you make better property decisions.
-        
-        [MAIN CONTENT]
-        Let me break this down for you in simple terms...
-        
-        [CALL TO ACTION]
-        If you found this helpful, make sure to follow for more real estate tips and market insights. And remember, if you're thinking of buying or selling, I'm here to help!
-        
-        What questions do you have about the current market? Drop them in the comments below!
-        
-        #RealEstate #PropertyTips #AustraliaProperty #RealEstateAgent
-      `);
+      // Set fallback script data
+      setScriptData({
+        title: "Fallback Real Estate Scripts",
+        scripts: [
+          {
+            label: "Script A - Market Insights",
+            content: `Hey everyone! Welcome back to Bailey's Real Estate Corner! 
+
+Today I want to talk about: ${idea}
+
+[INTRO HOOK]
+Did you know that the Australian real estate market is constantly evolving? Today I'm sharing some insights that could help you make better property decisions.
+
+[MAIN CONTENT]
+Let me break this down for you in simple terms...
+
+[CALL TO ACTION]
+If you found this helpful, make sure to follow for more real estate tips and market insights. And remember, if you're thinking of buying or selling, I'm here to help!
+
+What questions do you have about the current market? Drop them in the comments below!
+
+#RealEstate #PropertyTips #AustraliaProperty #RealEstateAgent`
+          },
+          {
+            label: "Script B - Quick Tips",
+            content: `G'day property enthusiasts! Bailey here with another real estate update!
+
+Today's topic: ${idea}
+
+[HOOK]
+The property market waits for no one - and today I've got insights that could save you thousands!
+
+[CONTENT]
+Here's what you need to know...
+
+[CLOSING]
+Found this valuable? Hit that follow button and share with someone who needs to see this! And if you're ready to make your next property move, let's chat!
+
+Drop a 🏠 if you're ready to take action!
+
+#PropertyExpert #RealEstateAustralia #PropertyTips #Bailey`
+          }
+        ]
+      });
     } finally {
       clearInterval(progressInterval);
       setTimeout(() => {
@@ -140,11 +143,11 @@ const BaileyScript = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = (scriptContent: string, scriptLabel: string) => {
     const element = document.createElement('a');
-    const file = new Blob([script], { type: 'text/plain' });
+    const file = new Blob([scriptContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = 'bailey_script.txt';
+    element.download = `bailey_${scriptLabel.replace(/\s+/g, '_').toLowerCase()}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -152,6 +155,13 @@ const BaileyScript = () => {
     toast({
       title: "Downloaded!",
       description: "Script has been downloaded successfully.",
+    });
+  };
+
+  const selectScript = () => {
+    toast({
+      title: "Coming Soon! 🎬",
+      description: "Video generation with Bailey will be available soon for you. Stay tuned!",
     });
   };
 
@@ -268,47 +278,71 @@ const BaileyScript = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
               <Sparkles className="w-8 h-8 text-emerald-600 animate-spin" />
             </div>
-            <p className="text-gray-600 mb-2">Generating your video script...</p>
+            <p className="text-gray-600 mb-2">Generating your video scripts...</p>
             <p className="text-emerald-600 font-semibold">{Math.round(progress)}%</p>
           </div>
-        ) : script ? (
-          <div className="max-w-4xl mx-auto">
-            <Card className="bg-white/80 backdrop-blur-sm border-emerald-100">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-gray-900">Generated Script</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleRegenerate}
-                    variant="outline"
-                    className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Regenerate
-                  </Button>
-                  <Button
-                    onClick={handleDownload}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Script
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-50 rounded-lg p-6 border">
-                  <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans">
-                    {script}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
+        ) : scriptData ? (
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-center mb-8">
+              <Button
+                onClick={handleRegenerate}
+                variant="outline"
+                className="border-emerald-200 text-emerald-600 hover:bg-emerald-50 mr-4"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Regenerate Scripts
+              </Button>
+              <h2 className="text-2xl font-bold text-gray-900 text-center">
+                {scriptData.title}
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {scriptData.scripts?.map((script, index) => (
+                <Card 
+                  key={index}
+                  className="bg-white/80 backdrop-blur-sm border-emerald-100 hover:shadow-xl transition-all duration-300 h-full"
+                >
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-gray-900 text-xl flex items-center">
+                      <FileText className="w-6 h-6 mr-2 text-emerald-500 flex-shrink-0" />
+                      <span className="line-clamp-2">{script.label}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 pt-0 flex flex-col h-full">
+                    <div className="bg-gray-50/80 rounded-lg p-4 mb-4 flex-grow overflow-y-auto max-h-80">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
+                        {script.content}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 mt-auto">
+                      <Button
+                        onClick={() => handleDownload(script.content, script.label)}
+                        variant="outline"
+                        className="flex-1 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                      <Button
+                        onClick={selectScript}
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                      >
+                        Use Script
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center text-gray-500">
             <div className="w-32 h-32 mx-auto mb-6 opacity-50">
               <FileText className="w-full h-full" />
             </div>
-            <p className="text-xl">No script generated yet.</p>
+            <p className="text-xl">No scripts generated yet.</p>
           </div>
         )}
       </div>
