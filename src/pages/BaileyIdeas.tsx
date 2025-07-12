@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lightbulb, ArrowLeft, LogOut, RefreshCw, Sparkles, Copy, Check } from 'lucide-react';
+import { Lightbulb, ArrowLeft, LogOut, RefreshCw, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import AnimatedText from '@/components/AnimatedText';
 
@@ -12,7 +12,6 @@ const BaileyIdeas = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -43,11 +42,37 @@ const BaileyIdeas = () => {
       if (data && data.ideas && Array.isArray(data.ideas)) {
         setIdeas(data.ideas);
       } else if (data && typeof data === 'object') {
+        // Handle different response formats
         const ideaValues = Object.values(data).filter(value => 
           typeof value === 'string' && value.trim().length > 0
         );
+        
         if (ideaValues.length > 0) {
-          setIdeas(ideaValues as string[]);
+          // Try to split long text into individual ideas
+          const processedIdeas = ideaValues.flatMap(value => {
+            const text = value as string;
+            // Split by numbers (1., 2., etc.) or double newlines or specific markers
+            const splitIdeas = text.split(/(?:\d+\.\s+|\n\n+|(?:\*[^*]+\*))/).filter(idea => 
+              idea.trim().length > 20 // Only keep substantial ideas
+            );
+            
+            if (splitIdeas.length > 1) {
+              return splitIdeas.map(idea => idea.trim());
+            } else {
+              // If no clear splitting pattern, try to break by sentences and group them
+              const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+              const groupedIdeas = [];
+              for (let i = 0; i < sentences.length; i += 2) {
+                const combined = sentences.slice(i, i + 2).join('. ').trim();
+                if (combined.length > 20) {
+                  groupedIdeas.push(combined + (combined.endsWith('.') ? '' : '.'));
+                }
+              }
+              return groupedIdeas.length > 0 ? groupedIdeas : [text];
+            }
+          });
+          
+          setIdeas(processedIdeas);
         } else {
           throw new Error('No valid ideas found in response');
         }
@@ -79,16 +104,16 @@ const BaileyIdeas = () => {
     setIsRegenerating(true);
     setProgress(0);
     
-    // Animate progress
+    // Animate progress over 2 minutes (120 seconds)
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return 90;
         }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 0.8; // Slower progress for 2 minute duration
       });
-    }, 200);
+    }, 1000); // Update every second
 
     try {
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Regenerate', {
@@ -104,11 +129,37 @@ const BaileyIdeas = () => {
       if (data && data.ideas && Array.isArray(data.ideas)) {
         setIdeas(data.ideas);
       } else if (data && typeof data === 'object') {
+        // Handle different response formats
         const ideaValues = Object.values(data).filter(value => 
           typeof value === 'string' && value.trim().length > 0
         );
+        
         if (ideaValues.length > 0) {
-          setIdeas(ideaValues as string[]);
+          // Try to split long text into individual ideas
+          const processedIdeas = ideaValues.flatMap(value => {
+            const text = value as string;
+            // Split by numbers (1., 2., etc.) or double newlines or specific markers
+            const splitIdeas = text.split(/(?:\d+\.\s+|\n\n+|(?:\*[^*]+\*))/).filter(idea => 
+              idea.trim().length > 20 // Only keep substantial ideas
+            );
+            
+            if (splitIdeas.length > 1) {
+              return splitIdeas.map(idea => idea.trim());
+            } else {
+              // If no clear splitting pattern, try to break by sentences and group them
+              const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+              const groupedIdeas = [];
+              for (let i = 0; i < sentences.length; i += 2) {
+                const combined = sentences.slice(i, i + 2).join('. ').trim();
+                if (combined.length > 20) {
+                  groupedIdeas.push(combined + (combined.endsWith('.') ? '' : '.'));
+                }
+              }
+              return groupedIdeas.length > 0 ? groupedIdeas : [text];
+            }
+          });
+          
+          setIdeas(processedIdeas);
         } else {
           throw new Error('No valid ideas found in response');
         }
@@ -139,22 +190,9 @@ const BaileyIdeas = () => {
     }
   };
 
-  const copyToClipboard = async (text: string, index: number) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedIndex(index);
-      toast({
-        title: "Copied!",
-        description: "Idea copied to clipboard.",
-      });
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy to clipboard.",
-        variant: "destructive",
-      });
-    }
+  const handleUseIdea = (idea: string) => {
+    localStorage.setItem('selectedIdea', idea);
+    navigate('/bailey-script');
   };
 
   const handleLogout = () => {
@@ -259,24 +297,18 @@ const BaileyIdeas = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-5 group-hover:opacity-10 transition-opacity duration-300"></div>
                 <CardHeader className="relative z-10">
-                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-start justify-between">
-                    <span className="flex-1">Idea {index + 1}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(idea, index)}
-                      className="ml-2 h-8 w-8 p-0 hover:bg-emerald-100"
-                    >
-                      {copiedIndex === index ? (
-                        <Check className="w-4 h-4 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-gray-500" />
-                      )}
-                    </Button>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    Idea {index + 1}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-gray-700 leading-relaxed">{idea}</p>
+                  <p className="text-gray-700 leading-relaxed mb-4">{idea}</p>
+                  <Button
+                    onClick={() => handleUseIdea(idea)}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                  >
+                    Use this Idea!
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -293,8 +325,8 @@ const BaileyIdeas = () => {
         )}
       </div>
 
-      {/* Regenerate Button - Fixed Position */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Regenerate Button - Centered at Bottom */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={handleRegenerate}
           disabled={isRegenerating}

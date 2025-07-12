@@ -2,50 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { FileText, ArrowLeft, LogOut, Send, Copy, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, LogOut, FileText, Download, Sparkles, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const BaileyScript = () => {
   const navigate = useNavigate();
-  const [topic, setTopic] = useState('');
-  const [description, setDescription] = useState('');
-  const [script, setScript] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCopied, setIsCopied] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<string>('');
+  const [script, setScript] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     const selectedInfluencer = localStorage.getItem('selectedInfluencer');
+    const idea = localStorage.getItem('selectedIdea');
     
     if (!isLoggedIn || selectedInfluencer !== 'bailey') {
       navigate('/');
-    }
-  }, [navigate]);
-
-  const generateScript = async () => {
-    if (!topic.trim()) {
-      toast({
-        title: "Topic Required",
-        description: "Please enter a topic for your script.",
-        variant: "destructive",
-      });
       return;
     }
 
-    setIsLoading(true);
+    if (idea) {
+      setSelectedIdea(idea);
+      generateScript(idea);
+    } else {
+      navigate('/bailey-ideas');
+    }
+  }, [navigate]);
+
+  const generateScript = async (idea: string) => {
+    setIsGenerating(true);
+    setProgress(0);
+    
+    // Animate progress over 2 minutes
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 0.8;
+      });
+    }, 1000);
+
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Generate Script',
-          topic: topic,
-          description: description
-        }),
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=${encodeURIComponent(idea)}`, {
+        method: 'GET',
       });
 
       if (!response.ok) {
@@ -54,13 +56,22 @@ const BaileyScript = () => {
 
       const data = await response.json();
       
-      if (data && data.script) {
-        setScript(data.script);
-      } else if (data && typeof data === 'string') {
-        setScript(data);
+      // Extract script from response
+      if (data && typeof data === 'object') {
+        const scriptContent = Object.values(data).find(value => 
+          typeof value === 'string' && value.trim().length > 100
+        ) as string;
+        
+        if (scriptContent) {
+          setScript(scriptContent);
+        } else {
+          throw new Error('No script content found in response');
+        }
       } else {
-        throw new Error('Invalid script response');
+        throw new Error('Invalid response format');
       }
+
+      setProgress(100);
       
       toast({
         title: "Script Generated!",
@@ -75,47 +86,52 @@ const BaileyScript = () => {
         variant: "destructive",
       });
       
-      // Fallback script
-      setScript(`**Bailey's Real Estate Video Script: ${topic}**
-
-[INTRO]
-Hey there! Bailey here, your trusted AI real estate agent in Australia. 
-
-[MAIN CONTENT]
-${description ? `Today I want to talk to you about ${description.toLowerCase()}.` : `Let me share some insights about ${topic}.`}
-
-This is exactly what you need to know as a property buyer or seller in today's Australian market.
-
-[KEY POINTS]
-• Market insights and trends
-• Professional guidance you can trust
-• Tailored solutions for your needs
-
-[CALL TO ACTION]
-Ready to make your next property move? Let's connect and discuss how I can help you achieve your real estate goals.
-
-[OUTRO]
-Thanks for watching! Don't forget to follow for more real estate tips and market updates from your AI agent, Bailey.`);
+      // Set fallback script
+      setScript(`
+        Hey everyone! Welcome back to Bailey's Real Estate Corner! 
+        
+        Today I want to talk about: ${idea}
+        
+        [INTRO HOOK]
+        Did you know that the Australian real estate market is constantly evolving? Today I'm sharing some insights that could help you make better property decisions.
+        
+        [MAIN CONTENT]
+        Let me break this down for you in simple terms...
+        
+        [CALL TO ACTION]
+        If you found this helpful, make sure to follow for more real estate tips and market insights. And remember, if you're thinking of buying or selling, I'm here to help!
+        
+        What questions do you have about the current market? Drop them in the comments below!
+        
+        #RealEstate #PropertyTips #AustraliaProperty #RealEstateAgent
+      `);
     } finally {
-      setIsLoading(false);
+      clearInterval(progressInterval);
+      setTimeout(() => {
+        setIsGenerating(false);
+        setProgress(0);
+      }, 1000);
     }
   };
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(script);
-      setIsCopied(true);
-      toast({
-        title: "Copied!",
-        description: "Script copied to clipboard.",
-      });
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy to clipboard.",
-        variant: "destructive",
-      });
+  const handleDownload = () => {
+    const element = document.createElement('a');
+    const file = new Blob([script], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = 'bailey_script.txt';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    
+    toast({
+      title: "Downloaded!",
+      description: "Script has been downloaded successfully.",
+    });
+  };
+
+  const handleRegenerate = () => {
+    if (selectedIdea) {
+      generateScript(selectedIdea);
     }
   };
 
@@ -123,6 +139,7 @@ Thanks for watching! Don't forget to follow for more real estate tips and market
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userId');
     localStorage.removeItem('selectedInfluencer');
+    localStorage.removeItem('selectedIdea');
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
@@ -130,8 +147,8 @@ Thanks for watching! Don't forget to follow for more real estate tips and market
     navigate('/');
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/bailey-dashboard');
+  const handleBackToIdeas = () => {
+    navigate('/bailey-ideas');
   };
 
   return (
@@ -141,12 +158,12 @@ Thanks for watching! Don't forget to follow for more real estate tips and market
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <Button
-              onClick={handleBackToDashboard}
+              onClick={handleBackToIdeas}
               variant="outline"
               className="flex items-center border-emerald-200 text-emerald-600 hover:bg-emerald-50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              Back to Ideas
             </Button>
             <div className="flex items-center justify-center">
               <img 
@@ -197,111 +214,77 @@ Thanks for watching! Don't forget to follow for more real estate tips and market
               <FileText className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
-              Script Writer
+              Video Script
             </h1>
           </div>
           <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
-            Create engaging video scripts with Bailey's AI-powered writing assistance
+            AI-generated video script based on your selected idea
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Input Section */}
-          <Card className="bg-white/80 backdrop-blur-sm border-emerald-100">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center">
-                <Sparkles className="w-6 h-6 text-emerald-600 mr-2" />
-                Script Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Topic *
-                </label>
-                <Input
-                  type="text"
-                  placeholder="e.g., Luxury Waterfront Properties in Sydney"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="border-emerald-200 focus:border-emerald-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Description (Optional)
-                </label>
-                <Textarea
-                  placeholder="Provide more context about what you want to cover in the script..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="border-emerald-200 focus:border-emerald-500 min-h-[100px]"
-                />
-              </div>
+        {/* Selected Idea */}
+        {selectedIdea && (
+          <div className="mb-8">
+            <Card className="bg-white/80 backdrop-blur-sm border-emerald-100 max-w-4xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-emerald-700">Selected Idea:</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 leading-relaxed">{selectedIdea}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-              <Button
-                onClick={generateScript}
-                disabled={isLoading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 text-lg font-semibold border-0"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <Sparkles className="w-5 h-5 mr-2 animate-spin" />
-                    Generating Script...
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <Send className="w-5 h-5 mr-2" />
-                    Generate Script
-                  </div>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Output Section */}
-          <Card className="bg-white/80 backdrop-blur-sm border-emerald-100">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center justify-between">
-                <div className="flex items-center">
-                  <FileText className="w-6 h-6 text-emerald-600 mr-2" />
-                  Generated Script
-                </div>
-                {script && (
+        {/* Script Content */}
+        {isGenerating ? (
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
+              <Sparkles className="w-8 h-8 text-emerald-600 animate-spin" />
+            </div>
+            <p className="text-gray-600 mb-2">Generating your video script...</p>
+            <p className="text-emerald-600 font-semibold">{Math.round(progress)}%</p>
+          </div>
+        ) : script ? (
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-white/80 backdrop-blur-sm border-emerald-100">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-gray-900">Generated Script</CardTitle>
+                <div className="flex gap-2">
                   <Button
-                    size="sm"
+                    onClick={handleRegenerate}
                     variant="outline"
-                    onClick={copyToClipboard}
                     className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                   >
-                    {isCopied ? (
-                      <Check className="w-4 h-4 mr-1" />
-                    ) : (
-                      <Copy className="w-4 h-4 mr-1" />
-                    )}
-                    {isCopied ? 'Copied!' : 'Copy'}
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Regenerate
                   </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {script ? (
-                <div className="bg-gray-50 p-4 rounded-lg border border-emerald-100">
-                  <pre className="whitespace-pre-wrap text-gray-700 font-mono text-sm leading-relaxed">
+                  <Button
+                    onClick={handleDownload}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Script
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gray-50 rounded-lg p-6 border">
+                  <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans">
                     {script}
                   </pre>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Your generated script will appear here</p>
-                  <p className="text-sm mt-2">Enter a topic and click "Generate Script" to get started</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="text-center text-gray-500">
+            <div className="w-32 h-32 mx-auto mb-6 opacity-50">
+              <FileText className="w-full h-full" />
+            </div>
+            <p className="text-xl">No script generated yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );
