@@ -36,7 +36,7 @@ const BaileyIdeas = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: 'Generate Ideas'
+          message: 'Generating Ideas'
         }),
       });
 
