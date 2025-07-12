@@ -38,53 +38,77 @@ const BaileyIdeas = () => {
       }
 
       const data = await response.json();
-      console.log('Raw webhook response:', data);
+      console.log('==================== BAILEY IDEAS WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
       console.log('Response keys:', Object.keys(data));
+      console.log('======================================================================');
+      
+      // Handle different possible response formats
+      let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
-        console.log('Found ideas array with length:', data.ideas.length);
-        setIdeas(data.ideas);
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
+        processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
-        // Handle different response formats
-        const ideaValues = Object.values(data).filter(value => 
-          typeof value === 'string' && value.trim().length > 0
+        // Check if response contains a single text field with all ideas
+        const textFields = Object.values(data).filter(value => 
+          typeof value === 'string' && value.length > 50
         );
         
-        if (ideaValues.length > 0) {
-          console.log('Idea values found:', ideaValues);
-          // Try to split long text into individual ideas
-          const processedIdeas = ideaValues.flatMap(value => {
-            const text = value as string;
-            // Split by numbers (1., 2., etc.) or double newlines or specific markers
-            const splitIdeas = text.split(/(?:\d+\.\s+|\n\n+|(?:\*[^*]+\*))/).filter(idea => 
-              idea.trim().length > 20 // Only keep substantial ideas
-            );
-            
-            if (splitIdeas.length > 1) {
-              return splitIdeas.map(idea => idea.trim());
-            } else {
-              // If no clear splitting pattern, try to break by sentences and group them
-              const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-              const groupedIdeas = [];
-              for (let i = 0; i < sentences.length; i += 2) {
-                const combined = sentences.slice(i, i + 2).join('. ').trim();
-                if (combined.length > 20) {
-                  groupedIdeas.push(combined + (combined.endsWith('.') ? '' : '.'));
-                }
-              }
-              return groupedIdeas.length > 0 ? groupedIdeas : [text];
-            }
-          });
+        console.log('Found text fields:', textFields.length);
+        
+        if (textFields.length > 0) {
+          const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
-          console.log('Processed ideas count:', processedIdeas.length);
-          console.log('Final processed ideas:', processedIdeas);
-          setIdeas(processedIdeas);
+          // Try multiple splitting patterns to extract individual ideas
+          let splitIdeas: string[] = [];
+          
+          // Pattern 1: Split by numbered list (1., 2., etc.)
+          if (fullText.includes('1.') && fullText.includes('2.')) {
+            splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 2: Split by line breaks and filter for substantial content
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/\n+/).filter(idea => 
+              idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
+            );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 3: Split by bullet points or dashes
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Clean up the ideas
+          processedIdeas = splitIdeas.map(idea => 
+            idea.trim()
+              .replace(/^\d+\.\s*/, '') // Remove leading numbers
+              .replace(/^[-•*]\s*/, '') // Remove leading bullets
+              .replace(/\n+/g, ' ') // Replace line breaks with spaces
+              .trim()
+          ).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
-          throw new Error('No valid ideas found in response');
+          throw new Error('No text content found in response');
         }
       } else {
-        throw new Error('Invalid response format');
+        throw new Error('Invalid response format - not an object');
       }
+      
+      if (processedIdeas.length === 0) {
+        throw new Error('No ideas could be extracted from response');
+      }
+      
+      console.log('Setting', processedIdeas.length, 'ideas in state');
+      setIdeas(processedIdeas);
       
     } catch (error) {
       console.error('Error loading ideas:', error);
@@ -131,47 +155,75 @@ const BaileyIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('==================== BAILEY REGENERATE WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('======================================================================');
+      
+      // Handle different possible response formats
+      let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
-        setIdeas(data.ideas);
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
+        processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
-        // Handle different response formats
-        const ideaValues = Object.values(data).filter(value => 
-          typeof value === 'string' && value.trim().length > 0
+        // Check if response contains a single text field with all ideas
+        const textFields = Object.values(data).filter(value => 
+          typeof value === 'string' && value.length > 50
         );
         
-        if (ideaValues.length > 0) {
-          // Try to split long text into individual ideas
-          const processedIdeas = ideaValues.flatMap(value => {
-            const text = value as string;
-            // Split by numbers (1., 2., etc.) or double newlines or specific markers
-            const splitIdeas = text.split(/(?:\d+\.\s+|\n\n+|(?:\*[^*]+\*))/).filter(idea => 
-              idea.trim().length > 20 // Only keep substantial ideas
-            );
-            
-            if (splitIdeas.length > 1) {
-              return splitIdeas.map(idea => idea.trim());
-            } else {
-              // If no clear splitting pattern, try to break by sentences and group them
-              const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-              const groupedIdeas = [];
-              for (let i = 0; i < sentences.length; i += 2) {
-                const combined = sentences.slice(i, i + 2).join('. ').trim();
-                if (combined.length > 20) {
-                  groupedIdeas.push(combined + (combined.endsWith('.') ? '' : '.'));
-                }
-              }
-              return groupedIdeas.length > 0 ? groupedIdeas : [text];
-            }
-          });
+        console.log('Found text fields:', textFields.length);
+        
+        if (textFields.length > 0) {
+          const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
-          setIdeas(processedIdeas);
+          // Try multiple splitting patterns to extract individual ideas
+          let splitIdeas: string[] = [];
+          
+          // Pattern 1: Split by numbered list (1., 2., etc.)
+          if (fullText.includes('1.') && fullText.includes('2.')) {
+            splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 2: Split by line breaks and filter for substantial content
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/\n+/).filter(idea => 
+              idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
+            );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 3: Split by bullet points or dashes
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Clean up the ideas
+          processedIdeas = splitIdeas.map(idea => 
+            idea.trim()
+              .replace(/^\d+\.\s*/, '') // Remove leading numbers
+              .replace(/^[-•*]\s*/, '') // Remove leading bullets
+              .replace(/\n+/g, ' ') // Replace line breaks with spaces
+              .trim()
+          ).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
-          throw new Error('No valid ideas found in response');
+          throw new Error('No text content found in response');
         }
       } else {
-        throw new Error('Invalid response format');
+        throw new Error('Invalid response format - not an object');
       }
+      
+      if (processedIdeas.length === 0) {
+        throw new Error('No ideas could be extracted from response');
+      }
+      
+      console.log('Setting', processedIdeas.length, 'ideas in state');
+      setIdeas(processedIdeas);
 
       setProgress(100);
       
