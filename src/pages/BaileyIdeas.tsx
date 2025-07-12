@@ -30,14 +30,8 @@ const BaileyIdeas = () => {
   const loadIdeas = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Generating Ideas'
-        }),
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Generating Ideas', {
+        method: 'GET',
       });
 
       if (!response.ok) {
@@ -97,14 +91,8 @@ const BaileyIdeas = () => {
     }, 200);
 
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'Regenerate'
-        }),
+      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Regenerate', {
+        method: 'GET',
       });
 
       if (!response.ok) {
