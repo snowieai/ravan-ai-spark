@@ -38,8 +38,11 @@ const BaileyIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('Raw webhook response:', data);
+      console.log('Response keys:', Object.keys(data));
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Found ideas array with length:', data.ideas.length);
         setIdeas(data.ideas);
       } else if (data && typeof data === 'object') {
         // Handle different response formats
@@ -48,6 +51,7 @@ const BaileyIdeas = () => {
         );
         
         if (ideaValues.length > 0) {
+          console.log('Idea values found:', ideaValues);
           // Try to split long text into individual ideas
           const processedIdeas = ideaValues.flatMap(value => {
             const text = value as string;
@@ -72,6 +76,8 @@ const BaileyIdeas = () => {
             }
           });
           
+          console.log('Processed ideas count:', processedIdeas.length);
+          console.log('Final processed ideas:', processedIdeas);
           setIdeas(processedIdeas);
         } else {
           throw new Error('No valid ideas found in response');
