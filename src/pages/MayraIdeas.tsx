@@ -25,15 +25,11 @@ const MayraIdeas = () => {
     try {
       console.log('Generating ideas for Mayra...');
       
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728', {
-        method: 'POST',
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook-test/31fda247-1f1b-48ac-8d53-50e26cb92728?action=generate_ideas&influencer=mayra`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: 'generate_ideas',
-          influencer: 'mayra'
-        }),
       });
 
       if (!response.ok) {
