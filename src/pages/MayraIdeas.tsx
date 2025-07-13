@@ -115,9 +115,22 @@ const MayraIdeas = () => {
             }
             
             if (extractedIdeas.length > 0) {
-              processedIdeas = extractedIdeas.map(idea => 
-                idea.replace(/^\d+[\.\)]\s*/, '').replace(/^\*+\s*/, '').replace(/\*+$/, '').trim()
-              );
+              processedIdeas = extractedIdeas.map(idea => {
+                let cleanIdea = idea.replace(/^\d+[\.\)]\s*/, '').replace(/^\*+\s*/, '').replace(/\*+$/, '').trim();
+                
+                // Remove category-related text patterns
+                cleanIdea = cleanIdea
+                  .replace(/\*?Category:?\*?.*$/i, '') // Remove Category: and everything after
+                  .replace(/\*?Type:?\*?.*$/i, '') // Remove Type: and everything after
+                  .replace(/\*?Genre:?\*?.*$/i, '') // Remove Genre: and everything after
+                  .replace(/\*?\[.*?\]\*?/g, '') // Remove [category] patterns
+                  .replace(/\*?\(.*?\)\*?/g, '') // Remove (category) patterns
+                  .replace(/\*+/g, '') // Remove all asterisks
+                  .replace(/\s+/g, ' ') // Clean up multiple spaces
+                  .trim();
+                
+                return cleanIdea;
+              }).filter(idea => idea.length > 15);
               foundIdeas = true;
               break;
             }
@@ -241,7 +254,7 @@ const MayraIdeas = () => {
             console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
-          // Clean up the ideas - extract only the main title
+          // Clean up the ideas - extract only the main title and remove category text
           processedIdeas = splitIdeas.map(idea => {
             let cleanIdea = idea.trim()
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
@@ -249,17 +262,20 @@ const MayraIdeas = () => {
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
               .trim();
             
-            // Extract just the main title before any category or extra info
-            if (cleanIdea.includes('*Category:*')) {
-              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
-            }
+            // Remove category-related text patterns
+            cleanIdea = cleanIdea
+              .replace(/\*?Category:?\*?.*$/i, '') // Remove Category: and everything after
+              .replace(/\*?Type:?\*?.*$/i, '') // Remove Type: and everything after
+              .replace(/\*?Genre:?\*?.*$/i, '') // Remove Genre: and everything after
+              .replace(/\*?\[.*?\]\*?/g, '') // Remove [category] patterns
+              .replace(/\*?\(.*?\)\*?/g, '') // Remove (category) patterns
+              .replace(/\*+/g, '') // Remove all asterisks
+              .replace(/\s+/g, ' ') // Clean up multiple spaces
+              .trim();
             
-            // Remove any trailing asterisks or metadata
-            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
-            
-            // If there's a pattern like "Title vs Title*" or "Title*", clean it
-            if (cleanIdea.endsWith('*')) {
-              cleanIdea = cleanIdea.slice(0, -1).trim();
+            // If there's still a pattern like "Title vs Title" or extra metadata, clean it
+            if (cleanIdea.includes(' vs ') && cleanIdea.length > 100) {
+              cleanIdea = cleanIdea.split(' vs ')[0].trim();
             }
             
             return cleanIdea;
@@ -395,66 +411,63 @@ const MayraIdeas = () => {
 
           {/* Ideas Grid */}
           {ideas.length > 0 && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {ideas.map((idea, index) => (
-                  <Card 
-                    key={index}
-                    className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
-                    onClick={() => selectIdea(idea)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                          Idea {index + 1}
-                        </Badge>
-                        <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                      
-                      <div className="flex items-start mb-4">
-                        <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
-                        <p className="text-gray-700 leading-relaxed line-clamp-4">
-                          {idea}
-                        </p>
-                      </div>
-                      
-                      <Button
-                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          selectIdea(idea);
-                        }}
-                      >
-                        Create Script
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Regenerate Button - Centered at Bottom */}
-              <div className="flex justify-center mt-8">
-                <Button
-                  onClick={handleRegenerate}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-8 py-3 rounded-full"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {ideas.map((idea, index) => (
+                <Card 
+                  key={index}
+                  className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
+                  onClick={() => selectIdea(idea)}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Regenerating...
-                    </>
-                  ) : (
-                    <>
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      Regenerate Ideas
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                        Idea {index + 1}
+                      </Badge>
+                      <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    
+                    <div className="flex items-start mb-4">
+                      <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
+                      <p className="text-gray-700 leading-relaxed line-clamp-4">
+                        {idea}
+                      </p>
+                    </div>
+                    
+                    <Button
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectIdea(idea);
+                      }}
+                    >
+                      Use This Idea
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
+
+          {/* Regenerate Button - Always at Bottom */}
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={handleRegenerate}
+              disabled={isLoading}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Regenerate AI-Ideas!
+                </>
+              )}
+            </Button>
+          </div>
 
           {/* Loading State */}
           {isLoading && ideas.length === 0 && (
