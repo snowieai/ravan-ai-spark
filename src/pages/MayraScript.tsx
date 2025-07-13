@@ -30,8 +30,67 @@ const MayraScript = () => {
     
     if (idea) {
       setSelectedIdea(idea);
+      // Auto-generate script when idea is selected
+      generateScriptForIdea(idea);
     }
   }, [navigate]);
+
+  const generateScriptForIdea = async (idea: string) => {
+    setIsLoading(true);
+    try {
+      console.log('Generating script for Mayra with idea:', idea);
+      
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(idea)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Script generation response:', data);
+      
+      if (data.scriptA && data.scriptB) {
+        setScriptData({
+          scriptA: data.scriptA,
+          scriptB: data.scriptB,
+          title: data.title || 'Generated Script'
+        });
+        
+        toast({
+          title: "Scripts Generated!",
+          description: "A/B tested scripts have been created successfully.",
+        });
+      } else if (data.script) {
+        // Handle single script response
+        setScriptData({
+          scriptA: data.script,
+          scriptB: data.script,
+          title: data.title || 'Generated Script'
+        });
+        
+        toast({
+          title: "Script Generated!",
+          description: "Video script has been created successfully.",
+        });
+      } else {
+        throw new Error('No scripts received from the API');
+      }
+    } catch (error) {
+      console.error('Error generating script:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate scripts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const generateScript = async () => {
     if (!selectedIdea) {
