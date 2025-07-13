@@ -395,63 +395,65 @@ const MayraIdeas = () => {
 
           {/* Ideas Grid */}
           {ideas.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {ideas.map((idea, index) => (
-                <Card 
-                  key={index}
-                  className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
-                  onClick={() => selectIdea(idea)}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                        Idea {index + 1}
-                      </Badge>
-                      <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    
-                    <div className="flex items-start mb-4">
-                      <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
-                      <p className="text-gray-700 leading-relaxed line-clamp-4">
-                        {idea}
-                      </p>
-                    </div>
-                    
-                    <Button
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        selectIdea(idea);
-                      }}
-                    >
-                      Create Script
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {ideas.map((idea, index) => (
+                  <Card 
+                    key={index}
+                    className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
+                    onClick={() => selectIdea(idea)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                          Idea {index + 1}
+                        </Badge>
+                        <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      
+                      <div className="flex items-start mb-4">
+                        <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
+                        <p className="text-gray-700 leading-relaxed line-clamp-4">
+                          {idea}
+                        </p>
+                      </div>
+                      
+                      <Button
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          selectIdea(idea);
+                        }}
+                      >
+                        Create Script
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-            {/* Regenerate Button - Centered at Bottom */}
-            <div className="flex justify-center mt-8">
-              <Button
-                onClick={handleRegenerate}
-                disabled={isLoading}
-                variant="outline"
-                className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-8 py-3 rounded-full"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Regenerating...
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="w-4 h-4 mr-2" />
-                    Regenerate Ideas
-                  </>
-                )}
-              </Button>
-            </div>
+              {/* Regenerate Button - Centered at Bottom */}
+              <div className="flex justify-center mt-8">
+                <Button
+                  onClick={handleRegenerate}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-8 py-3 rounded-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Regenerate Ideas
+                    </>
+                  )}
+                </Button>
+              </div>
+            </>
           )}
 
           {/* Loading State */}
