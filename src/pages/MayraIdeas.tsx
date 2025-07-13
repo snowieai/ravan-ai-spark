@@ -17,13 +17,17 @@ const MayraIdeas = () => {
     
     if (!isLoggedIn || selectedInfluencer !== 'mayra') {
       navigate('/');
+      return;
     }
+
+    // Load initial ideas automatically like Bailey
+    loadIdeas();
   }, [navigate]);
 
-  const generateIdeas = async () => {
+  const loadIdeas = async () => {
     setIsLoading(true);
     try {
-      console.log('Generating ideas for Mayra...');
+      console.log('Loading ideas for Mayra...');
       
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generating Ideas`, {
         method: 'GET',
@@ -37,44 +41,228 @@ const MayraIdeas = () => {
       }
 
       const data = await response.json();
-      console.log('Ideas response:', data);
+      console.log('==================== MAYRA IDEAS WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', Object.keys(data));
+      console.log('======================================================================');
       
-      if (data.ideas) {
-        // Parse ideas from the response, handling different formats
-        let parsedIdeas = [];
-        if (Array.isArray(data.ideas)) {
-          parsedIdeas = data.ideas;
-        } else if (typeof data.ideas === 'string') {
-          // Split by common delimiters and clean up
-          parsedIdeas = data.ideas
-            .split(/\n+|\*\*|\d+\./)
-            .map(idea => idea.trim())
-            .filter(idea => idea && idea.length > 10)
-            .map(idea => {
-              // Remove leading numbers, asterisks, and category labels
-              return idea
-                .replace(/^\d+\.\s*/, '')
-                .replace(/^\*+\s*/, '')
-                .replace(/^[-•]\s*/, '')
-                .replace(/^\([^)]*\)\s*/, '')
-                .replace(/^Category:\s*[^:]*:\s*/i, '')
-                .trim();
-            });
-        }
+      // Handle different possible response formats like Bailey
+      let processedIdeas: string[] = [];
+      
+      if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
+        processedIdeas = data.ideas;
+      } else if (data && typeof data === 'object') {
+        // Check if response contains a single text field with all ideas
+        const textFields = Object.values(data).filter(value => 
+          typeof value === 'string' && value.length > 50
+        );
         
-        setIdeas(parsedIdeas.slice(0, 6)); // Limit to 6 ideas
-        toast({
-          title: "Ideas Generated!",
-          description: `Generated ${parsedIdeas.length} creative ideas for Mayra.`,
-        });
+        console.log('Found text fields:', textFields.length);
+        
+        if (textFields.length > 0) {
+          const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
+          
+          // Try multiple splitting patterns to extract individual ideas
+          let splitIdeas: string[] = [];
+          
+          // Pattern 1: Split by numbered list (1., 2., etc.)
+          if (fullText.includes('1.') && fullText.includes('2.')) {
+            splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 2: Split by line breaks and filter for substantial content
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/\n+/).filter(idea => 
+              idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
+            );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 3: Split by bullet points or dashes
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Clean up the ideas - extract only the main title
+          processedIdeas = splitIdeas.map(idea => {
+            let cleanIdea = idea.trim()
+              .replace(/^\d+\.\s*/, '') // Remove leading numbers
+              .replace(/^[-•*]\s*/, '') // Remove leading bullets
+              .replace(/\n+/g, ' ') // Replace line breaks with spaces
+              .trim();
+            
+            // Extract just the main title before any category or extra info
+            if (cleanIdea.includes('*Category:*')) {
+              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
+            }
+            
+            // Remove any trailing asterisks or metadata
+            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
+            
+            // If there's a pattern like "Title vs Title*" or "Title*", clean it
+            if (cleanIdea.endsWith('*')) {
+              cleanIdea = cleanIdea.slice(0, -1).trim();
+            }
+            
+            return cleanIdea;
+          }).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
+        } else {
+          throw new Error('No text content found in response');
+        }
       } else {
-        throw new Error('No ideas received from the API');
+        throw new Error('Invalid response format - not an object');
       }
+      
+      if (processedIdeas.length === 0) {
+        throw new Error('No ideas could be extracted from response');
+      }
+      
+      console.log('Setting', processedIdeas.length, 'ideas in state');
+      setIdeas(processedIdeas);
+      
+      toast({
+        title: "Ideas Loaded!",
+        description: `Generated ${processedIdeas.length} creative ideas for Mayra.`,
+      });
     } catch (error) {
-      console.error('Error generating ideas:', error);
+      console.error('Error loading ideas:', error);
       toast({
         title: "Error",
-        description: "Failed to generate ideas. Please try again.",
+        description: "Failed to load ideas. Please try again.",
+        variant: "destructive",
+      });
+      // Set fallback ideas
+      setIdeas([
+        "Create engaging content about your daily life",
+        "Share tips for personal development", 
+        "Showcase behind-the-scenes moments",
+        "Educational content for your audience",
+        "Trending topics in your niche"
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Regenerating ideas for Mayra...');
+      
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('==================== MAYRA REGENERATE WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('======================================================================');
+      
+      // Handle different possible response formats like Bailey
+      let processedIdeas: string[] = [];
+      
+      if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
+        processedIdeas = data.ideas;
+      } else if (data && typeof data === 'object') {
+        // Check if response contains a single text field with all ideas
+        const textFields = Object.values(data).filter(value => 
+          typeof value === 'string' && value.length > 50
+        );
+        
+        console.log('Found text fields:', textFields.length);
+        
+        if (textFields.length > 0) {
+          const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
+          
+          // Try multiple splitting patterns to extract individual ideas
+          let splitIdeas: string[] = [];
+          
+          // Pattern 1: Split by numbered list (1., 2., etc.)
+          if (fullText.includes('1.') && fullText.includes('2.')) {
+            splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 2: Split by line breaks and filter for substantial content
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/\n+/).filter(idea => 
+              idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
+            );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Pattern 3: Split by bullet points or dashes
+          if (splitIdeas.length < 5) {
+            splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
+          }
+          
+          // Clean up the ideas - extract only the main title
+          processedIdeas = splitIdeas.map(idea => {
+            let cleanIdea = idea.trim()
+              .replace(/^\d+\.\s*/, '') // Remove leading numbers
+              .replace(/^[-•*]\s*/, '') // Remove leading bullets
+              .replace(/\n+/g, ' ') // Replace line breaks with spaces
+              .trim();
+            
+            // Extract just the main title before any category or extra info
+            if (cleanIdea.includes('*Category:*')) {
+              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
+            }
+            
+            // Remove any trailing asterisks or metadata
+            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
+            
+            // If there's a pattern like "Title vs Title*" or "Title*", clean it
+            if (cleanIdea.endsWith('*')) {
+              cleanIdea = cleanIdea.slice(0, -1).trim();
+            }
+            
+            return cleanIdea;
+          }).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
+        } else {
+          throw new Error('No text content found in response');
+        }
+      } else {
+        throw new Error('Invalid response format - not an object');
+      }
+      
+      if (processedIdeas.length === 0) {
+        throw new Error('No ideas could be extracted from response');
+      }
+      
+      console.log('Setting', processedIdeas.length, 'ideas in state');
+      setIdeas(processedIdeas);
+      
+      toast({
+        title: "Ideas Regenerated!",
+        description: `Generated ${processedIdeas.length} new creative ideas for Mayra.`,
+      });
+    } catch (error) {
+      console.error('Error regenerating ideas:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate ideas. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -157,102 +345,47 @@ const MayraIdeas = () => {
               Generate AI-powered video ideas tailored for Mayra's content style
             </p>
             
-            <Button
-              onClick={generateIdeas}
-              disabled={isLoading}
-              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generating Ideas...
-                </>
-              ) : (
-                <>
-                  <Lightbulb className="w-5 h-5 mr-2" />
-                  Generate New Ideas
-                </>
-              )}
-            </Button>
-            
-            {/* Regenerate Button */}
-            {ideas.length > 0 && (
+            <div className="flex gap-4 justify-center">
               <Button
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    console.log('Regenerating ideas for Mayra...');
-                    
-                    const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
-                      method: 'GET',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                    });
-
-                    if (!response.ok) {
-                      throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    console.log('Regenerate response:', data);
-                    
-                    if (data.ideas) {
-                      let parsedIdeas = [];
-                      if (Array.isArray(data.ideas)) {
-                        parsedIdeas = data.ideas;
-                      } else if (typeof data.ideas === 'string') {
-                        parsedIdeas = data.ideas
-                          .split(/\n+|\*\*|\d+\./)
-                          .map(idea => idea.trim())
-                          .filter(idea => idea && idea.length > 10)
-                          .map(idea => {
-                            return idea
-                              .replace(/^\d+\.\s*/, '')
-                              .replace(/^\*+\s*/, '')
-                              .replace(/^[-•]\s*/, '')
-                              .replace(/^\([^)]*\)\s*/, '')
-                              .replace(/^Category:\s*[^:]*:\s*/i, '')
-                              .trim();
-                          });
-                      }
-                      
-                      setIdeas(parsedIdeas.slice(0, 6));
-                      toast({
-                        title: "Ideas Regenerated!",
-                        description: `Generated ${parsedIdeas.length} new creative ideas for Mayra.`,
-                      });
-                    } else {
-                      throw new Error('No ideas received from the API');
-                    }
-                  } catch (error) {
-                    console.error('Error regenerating ideas:', error);
-                    toast({
-                      title: "Error",
-                      description: "Failed to regenerate ideas. Please try again.",
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
+                onClick={loadIdeas}
                 disabled={isLoading}
-                variant="outline"
-                className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-6 py-3 rounded-full"
+                className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Regenerating...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generating Ideas...
                   </>
                 ) : (
                   <>
-                    <Lightbulb className="w-4 h-4 mr-2" />
-                    Regenerate Ideas
+                    <Lightbulb className="w-5 h-5 mr-2" />
+                    Generate New Ideas
                   </>
                 )}
               </Button>
-            )}
+              
+              {/* Regenerate Button */}
+              {ideas.length > 0 && (
+                <Button
+                  onClick={handleRegenerate}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-6 py-3 rounded-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Regenerate Ideas
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Ideas Grid */}
@@ -288,6 +421,16 @@ const MayraIdeas = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && ideas.length === 0 && (
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+                <Loader2 className="w-8 h-8 text-yellow-600 animate-spin" />
+              </div>
+              <p className="text-gray-600">Generating fresh ideas for Mayra...</p>
             </div>
           )}
 
