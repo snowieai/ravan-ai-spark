@@ -32,6 +32,14 @@ const Influencers = () => {
       description: 'Australia\'s Premier AI Real Estate Agent',
       color: 'from-emerald-500 to-teal-500',
       image: '/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png'
+    },
+    {
+      id: 'mayra',
+      name: 'Mayra',
+      status: 'Active',
+      description: 'Global AI Content Creator',
+      color: 'from-yellow-500 to-amber-500',
+      image: '/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png' // Placeholder, will be updated later
     }
   ];
 
@@ -53,6 +61,9 @@ const Influencers = () => {
     } else if (influencerId === 'bailey') {
       localStorage.setItem('selectedInfluencer', 'bailey');
       navigate('/bailey-dashboard');
+    } else if (influencerId === 'mayra') {
+      localStorage.setItem('selectedInfluencer', 'mayra');
+      navigate('/mayra-dashboard');
     } else {
       toast({
         title: "Coming Soon",
@@ -147,7 +158,7 @@ const Influencers = () => {
               <div 
                 className={`absolute inset-0 bg-gradient-to-r ${influencer.color} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}
                 style={{
-                  boxShadow: `inset 0 0 50px ${influencer.id === 'kaira' ? 'rgba(249, 115, 22, 0.2)' : influencer.id === 'aisha' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                  boxShadow: `inset 0 0 50px ${influencer.id === 'kaira' ? 'rgba(249, 115, 22, 0.2)' : influencer.id === 'aisha' ? 'rgba(59, 130, 246, 0.2)' : influencer.id === 'bailey' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)'}`,
                   animation: `pulse 2s ease-in-out infinite alternate`
                 }}
               ></div>
