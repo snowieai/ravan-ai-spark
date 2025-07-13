@@ -52,34 +52,82 @@ const MayraScript = () => {
       }
 
       const data = await response.json();
-      console.log('Script generation response:', data);
+      console.log('==================== MAYRA SCRIPT GENERATION RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
+      console.log('======================================================================');
       
-      if (data.scriptA && data.scriptB) {
-        setScriptData({
-          scriptA: data.scriptA,
-          scriptB: data.scriptB,
-          title: data.title || 'Generated Script'
-        });
+      // Handle multiple possible response formats
+      let scriptA = '';
+      let scriptB = '';
+      let title = 'Generated A/B Scripts';
+      
+      // Check for direct scriptA/scriptB properties
+      if (data && data.scriptA && data.scriptB) {
+        console.log('✅ Found direct scriptA and scriptB properties');
+        scriptA = data.scriptA;
+        scriptB = data.scriptB;
+        title = data.title || title;
+      }
+      // Check if response has output property (like Bailey)
+      else if (data && data.output && data.output.scriptA && data.output.scriptB) {
+        console.log('✅ Found scripts in output property');
+        scriptA = data.output.scriptA;
+        scriptB = data.output.scriptB;
+        title = data.output.title || title;
+      }
+      // Check if response has scripts array (like Bailey's format)
+      else if (data && data.output && data.output.scripts && Array.isArray(data.output.scripts)) {
+        console.log('✅ Found scripts array format');
+        const scripts = data.output.scripts;
+        scriptA = scripts[0]?.content || scripts[0]?.script || '';
+        scriptB = scripts[1]?.content || scripts[1]?.script || scriptA;
+        title = data.output.title || title;
+      }
+      // Check for any property that might contain scripts as string
+      else if (data && typeof data === 'object') {
+        console.log('🔍 Searching for script content in response...');
+        const allValues = Object.values(data);
         
-        toast({
-          title: "Scripts Generated!",
-          description: "A/B tested scripts have been created successfully.",
-        });
-      } else if (data.script) {
-        // Handle single script response
-        setScriptData({
-          scriptA: data.script,
-          scriptB: data.script,
-          title: data.title || 'Generated Script'
-        });
-        
-        toast({
-          title: "Script Generated!",
-          description: "Video script has been created successfully.",
-        });
-      } else {
+        for (const value of allValues) {
+          if (typeof value === 'string' && value.length > 100) {
+            console.log('✅ Found text content, treating as single script');
+            scriptA = value;
+            scriptB = value;
+            break;
+          }
+          // Check nested objects
+          else if (typeof value === 'object' && value !== null) {
+            const nestedValues = Object.values(value);
+            for (const nestedValue of nestedValues) {
+              if (typeof nestedValue === 'string' && nestedValue.length > 100) {
+                console.log('✅ Found nested text content');
+                scriptA = nestedValue;
+                scriptB = nestedValue;
+                break;
+              }
+            }
+            if (scriptA) break;
+          }
+        }
+      }
+      
+      if (!scriptA || !scriptB) {
+        console.log('❌ No valid scripts found in response');
         throw new Error('No scripts received from the API');
       }
+      
+      setScriptData({
+        scriptA,
+        scriptB,
+        title
+      });
+      
+      toast({
+        title: "Scripts Generated!",
+        description: "A/B tested scripts have been created successfully.",
+      });
     } catch (error) {
       console.error('Error generating script:', error);
       toast({
@@ -118,34 +166,61 @@ const MayraScript = () => {
       }
 
       const data = await response.json();
-      console.log('Script generation response:', data);
+      console.log('Script generation response (manual):', data);
       
-      if (data.scriptA && data.scriptB) {
-        setScriptData({
-          scriptA: data.scriptA,
-          scriptB: data.scriptB,
-          title: data.title || 'Generated Script'
-        });
-        
-        toast({
-          title: "Scripts Generated!",
-          description: "A/B tested scripts have been created successfully.",
-        });
-      } else if (data.script) {
-        // Handle single script response
-        setScriptData({
-          scriptA: data.script,
-          scriptB: data.script,
-          title: data.title || 'Generated Script'
-        });
-        
-        toast({
-          title: "Script Generated!",
-          description: "Video script has been created successfully.",
-        });
-      } else {
+      // Use the same logic as auto-generation
+      let scriptA = '';
+      let scriptB = '';
+      let title = 'Generated A/B Scripts';
+      
+      if (data && data.scriptA && data.scriptB) {
+        scriptA = data.scriptA;
+        scriptB = data.scriptB;
+        title = data.title || title;
+      } else if (data && data.output && data.output.scriptA && data.output.scriptB) {
+        scriptA = data.output.scriptA;
+        scriptB = data.output.scriptB;
+        title = data.output.title || title;
+      } else if (data && data.output && data.output.scripts && Array.isArray(data.output.scripts)) {
+        const scripts = data.output.scripts;
+        scriptA = scripts[0]?.content || scripts[0]?.script || '';
+        scriptB = scripts[1]?.content || scripts[1]?.script || scriptA;
+        title = data.output.title || title;
+      } else if (data && typeof data === 'object') {
+        const allValues = Object.values(data);
+        for (const value of allValues) {
+          if (typeof value === 'string' && value.length > 100) {
+            scriptA = value;
+            scriptB = value;
+            break;
+          } else if (typeof value === 'object' && value !== null) {
+            const nestedValues = Object.values(value);
+            for (const nestedValue of nestedValues) {
+              if (typeof nestedValue === 'string' && nestedValue.length > 100) {
+                scriptA = nestedValue;
+                scriptB = nestedValue;
+                break;
+              }
+            }
+            if (scriptA) break;
+          }
+        }
+      }
+      
+      if (!scriptA || !scriptB) {
         throw new Error('No scripts received from the API');
       }
+      
+      setScriptData({
+        scriptA,
+        scriptB,
+        title
+      });
+      
+      toast({
+        title: "Scripts Generated!",
+        description: "A/B tested scripts have been created successfully.",
+      });
     } catch (error) {
       console.error('Error generating script:', error);
       toast({

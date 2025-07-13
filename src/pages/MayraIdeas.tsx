@@ -130,7 +130,7 @@ const MayraIdeas = () => {
                   .trim();
                 
                 return cleanIdea;
-              }).filter(idea => idea.length > 15);
+              }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
               foundIdeas = true;
               break;
             }
@@ -279,7 +279,7 @@ const MayraIdeas = () => {
             }
             
             return cleanIdea;
-          }).filter(idea => idea.length > 15);
+          }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
