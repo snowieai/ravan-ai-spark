@@ -47,16 +47,11 @@ const MayraScript = () => {
     try {
       console.log('Generating script for Mayra with idea:', selectedIdea);
       
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728', {
-        method: 'POST',
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(selectedIdea)}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: 'generate_script',
-          influencer: 'mayra',
-          idea: selectedIdea
-        }),
       });
 
       if (!response.ok) {

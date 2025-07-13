@@ -25,15 +25,11 @@ const MayraIdeas = () => {
     try {
       console.log('Generating ideas for Mayra...');
       
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728', {
-        method: 'POST',
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generating Ideas`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: 'generate_ideas',
-          influencer: 'mayra'
-        }),
       });
 
       if (!response.ok) {
@@ -178,6 +174,85 @@ const MayraIdeas = () => {
                 </>
               )}
             </Button>
+            
+            {/* Regenerate Button */}
+            {ideas.length > 0 && (
+              <Button
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    console.log('Regenerating ideas for Mayra...');
+                    
+                    const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    });
+
+                    if (!response.ok) {
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Regenerate response:', data);
+                    
+                    if (data.ideas) {
+                      let parsedIdeas = [];
+                      if (Array.isArray(data.ideas)) {
+                        parsedIdeas = data.ideas;
+                      } else if (typeof data.ideas === 'string') {
+                        parsedIdeas = data.ideas
+                          .split(/\n+|\*\*|\d+\./)
+                          .map(idea => idea.trim())
+                          .filter(idea => idea && idea.length > 10)
+                          .map(idea => {
+                            return idea
+                              .replace(/^\d+\.\s*/, '')
+                              .replace(/^\*+\s*/, '')
+                              .replace(/^[-•]\s*/, '')
+                              .replace(/^\([^)]*\)\s*/, '')
+                              .replace(/^Category:\s*[^:]*:\s*/i, '')
+                              .trim();
+                          });
+                      }
+                      
+                      setIdeas(parsedIdeas.slice(0, 6));
+                      toast({
+                        title: "Ideas Regenerated!",
+                        description: `Generated ${parsedIdeas.length} new creative ideas for Mayra.`,
+                      });
+                    } else {
+                      throw new Error('No ideas received from the API');
+                    }
+                  } catch (error) {
+                    console.error('Error regenerating ideas:', error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to regenerate ideas. Please try again.",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                disabled={isLoading}
+                variant="outline"
+                className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-6 py-3 rounded-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Regenerate Ideas
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Ideas Grid */}
