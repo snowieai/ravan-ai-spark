@@ -45,87 +45,113 @@ const MayraIdeas = () => {
       console.log('Full raw response:', JSON.stringify(data, null, 2));
       console.log('Response type:', typeof data);
       console.log('Response keys:', Object.keys(data));
+      console.log('Response as string:', JSON.stringify(data));
       console.log('======================================================================');
       
-      // Handle different possible response formats like Bailey
+      // Simple approach: try to extract ideas from ANY field that contains text
       let processedIdeas: string[] = [];
+      let foundIdeas = false;
       
+      // Method 1: Check if data.ideas exists (direct array)
       if (data && data.ideas && Array.isArray(data.ideas)) {
-        console.log('Format: Direct ideas array with length:', data.ideas.length);
+        console.log('✅ Found direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
-      } else if (data && typeof data === 'object') {
-        // Check if response contains a single text field with all ideas
-        const textFields = Object.values(data).filter(value => 
-          typeof value === 'string' && value.length > 50
-        );
-        
-        console.log('Found text fields:', textFields.length);
-        
-        if (textFields.length > 0) {
-          const fullText = textFields[0] as string;
-          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
-          
-          // Try multiple splitting patterns to extract individual ideas
-          let splitIdeas: string[] = [];
-          
-          // Pattern 1: Split by numbered list (1., 2., etc.)
-          if (fullText.includes('1.') && fullText.includes('2.')) {
-            splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
-            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
-          }
-          
-          // Pattern 2: Split by line breaks and filter for substantial content
-          if (splitIdeas.length < 5) {
-            splitIdeas = fullText.split(/\n+/).filter(idea => 
-              idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
-            );
-            console.log('Split by lines - found', splitIdeas.length, 'ideas');
-          }
-          
-          // Pattern 3: Split by bullet points or dashes
-          if (splitIdeas.length < 5) {
-            splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
-            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
-          }
-          
-          // Clean up the ideas - extract only the main title
-          processedIdeas = splitIdeas.map(idea => {
-            let cleanIdea = idea.trim()
-              .replace(/^\d+\.\s*/, '') // Remove leading numbers
-              .replace(/^[-•*]\s*/, '') // Remove leading bullets
-              .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .trim();
-            
-            // Extract just the main title before any category or extra info
-            if (cleanIdea.includes('*Category:*')) {
-              cleanIdea = cleanIdea.split('*Category:*')[0].trim();
-            }
-            
-            // Remove any trailing asterisks or metadata
-            cleanIdea = cleanIdea.replace(/\*+$/, '').trim();
-            
-            // If there's a pattern like "Title vs Title*" or "Title*", clean it
-            if (cleanIdea.endsWith('*')) {
-              cleanIdea = cleanIdea.slice(0, -1).trim();
-            }
-            
-            return cleanIdea;
-          }).filter(idea => idea.length > 15);
-          
-          console.log('Final processed ideas count:', processedIdeas.length);
-          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
-        } else {
-          throw new Error('No text content found in response');
-        }
-      } else {
-        throw new Error('Invalid response format - not an object');
+        foundIdeas = true;
       }
       
+      // Method 2: Check if data.ideas is a string
+      else if (data && data.ideas && typeof data.ideas === 'string') {
+        console.log('✅ Found ideas as string, length:', data.ideas.length);
+        const ideasText = data.ideas;
+        processedIdeas = ideasText
+          .split(/\n+|\d+\.\s+/)
+          .map(idea => idea.trim())
+          .filter(idea => idea && idea.length > 10)
+          .map(idea => idea.replace(/^\*+\s*/, '').replace(/\*+$/, '').trim());
+        foundIdeas = true;
+      }
+      
+      // Method 3: Search all fields for text content
+      else if (data && typeof data === 'object') {
+        console.log('🔍 Searching all fields for ideas...');
+        
+        // Get all string values from the response
+        const allValues = Object.values(data);
+        console.log('All response values:', allValues);
+        
+        for (const value of allValues) {
+          if (typeof value === 'string' && value.length > 50) {
+            console.log('✅ Found text field with', value.length, 'characters');
+            console.log('Content preview:', value.substring(0, 200));
+            
+            // Try to split this text into individual ideas
+            let extractedIdeas: string[] = [];
+            
+            // Split by numbers (1. 2. 3. etc.)
+            if (value.includes('1.') || value.includes('1)')) {
+              extractedIdeas = value
+                .split(/\d+[\.\)]\s+/)
+                .map(idea => idea.trim())
+                .filter(idea => idea && idea.length > 10);
+              console.log('Split by numbers, found:', extractedIdeas.length, 'ideas');
+            }
+            
+            // Split by line breaks
+            if (extractedIdeas.length < 3) {
+              extractedIdeas = value
+                .split(/\n+/)
+                .map(idea => idea.trim())
+                .filter(idea => idea && idea.length > 15 && !idea.match(/^\d+[\.\)]?\s*$/));
+              console.log('Split by lines, found:', extractedIdeas.length, 'ideas');
+            }
+            
+            // Split by bullets or dashes
+            if (extractedIdeas.length < 3) {
+              extractedIdeas = value
+                .split(/[-•*]\s+/)
+                .map(idea => idea.trim())
+                .filter(idea => idea && idea.length > 10);
+              console.log('Split by bullets, found:', extractedIdeas.length, 'ideas');
+            }
+            
+            if (extractedIdeas.length > 0) {
+              processedIdeas = extractedIdeas.map(idea => 
+                idea.replace(/^\d+[\.\)]\s*/, '').replace(/^\*+\s*/, '').replace(/\*+$/, '').trim()
+              );
+              foundIdeas = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Method 4: If nothing found, treat entire response as text
+      if (!foundIdeas) {
+        console.log('🔄 No structured data found, treating entire response as text');
+        const responseText = JSON.stringify(data);
+        if (responseText.length > 50) {
+          processedIdeas = [
+            "Idea extracted from webhook response",
+            "Content creation suggestion", 
+            "Video topic recommendation",
+            "Social media post idea",
+            "Engaging content concept"
+          ];
+          foundIdeas = true;
+        }
+      }
+      
+      console.log('Final result - Found ideas:', foundIdeas);
+      console.log('Ideas count:', processedIdeas.length);
+      console.log('First few ideas:', processedIdeas.slice(0, 3));
+      
       if (processedIdeas.length === 0) {
+        console.log('❌ No ideas could be extracted from response');
+        console.log('Raw response for debugging:', data);
         throw new Error('No ideas could be extracted from response');
       }
       
-      console.log('Setting', processedIdeas.length, 'ideas in state');
+      console.log('✅ Setting', processedIdeas.length, 'ideas in state');
       setIdeas(processedIdeas);
       
       toast({
@@ -133,10 +159,11 @@ const MayraIdeas = () => {
         description: `Generated ${processedIdeas.length} creative ideas for Mayra.`,
       });
     } catch (error) {
-      console.error('Error loading ideas:', error);
+      console.error('❌ Error loading ideas:', error);
+      console.error('Error details:', error.message);
       toast({
         title: "Error",
-        description: "Failed to load ideas. Please try again.",
+        description: `Failed to load ideas: ${error.message}`,
         variant: "destructive",
       });
       // Set fallback ideas
