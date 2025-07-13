@@ -44,7 +44,7 @@ const MayraIdeas = () => {
       console.log('==================== MAYRA IDEAS WEBHOOK RESPONSE ====================');
       console.log('Full raw response:', JSON.stringify(data, null, 2));
       console.log('Response type:', typeof data);
-      console.log('Response keys:', Object.keys(data));
+      console.log('Response keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
       console.log('Response as string:', JSON.stringify(data));
       console.log('======================================================================');
       
@@ -372,7 +372,7 @@ const MayraIdeas = () => {
               Generate AI-powered video ideas tailored for Mayra's content style
             </p>
             
-            <div className="flex gap-4 justify-center">
+            <div className="flex justify-center">
               <Button
                 onClick={loadIdeas}
                 disabled={isLoading}
@@ -390,28 +390,6 @@ const MayraIdeas = () => {
                   </>
                 )}
               </Button>
-              
-              {/* Regenerate Button */}
-              {ideas.length > 0 && (
-                <Button
-                  onClick={handleRegenerate}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-6 py-3 rounded-full"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Regenerating...
-                    </>
-                  ) : (
-                    <>
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      Regenerate Ideas
-                    </>
-                  )}
-                </Button>
-              )}
             </div>
           </div>
 
@@ -432,9 +410,12 @@ const MayraIdeas = () => {
                       <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
                     </div>
                     
-                    <p className="text-gray-700 leading-relaxed mb-4 line-clamp-4">
-                      {idea}
-                    </p>
+                    <div className="flex items-start mb-4">
+                      <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
+                      <p className="text-gray-700 leading-relaxed line-clamp-4">
+                        {idea}
+                      </p>
+                    </div>
                     
                     <Button
                       className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
@@ -448,6 +429,28 @@ const MayraIdeas = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            {/* Regenerate Button - Centered at Bottom */}
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={handleRegenerate}
+                disabled={isLoading}
+                variant="outline"
+                className="border-yellow-200 text-yellow-600 hover:bg-yellow-50 px-8 py-3 rounded-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Regenerate Ideas
+                  </>
+                )}
+              </Button>
             </div>
           )}
 
