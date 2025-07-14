@@ -92,9 +92,13 @@ const MayraDashboard = () => {
                   </span>
                 </h1>
                 
-                {/* Mayra's Image - placeholder for now */}
-                <div className="w-80 h-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-yellow-100 to-amber-100 flex items-center justify-center">
-                  <div className="text-yellow-600 text-6xl font-bold">M</div>
+                {/* Mayra's Image */}
+                <div className="w-80 h-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl">
+                  <img 
+                    src="/lovable-uploads/a7454496-f5af-4ef2-91e0-7ab34585589e.png" 
+                    alt="Mayra Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 
                 {/* Description */}
