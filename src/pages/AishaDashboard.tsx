@@ -15,9 +15,14 @@ const AishaDashboard = () => {
     }
   }, [navigate]);
 
-  const handleScriptRedirect = () => {
+  const handleScriptRedirectEnglish = () => {
     // Unresponsive for now - will add link later
-    console.log('Script generation will be available soon');
+    console.log('Script generation in English will be available soon');
+  };
+
+  const handleScriptRedirectHindi = () => {
+    // Unresponsive for now - will add link later
+    console.log('Script generation in Hindi will be available soon');
   };
 
   const handleIdeasRedirect = () => {
@@ -133,11 +138,20 @@ const AishaDashboard = () => {
             </Button>
             
             <Button
-              onClick={handleScriptRedirect}
+              onClick={handleScriptRedirectEnglish}
               className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
               <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-              Generate Script with Custom Idea
+              Generate Script in English
+              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+
+            <Button
+              onClick={handleScriptRedirectHindi}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+            >
+              <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
+              Generate Script in Hindi
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
