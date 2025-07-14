@@ -21,37 +21,40 @@ import BaileyScript from "./pages/BaileyScript";
 import MayraScript from "./pages/MayraScript";
 import Video from "./pages/Video";
 import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/influencers" element={<Influencers />} />
-          <Route path="/kaira-dashboard" element={<KairaDashboard />} />
-          <Route path="/aisha-dashboard" element={<AishaDashboard />} />
-          <Route path="/bailey-dashboard" element={<BaileyDashboard />} />
-          <Route path="/mayra-dashboard" element={<MayraDashboard />} />
-          <Route path="/ideas" element={<Ideas />} />
-          <Route path="/kaira-ideas" element={<KairaIdeas />} />
-          <Route path="/bailey-ideas" element={<BaileyIdeas />} />
-          <Route path="/mayra-ideas" element={<MayraIdeas />} />
-          <Route path="/script" element={<Script />} />
-          <Route path="/kaira-script" element={<KairaScript />} />
-          <Route path="/bailey-script" element={<BaileyScript />} />
-          <Route path="/mayra-script" element={<MayraScript />} />
-          <Route path="/video" element={<Video />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/influencers" element={<Influencers />} />
+            <Route path="/kaira-dashboard" element={<KairaDashboard />} />
+            <Route path="/aisha-dashboard" element={<AishaDashboard />} />
+            <Route path="/bailey-dashboard" element={<BaileyDashboard />} />
+            <Route path="/mayra-dashboard" element={<MayraDashboard />} />
+            <Route path="/ideas" element={<Ideas />} />
+            <Route path="/kaira-ideas" element={<KairaIdeas />} />
+            <Route path="/bailey-ideas" element={<BaileyIdeas />} />
+            <Route path="/mayra-ideas" element={<MayraIdeas />} />
+            <Route path="/script" element={<Script />} />
+            <Route path="/kaira-script" element={<KairaScript />} />
+            <Route path="/bailey-script" element={<BaileyScript />} />
+            <Route path="/mayra-script" element={<MayraScript />} />
+            <Route path="/video" element={<Video />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -13,9 +13,10 @@ const Ideas = () => {
   const navigate = useNavigate();
 
   // Auto-generate ideas when component mounts
-  useEffect(() => {
-    generateIdeas();
-  }, []);
+  // Remove auto-generation on mount to prevent preview issues
+  // useEffect(() => {
+  //   generateIdeas();
+  // }, []);
 
   const generateIdeas = async () => {
     setIsLoading(true);
@@ -284,11 +285,18 @@ const Ideas = () => {
         )}
 
         {ideas.length === 0 && !isLoading && (
-          <div className="text-center text-gray-500">
+          <div className="text-center">
             <div className="w-32 h-32 mx-auto mb-6 opacity-50">
-              <Lightbulb className="w-full h-full" />
+              <Lightbulb className="w-full h-full text-blue-400" />
             </div>
-            <p className="text-xl">No ideas generated yet. Please wait...</p>
+            <p className="text-xl text-gray-500 mb-6">Ready to generate creative ideas?</p>
+            <Button
+              onClick={generateIdeas}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-4 text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border-0"
+            >
+              <Lightbulb className="w-6 h-6" />
+              <span>Generate AI Ideas</span>
+            </Button>
           </div>
         )}
       </div>
