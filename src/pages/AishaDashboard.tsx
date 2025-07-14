@@ -49,10 +49,10 @@ const AishaDashboard = () => {
             </div>
             <div className="flex-1 flex items-center justify-end">
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 mr-3">
-                <img 
-                  src="/lovable-uploads/d26d9340-1c14-4718-a74a-8a9e617396fe.png" 
-                  alt="Aisha" 
-                  className="w-full h-full object-cover"
+                  <img 
+                    src="/lovable-uploads/798609c5-a21a-445a-a991-92bf921ae7bd.png" 
+                    alt="Aisha" 
+                    className="w-full h-full object-cover"
                 />
               </div>
               <span className="text-gray-700 font-medium">Aisha</span>
@@ -101,10 +101,10 @@ const AishaDashboard = () => {
                 <div className="absolute inset-0 bg-blue-400/30 rounded-2xl blur-xl"></div>
                 {/* Plain image container */}
                 <div className="relative rounded-xl overflow-hidden border-4 border-white shadow-2xl">
-                  <img 
-                    src="/lovable-uploads/d26d9340-1c14-4718-a74a-8a9e617396fe.png" 
-                    alt="Aisha - AI Video Generation Specialist" 
-                    className="w-full h-full object-cover"
+                    <img 
+                      src="/lovable-uploads/798609c5-a21a-445a-a991-92bf921ae7bd.png" 
+                      alt="Aisha - AI Video Generation Specialist" 
+                      className="w-full h-full object-cover"
                   />
                 </div>
               </div>
