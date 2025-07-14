@@ -31,7 +31,7 @@ const Influencers = () => {
       status: 'Active',
       description: 'Australia\'s Premier AI Real Estate Agent',
       color: 'from-emerald-500 to-teal-500',
-      image: '/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png'
+      image: '/lovable-uploads/fa8232a2-9e33-4b08-8cfe-c6fad1827c6b.png'
     },
     {
       id: 'mayra',
