@@ -31,7 +31,7 @@ const Script = () => {
     }
   }, []);
 
-  const generateScript = async () => {
+  const generateScriptInEnglish = async () => {
     if (!topic.trim()) {
       toast({
         title: "Missing Topic",
@@ -46,6 +46,48 @@ const Script = () => {
     
     try {
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}`, {
+        method: 'GET',
+      });
+
+      const data = await response.json();
+      console.log("Script webhook response:", data);
+      
+      if (data.output && typeof data.output === 'object') {
+        setScriptData(data.output);
+        toast({
+          title: "Scripts Generated!",
+          description: `Created ${data.output.scripts?.length || 0} script variations for you.`,
+        });
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('Error generating script:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate scripts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateScriptInHindi = async () => {
+    if (!topic.trim()) {
+      toast({
+        title: "Missing Topic",
+        description: "Please provide a topic or idea for script generation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    console.log("Generating script for topic:", topic, "in Hindi");
+    
+    try {
+      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}&Hindi`, {
         method: 'GET',
       });
 
@@ -144,23 +186,42 @@ const Script = () => {
                     className="mt-2 bg-white/50 border-blue-200 text-gray-900 placeholder:text-gray-500 text-base sm:text-lg p-3 sm:p-4"
                   />
                 </div>
-                <Button
-                  onClick={generateScript}
-                  disabled={isLoading}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 animate-spin" />
-                      Generating Scripts...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                      Generate Scripts
-                    </>
-                  )}
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <Button
+                    onClick={generateScriptInEnglish}
+                    disabled={isLoading}
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                        Generate Script in English
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={generateScriptInHindi}
+                    disabled={isLoading}
+                    className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 sm:py-4 text-base sm:text-lg rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border-0"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                        Generate Script in Hindi
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
