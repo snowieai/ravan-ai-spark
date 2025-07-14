@@ -23,7 +23,7 @@ const Influencers = () => {
       status: 'Active', 
       description: 'India\'s First AI Real Estate Agent',
       color: 'from-blue-500 to-purple-500',
-      image: '/lovable-uploads/d26d9340-1c14-4718-a74a-8a9e617396fe.png'
+      image: '/lovable-uploads/6458a058-0856-4e7c-8358-f0af291ca257.png'
     },
     {
       id: 'bailey',
