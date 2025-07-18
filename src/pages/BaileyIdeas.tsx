@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,11 +38,17 @@ const BaileyIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('==================== BAILEY IDEAS WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', Object.keys(data));
+      console.log('======================================================================');
       
       // Handle different possible response formats
       let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
         // Check if response contains a single text field with all ideas
@@ -51,8 +56,11 @@ const BaileyIdeas = () => {
           typeof value === 'string' && value.length > 50
         );
         
+        console.log('Found text fields:', textFields.length);
+        
         if (textFields.length > 0) {
           const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
           // Try multiple splitting patterns to extract individual ideas
           let splitIdeas: string[] = [];
@@ -60,6 +68,7 @@ const BaileyIdeas = () => {
           // Pattern 1: Split by numbered list (1., 2., etc.)
           if (fullText.includes('1.') && fullText.includes('2.')) {
             splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 2: Split by line breaks and filter for substantial content
@@ -67,11 +76,13 @@ const BaileyIdeas = () => {
             splitIdeas = fullText.split(/\n+/).filter(idea => 
               idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
             );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 3: Split by bullet points or dashes
           if (splitIdeas.length < 5) {
             splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
           // Clean up the ideas - extract only the main title
@@ -97,6 +108,9 @@ const BaileyIdeas = () => {
             
             return cleanIdea;
           }).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
           throw new Error('No text content found in response');
         }
@@ -108,6 +122,7 @@ const BaileyIdeas = () => {
         throw new Error('No ideas could be extracted from response');
       }
       
+      console.log('Setting', processedIdeas.length, 'ideas in state');
       setIdeas(processedIdeas);
       
     } catch (error) {
@@ -155,11 +170,15 @@ const BaileyIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('==================== BAILEY REGENERATE WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('======================================================================');
       
       // Handle different possible response formats
       let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
         // Check if response contains a single text field with all ideas
@@ -167,8 +186,11 @@ const BaileyIdeas = () => {
           typeof value === 'string' && value.length > 50
         );
         
+        console.log('Found text fields:', textFields.length);
+        
         if (textFields.length > 0) {
           const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
           // Try multiple splitting patterns to extract individual ideas
           let splitIdeas: string[] = [];
@@ -176,6 +198,7 @@ const BaileyIdeas = () => {
           // Pattern 1: Split by numbered list (1., 2., etc.)
           if (fullText.includes('1.') && fullText.includes('2.')) {
             splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 2: Split by line breaks and filter for substantial content
@@ -183,11 +206,13 @@ const BaileyIdeas = () => {
             splitIdeas = fullText.split(/\n+/).filter(idea => 
               idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
             );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 3: Split by bullet points or dashes
           if (splitIdeas.length < 5) {
             splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
           // Clean up the ideas - extract only the main title
@@ -213,6 +238,9 @@ const BaileyIdeas = () => {
             
             return cleanIdea;
           }).filter(idea => idea.length > 15);
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
           throw new Error('No text content found in response');
         }
@@ -224,6 +252,7 @@ const BaileyIdeas = () => {
         throw new Error('No ideas could be extracted from response');
       }
       
+      console.log('Setting', processedIdeas.length, 'ideas in state');
       setIdeas(processedIdeas);
 
       setProgress(100);
@@ -315,7 +344,7 @@ const BaileyIdeas = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 w-full mx-auto shadow-lg border border-white/40 mb-8">
             <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <img 
-                src="/lovable-uploads/fa8232a2-9e33-4b08-8cfe-c6fad1827c6b.png" 
+                src="/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png" 
                 alt="Bailey Profile"
                 className="w-full h-full object-cover"
               />

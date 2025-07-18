@@ -38,6 +38,7 @@ const MayraScript = () => {
   const generateScriptForIdea = async (idea: string) => {
     setIsLoading(true);
     try {
+      console.log('Generating script for Mayra with idea:', idea);
       
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(idea)}`, {
         method: 'GET',
@@ -51,6 +52,11 @@ const MayraScript = () => {
       }
 
       const data = await response.json();
+      console.log('==================== MAYRA SCRIPT GENERATION RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
+      console.log('======================================================================');
       
       // Handle multiple possible response formats
       let scriptA = '';
@@ -59,18 +65,21 @@ const MayraScript = () => {
       
       // Check for direct scriptA/scriptB properties
       if (data && data.scriptA && data.scriptB) {
+        console.log('✅ Found direct scriptA and scriptB properties');
         scriptA = data.scriptA;
         scriptB = data.scriptB;
         title = data.title || title;
       }
       // Check if response has output property (like Bailey)
       else if (data && data.output && data.output.scriptA && data.output.scriptB) {
+        console.log('✅ Found scripts in output property');
         scriptA = data.output.scriptA;
         scriptB = data.output.scriptB;
         title = data.output.title || title;
       }
       // Check if response has scripts array (like Bailey's format)
       else if (data && data.output && data.output.scripts && Array.isArray(data.output.scripts)) {
+        console.log('✅ Found scripts array format');
         const scripts = data.output.scripts;
         scriptA = scripts[0]?.content || scripts[0]?.script || '';
         scriptB = scripts[1]?.content || scripts[1]?.script || scriptA;
@@ -78,10 +87,12 @@ const MayraScript = () => {
       }
       // Check for any property that might contain scripts as string
       else if (data && typeof data === 'object') {
+        console.log('🔍 Searching for script content in response...');
         const allValues = Object.values(data);
         
         for (const value of allValues) {
           if (typeof value === 'string' && value.length > 100) {
+            console.log('✅ Found text content, treating as single script');
             scriptA = value;
             scriptB = value;
             break;
@@ -91,6 +102,7 @@ const MayraScript = () => {
             const nestedValues = Object.values(value);
             for (const nestedValue of nestedValues) {
               if (typeof nestedValue === 'string' && nestedValue.length > 100) {
+                console.log('✅ Found nested text content');
                 scriptA = nestedValue;
                 scriptB = nestedValue;
                 break;
@@ -102,6 +114,7 @@ const MayraScript = () => {
       }
       
       if (!scriptA || !scriptB) {
+        console.log('❌ No valid scripts found in response');
         throw new Error('No scripts received from the API');
       }
       
@@ -139,6 +152,7 @@ const MayraScript = () => {
 
     setIsLoading(true);
     try {
+      console.log('Generating script for Mayra with idea:', selectedIdea);
       
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(selectedIdea)}`, {
         method: 'GET',
@@ -152,6 +166,7 @@ const MayraScript = () => {
       }
 
       const data = await response.json();
+      console.log('Script generation response (manual):', data);
       
       // Use the same logic as auto-generation
       let scriptA = '';

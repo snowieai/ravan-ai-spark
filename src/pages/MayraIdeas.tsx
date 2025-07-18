@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,8 @@ const MayraIdeas = () => {
   const loadIdeas = async () => {
     setIsLoading(true);
     try {
+      console.log('Loading ideas for Mayra...');
+      
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generating Ideas`, {
         method: 'GET',
         headers: {
@@ -40,6 +41,12 @@ const MayraIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('==================== MAYRA IDEAS WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('Response type:', typeof data);
+      console.log('Response keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
+      console.log('Response as string:', JSON.stringify(data));
+      console.log('======================================================================');
       
       // Simple approach: try to extract ideas from ANY field that contains text
       let processedIdeas: string[] = [];
@@ -47,12 +54,14 @@ const MayraIdeas = () => {
       
       // Method 1: Check if data.ideas exists (direct array)
       if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('✅ Found direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
         foundIdeas = true;
       }
       
       // Method 2: Check if data.ideas is a string
       else if (data && data.ideas && typeof data.ideas === 'string') {
+        console.log('✅ Found ideas as string, length:', data.ideas.length);
         const ideasText = data.ideas;
         processedIdeas = ideasText
           .split(/\n+|\d+\.\s+/)
@@ -64,11 +73,17 @@ const MayraIdeas = () => {
       
       // Method 3: Search all fields for text content
       else if (data && typeof data === 'object') {
+        console.log('🔍 Searching all fields for ideas...');
+        
         // Get all string values from the response
         const allValues = Object.values(data);
+        console.log('All response values:', allValues);
         
         for (const value of allValues) {
           if (typeof value === 'string' && value.length > 50) {
+            console.log('✅ Found text field with', value.length, 'characters');
+            console.log('Content preview:', value.substring(0, 200));
+            
             // Try to split this text into individual ideas
             let extractedIdeas: string[] = [];
             
@@ -78,6 +93,7 @@ const MayraIdeas = () => {
                 .split(/\d+[\.\)]\s+/)
                 .map(idea => idea.trim())
                 .filter(idea => idea && idea.length > 10);
+              console.log('Split by numbers, found:', extractedIdeas.length, 'ideas');
             }
             
             // Split by line breaks
@@ -86,6 +102,7 @@ const MayraIdeas = () => {
                 .split(/\n+/)
                 .map(idea => idea.trim())
                 .filter(idea => idea && idea.length > 15 && !idea.match(/^\d+[\.\)]?\s*$/));
+              console.log('Split by lines, found:', extractedIdeas.length, 'ideas');
             }
             
             // Split by bullets or dashes
@@ -94,6 +111,7 @@ const MayraIdeas = () => {
                 .split(/[-•*]\s+/)
                 .map(idea => idea.trim())
                 .filter(idea => idea && idea.length > 10);
+              console.log('Split by bullets, found:', extractedIdeas.length, 'ideas');
             }
             
             if (extractedIdeas.length > 0) {
@@ -122,6 +140,7 @@ const MayraIdeas = () => {
       
       // Method 4: If nothing found, treat entire response as text
       if (!foundIdeas) {
+        console.log('🔄 No structured data found, treating entire response as text');
         const responseText = JSON.stringify(data);
         if (responseText.length > 50) {
           processedIdeas = [
@@ -135,10 +154,17 @@ const MayraIdeas = () => {
         }
       }
       
+      console.log('Final result - Found ideas:', foundIdeas);
+      console.log('Ideas count:', processedIdeas.length);
+      console.log('First few ideas:', processedIdeas.slice(0, 3));
+      
       if (processedIdeas.length === 0) {
+        console.log('❌ No ideas could be extracted from response');
+        console.log('Raw response for debugging:', data);
         throw new Error('No ideas could be extracted from response');
       }
       
+      console.log('✅ Setting', processedIdeas.length, 'ideas in state');
       setIdeas(processedIdeas);
       
       toast({
@@ -146,7 +172,8 @@ const MayraIdeas = () => {
         description: `Generated ${processedIdeas.length} creative ideas for Mayra.`,
       });
     } catch (error) {
-      console.error('Error loading ideas:', error);
+      console.error('❌ Error loading ideas:', error);
+      console.error('Error details:', error.message);
       toast({
         title: "Error",
         description: `Failed to load ideas: ${error.message}`,
@@ -168,6 +195,8 @@ const MayraIdeas = () => {
   const handleRegenerate = async () => {
     setIsLoading(true);
     try {
+      console.log('Regenerating ideas for Mayra...');
+      
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
         method: 'GET',
         headers: {
@@ -180,11 +209,15 @@ const MayraIdeas = () => {
       }
 
       const data = await response.json();
+      console.log('==================== MAYRA REGENERATE WEBHOOK RESPONSE ====================');
+      console.log('Full raw response:', JSON.stringify(data, null, 2));
+      console.log('======================================================================');
       
       // Handle different possible response formats like Bailey
       let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
+        console.log('Format: Direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
         // Check if response contains a single text field with all ideas
@@ -192,8 +225,11 @@ const MayraIdeas = () => {
           typeof value === 'string' && value.length > 50
         );
         
+        console.log('Found text fields:', textFields.length);
+        
         if (textFields.length > 0) {
           const fullText = textFields[0] as string;
+          console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
           // Try multiple splitting patterns to extract individual ideas
           let splitIdeas: string[] = [];
@@ -201,6 +237,7 @@ const MayraIdeas = () => {
           // Pattern 1: Split by numbered list (1., 2., etc.)
           if (fullText.includes('1.') && fullText.includes('2.')) {
             splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by numbers - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 2: Split by line breaks and filter for substantial content
@@ -208,11 +245,13 @@ const MayraIdeas = () => {
             splitIdeas = fullText.split(/\n+/).filter(idea => 
               idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
             );
+            console.log('Split by lines - found', splitIdeas.length, 'ideas');
           }
           
           // Pattern 3: Split by bullet points or dashes
           if (splitIdeas.length < 5) {
             splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
+            console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
           // Clean up the ideas - extract only the main title and remove category text
@@ -241,6 +280,9 @@ const MayraIdeas = () => {
             
             return cleanIdea;
           }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
+          
+          console.log('Final processed ideas count:', processedIdeas.length);
+          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
           throw new Error('No text content found in response');
         }
@@ -252,6 +294,7 @@ const MayraIdeas = () => {
         throw new Error('No ideas could be extracted from response');
       }
       
+      console.log('Setting', processedIdeas.length, 'ideas in state');
       setIdeas(processedIdeas);
       
       toast({

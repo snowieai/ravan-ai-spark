@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ const KairaIdeas = () => {
 
   const generateIdeas = async () => {
     setIsLoading(true);
+    console.log("Generating ideas for Kaira...");
     
     try {
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=Generating Ideas', {
@@ -23,6 +23,7 @@ const KairaIdeas = () => {
       });
 
       const data = await response.json();
+      console.log("Kaira ideas webhook response:", data);
       
       // Parse ideas from the formatted output - same as Aisha's page
       const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
@@ -64,6 +65,7 @@ const KairaIdeas = () => {
     setIsLoading(true);
     setIsRegenerating(true);
     setLoadingProgress(0);
+    console.log("Regenerating ideas for Kaira...");
     
     // Simulate progress over 90 seconds (1.5 minutes)
     const progressInterval = setInterval(() => {
@@ -86,6 +88,7 @@ const KairaIdeas = () => {
       }
 
       const data = await response.json();
+      console.log("Kaira regenerate webhook response:", data);
       
       if (!data || !data.output) {
         throw new Error('Invalid response format from webhook');
@@ -143,6 +146,7 @@ const KairaIdeas = () => {
   };
 
   const selectIdea = (idea: string) => {
+    console.log("Selected idea:", idea);
     localStorage.setItem('selectedIdea', idea);
     navigate('/kaira-script');
   };

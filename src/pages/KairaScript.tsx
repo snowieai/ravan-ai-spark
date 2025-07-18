@@ -42,6 +42,7 @@ const KairaScript = () => {
     }
 
     setIsLoading(true);
+    console.log("Generating script for topic:", topic);
     
     try {
       const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=${encodeURIComponent(topic)}`, {
@@ -49,6 +50,7 @@ const KairaScript = () => {
       });
 
       const data = await response.json();
+      console.log("Kaira script webhook response:", data);
       
       if (data.output && typeof data.output === 'object') {
         setScriptData(data.output);
