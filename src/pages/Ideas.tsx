@@ -20,7 +20,6 @@ const Ideas = () => {
 
   const generateIdeas = async () => {
     setIsLoading(true);
-    console.log("Generating ideas via webhook...");
     
     try {
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Generating ideas', {
@@ -28,7 +27,6 @@ const Ideas = () => {
       });
 
       const data = await response.json();
-      console.log("Webhook response:", data);
       
       // Parse ideas from the formatted output
       const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
@@ -69,7 +67,6 @@ const Ideas = () => {
   const regenerateIdeas = async () => {
     setIsRegenerating(true);
     setLoadingProgress(0);
-    console.log("Regenerating ideas via webhook...");
     
     // Progress animation
     const progressInterval = setInterval(() => {
@@ -89,7 +86,6 @@ const Ideas = () => {
       }
 
       const data = await response.json();
-      console.log("Aisha regenerate webhook response:", data);
       
       if (!data || !data.output) {
         throw new Error('Invalid response format from webhook');
@@ -153,7 +149,6 @@ const Ideas = () => {
   };
 
   const selectIdea = (idea: string) => {
-    console.log("Selected idea:", idea);
     localStorage.setItem('selectedIdea', idea);
     navigate('/script');
   };

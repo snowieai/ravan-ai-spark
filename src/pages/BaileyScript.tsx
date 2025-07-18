@@ -65,9 +65,6 @@ const BaileyScript = () => {
       }
 
       const data = await response.json();
-      console.log('==================== BAILEY SCRIPT WEBHOOK RESPONSE ====================');
-      console.log('Full raw response:', JSON.stringify(data, null, 2));
-      console.log('======================================================================');
       
       // Handle script generation response similar to Kaira/Aisha
       if (data && data.output && typeof data.output === 'object') {

@@ -34,7 +34,6 @@ const VideoGenerator = () => {
     setIsLoading(true);
     setResult(null);
     setShowSuccess(false);
-    console.log("Generating video for script:", script);
     
     try {
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/837c4cfe-e8c9-4243-9e02-2d2872b87417', {
@@ -48,7 +47,6 @@ const VideoGenerator = () => {
       });
 
       const data = await response.json();
-      console.log("Video webhook response:", data);
       
       setResult(data.output);
       setShowSuccess(true);

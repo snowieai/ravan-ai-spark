@@ -17,7 +17,6 @@ const AishaDashboard = () => {
 
   const handleScriptRedirect = () => {
     // Unresponsive for now - will add link later
-    console.log('Script generation will be available soon');
   };
 
   const handleIdeasRedirect = () => {
