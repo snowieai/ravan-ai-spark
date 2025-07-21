@@ -1,14 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lightbulb, ArrowRight, Home, LogOut, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Lightbulb, ArrowRight, Home, LogOut, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 const MayraIdeas = () => {
   const [ideas, setIdeas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +24,7 @@ const MayraIdeas = () => {
       return;
     }
 
-    // Load initial ideas automatically like Bailey
+    // Load initial ideas automatically
     loadIdeas();
   }, [navigate]);
 
@@ -43,24 +47,17 @@ const MayraIdeas = () => {
       const data = await response.json();
       console.log('==================== MAYRA IDEAS WEBHOOK RESPONSE ====================');
       console.log('Full raw response:', JSON.stringify(data, null, 2));
-      console.log('Response type:', typeof data);
-      console.log('Response keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
-      console.log('Response as string:', JSON.stringify(data));
       console.log('======================================================================');
       
-      // Simple approach: try to extract ideas from ANY field that contains text
+      // Process ideas from response
       let processedIdeas: string[] = [];
       let foundIdeas = false;
       
-      // Method 1: Check if data.ideas exists (direct array)
       if (data && data.ideas && Array.isArray(data.ideas)) {
         console.log('✅ Found direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
         foundIdeas = true;
-      }
-      
-      // Method 2: Check if data.ideas is a string
-      else if (data && data.ideas && typeof data.ideas === 'string') {
+      } else if (data && data.ideas && typeof data.ideas === 'string') {
         console.log('✅ Found ideas as string, length:', data.ideas.length);
         const ideasText = data.ideas;
         processedIdeas = ideasText
@@ -69,25 +66,18 @@ const MayraIdeas = () => {
           .filter(idea => idea && idea.length > 10)
           .map(idea => idea.replace(/^\*+\s*/, '').replace(/\*+$/, '').trim());
         foundIdeas = true;
-      }
-      
-      // Method 3: Search all fields for text content
-      else if (data && typeof data === 'object') {
+      } else if (data && typeof data === 'object') {
         console.log('🔍 Searching all fields for ideas...');
         
-        // Get all string values from the response
         const allValues = Object.values(data);
         console.log('All response values:', allValues);
         
         for (const value of allValues) {
           if (typeof value === 'string' && value.length > 50) {
             console.log('✅ Found text field with', value.length, 'characters');
-            console.log('Content preview:', value.substring(0, 200));
             
-            // Try to split this text into individual ideas
             let extractedIdeas: string[] = [];
             
-            // Split by numbers (1. 2. 3. etc.)
             if (value.includes('1.') || value.includes('1)')) {
               extractedIdeas = value
                 .split(/\d+[\.\)]\s+/)
@@ -96,7 +86,6 @@ const MayraIdeas = () => {
               console.log('Split by numbers, found:', extractedIdeas.length, 'ideas');
             }
             
-            // Split by line breaks
             if (extractedIdeas.length < 3) {
               extractedIdeas = value
                 .split(/\n+/)
@@ -105,7 +94,6 @@ const MayraIdeas = () => {
               console.log('Split by lines, found:', extractedIdeas.length, 'ideas');
             }
             
-            // Split by bullets or dashes
             if (extractedIdeas.length < 3) {
               extractedIdeas = value
                 .split(/[-•*]\s+/)
@@ -118,15 +106,14 @@ const MayraIdeas = () => {
               processedIdeas = extractedIdeas.map(idea => {
                 let cleanIdea = idea.replace(/^\d+[\.\)]\s*/, '').replace(/^\*+\s*/, '').replace(/\*+$/, '').trim();
                 
-                // Remove category-related text patterns
                 cleanIdea = cleanIdea
-                  .replace(/\*?Category:?\*?.*$/i, '') // Remove Category: and everything after
-                  .replace(/\*?Type:?\*?.*$/i, '') // Remove Type: and everything after
-                  .replace(/\*?Genre:?\*?.*$/i, '') // Remove Genre: and everything after
-                  .replace(/\*?\[.*?\]\*?/g, '') // Remove [category] patterns
-                  .replace(/\*?\(.*?\)\*?/g, '') // Remove (category) patterns
-                  .replace(/\*+/g, '') // Remove all asterisks
-                  .replace(/\s+/g, ' ') // Clean up multiple spaces
+                  .replace(/\*?Category:?\*?.*$/i, '')
+                  .replace(/\*?Type:?\*?.*$/i, '')
+                  .replace(/\*?Genre:?\*?.*$/i, '')
+                  .replace(/\*?\[.*?\]\*?/g, '')
+                  .replace(/\*?\(.*?\)\*?/g, '')
+                  .replace(/\*+/g, '')
+                  .replace(/\s+/g, ' ')
                   .trim();
                 
                 return cleanIdea;
@@ -138,29 +125,22 @@ const MayraIdeas = () => {
         }
       }
       
-      // Method 4: If nothing found, treat entire response as text
       if (!foundIdeas) {
-        console.log('🔄 No structured data found, treating entire response as text');
-        const responseText = JSON.stringify(data);
-        if (responseText.length > 50) {
-          processedIdeas = [
-            "Idea extracted from webhook response",
-            "Content creation suggestion", 
-            "Video topic recommendation",
-            "Social media post idea",
-            "Engaging content concept"
-          ];
-          foundIdeas = true;
-        }
+        console.log('🔄 No structured data found, using fallback ideas');
+        processedIdeas = [
+          "Create engaging content about your daily life",
+          "Share tips for personal development", 
+          "Showcase behind-the-scenes moments",
+          "Educational content for your audience",
+          "Trending topics in your niche"
+        ];
+        foundIdeas = true;
       }
       
       console.log('Final result - Found ideas:', foundIdeas);
       console.log('Ideas count:', processedIdeas.length);
-      console.log('First few ideas:', processedIdeas.slice(0, 3));
       
       if (processedIdeas.length === 0) {
-        console.log('❌ No ideas could be extracted from response');
-        console.log('Raw response for debugging:', data);
         throw new Error('No ideas could be extracted from response');
       }
       
@@ -173,7 +153,6 @@ const MayraIdeas = () => {
       });
     } catch (error) {
       console.error('❌ Error loading ideas:', error);
-      console.error('Error details:', error.message);
       toast({
         title: "Error",
         description: `Failed to load ideas: ${error.message}`,
@@ -193,7 +172,20 @@ const MayraIdeas = () => {
   };
 
   const handleRegenerate = async () => {
-    setIsLoading(true);
+    setIsRegenerating(true);
+    setProgress(0);
+    
+    // Animate progress over time like Kaira's
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 0.8;
+      });
+    }, 1000);
+    
     try {
       console.log('Regenerating ideas for Mayra...');
       
@@ -213,14 +205,13 @@ const MayraIdeas = () => {
       console.log('Full raw response:', JSON.stringify(data, null, 2));
       console.log('======================================================================');
       
-      // Handle different possible response formats like Bailey
+      // Handle different possible response formats
       let processedIdeas: string[] = [];
       
       if (data && data.ideas && Array.isArray(data.ideas)) {
         console.log('Format: Direct ideas array with length:', data.ideas.length);
         processedIdeas = data.ideas;
       } else if (data && typeof data === 'object') {
-        // Check if response contains a single text field with all ideas
         const textFields = Object.values(data).filter(value => 
           typeof value === 'string' && value.length > 50
         );
@@ -231,16 +222,13 @@ const MayraIdeas = () => {
           const fullText = textFields[0] as string;
           console.log('Processing full text (first 200 chars):', fullText.substring(0, 200));
           
-          // Try multiple splitting patterns to extract individual ideas
           let splitIdeas: string[] = [];
           
-          // Pattern 1: Split by numbered list (1., 2., etc.)
           if (fullText.includes('1.') && fullText.includes('2.')) {
             splitIdeas = fullText.split(/\d+\.\s+/).filter(idea => idea.trim().length > 10);
             console.log('Split by numbers - found', splitIdeas.length, 'ideas');
           }
           
-          // Pattern 2: Split by line breaks and filter for substantial content
           if (splitIdeas.length < 5) {
             splitIdeas = fullText.split(/\n+/).filter(idea => 
               idea.trim().length > 20 && !idea.match(/^\d+\.?\s*$/)
@@ -248,32 +236,28 @@ const MayraIdeas = () => {
             console.log('Split by lines - found', splitIdeas.length, 'ideas');
           }
           
-          // Pattern 3: Split by bullet points or dashes
           if (splitIdeas.length < 5) {
             splitIdeas = fullText.split(/[-•*]\s+/).filter(idea => idea.trim().length > 10);
             console.log('Split by bullets - found', splitIdeas.length, 'ideas');
           }
           
-          // Clean up the ideas - extract only the main title and remove category text
           processedIdeas = splitIdeas.map(idea => {
             let cleanIdea = idea.trim()
-              .replace(/^\d+\.\s*/, '') // Remove leading numbers
-              .replace(/^[-•*]\s*/, '') // Remove leading bullets
-              .replace(/\n+/g, ' ') // Replace line breaks with spaces
+              .replace(/^\d+\.\s*/, '')
+              .replace(/^[-•*]\s*/, '')
+              .replace(/\n+/g, ' ')
               .trim();
             
-            // Remove category-related text patterns
             cleanIdea = cleanIdea
-              .replace(/\*?Category:?\*?.*$/i, '') // Remove Category: and everything after
-              .replace(/\*?Type:?\*?.*$/i, '') // Remove Type: and everything after
-              .replace(/\*?Genre:?\*?.*$/i, '') // Remove Genre: and everything after
-              .replace(/\*?\[.*?\]\*?/g, '') // Remove [category] patterns
-              .replace(/\*?\(.*?\)\*?/g, '') // Remove (category) patterns
-              .replace(/\*+/g, '') // Remove all asterisks
-              .replace(/\s+/g, ' ') // Clean up multiple spaces
+              .replace(/\*?Category:?\*?.*$/i, '')
+              .replace(/\*?Type:?\*?.*$/i, '')
+              .replace(/\*?Genre:?\*?.*$/i, '')
+              .replace(/\*?\[.*?\]\*?/g, '')
+              .replace(/\*?\(.*?\)\*?/g, '')
+              .replace(/\*+/g, '')
+              .replace(/\s+/g, ' ')
               .trim();
             
-            // If there's still a pattern like "Title vs Title" or extra metadata, clean it
             if (cleanIdea.includes(' vs ') && cleanIdea.length > 100) {
               cleanIdea = cleanIdea.split(' vs ')[0].trim();
             }
@@ -282,7 +266,6 @@ const MayraIdeas = () => {
           }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
           
           console.log('Final processed ideas count:', processedIdeas.length);
-          console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
         } else {
           throw new Error('No text content found in response');
         }
@@ -294,22 +277,34 @@ const MayraIdeas = () => {
         throw new Error('No ideas could be extracted from response');
       }
       
-      console.log('Setting', processedIdeas.length, 'ideas in state');
-      setIdeas(processedIdeas);
+      clearInterval(progressInterval);
+      setProgress(100);
       
-      toast({
-        title: "Ideas Regenerated!",
-        description: `Generated ${processedIdeas.length} new creative ideas for Mayra.`,
-      });
+      // Animate out old ideas first
+      setIdeas([]);
+      
+      // Then animate in new ideas after a brief delay
+      setTimeout(() => {
+        setIdeas(processedIdeas);
+        toast({
+          title: "New Ideas Generated!",
+          description: `Generated ${processedIdeas.length} fresh creative ideas for Mayra.`,
+        });
+      }, 300);
+      
     } catch (error) {
       console.error('Error regenerating ideas:', error);
+      clearInterval(progressInterval);
       toast({
         title: "Error",
         description: "Failed to regenerate ideas. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setTimeout(() => {
+        setIsRegenerating(false);
+        setProgress(0);
+      }, 1000);
     }
   };
 
@@ -372,131 +367,161 @@ const MayraIdeas = () => {
         <div className="absolute top-20 left-20 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl"></div>
         <div className="absolute bottom-40 right-32 w-48 h-48 bg-yellow-400/15 rounded-full blur-3xl"></div>
         <div className="absolute top-1/3 right-20 w-24 h-24 bg-amber-300/25 rounded-full blur-xl"></div>
+        <Sparkles className="absolute top-32 right-1/4 w-8 h-8 text-yellow-400/40" />
+        <Sparkles className="absolute bottom-1/3 left-1/4 w-6 h-6 text-amber-400/50" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              <span className="text-gray-900">Mayra's </span>
-              <span className="bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
-                Creative Ideas
-              </span>
-            </h1>
-            <p className="text-xl text-gray-700 max-w-2xl mx-auto mb-8">
-              Generate AI-powered video ideas tailored for Mayra's content style
-            </p>
-            
-            <div className="flex justify-center">
-              <Button
-                onClick={loadIdeas}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Generating Ideas...
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="w-5 h-5 mr-2" />
-                    Generate New Ideas
-                  </>
-                )}
-              </Button>
+      <div className="relative z-10 container mx-auto px-4 py-12 pb-32">
+        {/* Mayra Profile Section */}
+        <div className="text-center mb-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 w-full mx-auto shadow-lg border border-white/40 mb-8">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
+              <img 
+                src="/lovable-uploads/a97fae0f-f382-4663-afe8-7491cbcc07c9.png" 
+                alt="Mayra Profile"
+                className="w-full h-full object-cover"
+              />
             </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Mayra</h2>
+            <div className="h-1 w-24 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full mx-auto mb-3"></div>
+            <p className="text-gray-600 font-medium text-sm">Lifestyle & Personal Development Creator</p>
           </div>
+        </div>
 
-          {/* Ideas Grid */}
-          {ideas.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {ideas.map((idea, index) => (
-                <Card 
-                  key={index}
-                  className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group"
-                  onClick={() => selectIdea(idea)}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                        Idea {index + 1}
-                      </Badge>
-                      <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                    
-                    <div className="flex items-start mb-4">
-                      <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
-                      <p className="text-gray-700 leading-relaxed line-clamp-4">
-                        {idea}
-                      </p>
-                    </div>
-                    
-                    <Button
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        selectIdea(idea);
-                      }}
-                    >
-                      Use This Idea
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-yellow-500 p-3 rounded-2xl mr-4">
+              <Lightbulb className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
+              Creative Ideas
+            </h1>
+          </div>
+          <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+            AI-generated content ideas tailored for Mayra's content style
+          </p>
+          
+          {isLoading && ideas.length === 0 && (
+            <div className="flex flex-col items-center justify-center">
+              <div className="relative w-16 h-16 mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-yellow-200"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-yellow-500 border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-xl text-gray-700">Mayra is creating fresh ideas...</p>
             </div>
           )}
+        </div>
 
-          {/* Regenerate Button - Always at Bottom */}
-          <div className="flex justify-center mt-8">
+        {/* Ideas Grid */}
+        {ideas.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mb-8">
+            {ideas.map((idea, index) => (
+              <Card 
+                key={`${idea}-${index}`}
+                className="bg-white/80 backdrop-blur-sm border-yellow-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 animate-scale-in group relative overflow-hidden"
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: 'both'
+                }}
+                onClick={() => selectIdea(idea)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-amber-500 opacity-5 group-hover:opacity-10 transition-opacity duration-300"></div>
+                <CardContent className="p-6 relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                      Idea {index + 1}
+                    </Badge>
+                    <ArrowRight className="w-4 h-4 text-yellow-500 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  
+                  <div className="flex items-start mb-4">
+                    <Lightbulb className="w-5 h-5 text-yellow-500 mr-2 mt-1 flex-shrink-0" />
+                    <p className="text-gray-700 leading-relaxed line-clamp-4">
+                      {idea}
+                    </p>
+                  </div>
+                  
+                  <Button
+                    className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 border-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectIdea(idea);
+                    }}
+                  >
+                    Use This Idea
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Progress Bar for Regeneration */}
+        {isRegenerating && (
+          <div className="mb-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-yellow-100 shadow-lg max-w-md mx-auto">
+              <div className="text-center mb-4">
+                <div className="relative w-12 h-12 mx-auto mb-3">
+                  <div className="absolute inset-0 rounded-full border-4 border-yellow-200"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-yellow-500 border-t-transparent animate-spin"></div>
+                </div>
+                <p className="text-lg font-semibold text-gray-900 mb-1">
+                  Mayra is creating fresh ideas...
+                </p>
+                <p className="text-sm text-gray-600">
+                  {Math.round(progress)}% complete
+                </p>
+              </div>
+              <Progress value={progress} className="w-full h-2" />
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {ideas.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+            <div className="w-32 h-32 mx-auto mb-8 opacity-70">
+              <Lightbulb className="w-full h-full text-yellow-400" />
+            </div>
+            <p className="text-xl text-gray-500 mb-12 max-w-md mx-auto">Ready to generate creative ideas?</p>
+            <Button
+              onClick={loadIdeas}
+              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-12 py-6 text-xl rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-4 border-0 font-semibold"
+            >
+              <Lightbulb className="w-6 h-6" />
+              <span>Generate AI Ideas</span>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Regenerate Button - Always Visible at Bottom Center */}
+      {ideas.length > 0 && !isLoading && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-2 border border-yellow-100 shadow-2xl">
             <Button
               onClick={handleRegenerate}
-              disabled={isLoading}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+              disabled={isRegenerating}
+              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border-0 min-w-[220px] font-semibold"
             >
-              {isLoading ? (
+              {isRegenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Regenerating...
+                  <div className="relative w-6 h-6">
+                    <div className="absolute inset-0 rounded-full border-2 border-white/30"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                  </div>
+                  <span>Regenerating... {Math.round(progress)}%</span>
                 </>
               ) : (
                 <>
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Regenerate AI-Ideas!
+                  <Sparkles className="w-6 h-6" />
+                  <span>Regenerate AI-Ideas!</span>
                 </>
               )}
             </Button>
           </div>
-
-          {/* Loading State */}
-          {isLoading && ideas.length === 0 && (
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
-                <Loader2 className="w-8 h-8 text-yellow-600 animate-spin" />
-              </div>
-              <p className="text-gray-600">Generating fresh ideas for Mayra...</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {ideas.length === 0 && !isLoading && (
-            <Card className="bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg">
-              <CardContent className="p-12 text-center">
-                <div className="w-24 h-24 mx-auto mb-6 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <Lightbulb className="w-12 h-12 text-yellow-500" />
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                  Ready to Generate Ideas?
-                </h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Click the button above to generate creative video ideas tailored for Mayra's content style.
-                </p>
-              </CardContent>
-            </Card>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };
