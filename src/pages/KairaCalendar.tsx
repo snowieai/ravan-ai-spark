@@ -20,6 +20,9 @@ interface ContentItem {
   status: 'planned' | 'approved' | 'script_ready' | 'in_production' | 'published' | 'cancelled';
   priority: number;
   notes?: string;
+  script_content?: string;
+  content_source?: 'manual' | 'generated';
+  category?: 'Real Estate News' | 'Entertainment' | 'Educational';
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -52,13 +55,7 @@ const KairaCalendar = () => {
   const [newNotes, setNewNotes] = useState('');
   const [newPriority, setNewPriority] = useState<1 | 2 | 3>(1);
 
-  // Check authentication
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      navigate('/');
-    }
-  }, [navigate]);
+  // Remove authentication check - calendar is now public
 
   // Get current week dates
   const getWeekDates = () => {
@@ -87,7 +84,7 @@ const KairaCalendar = () => {
         .order('scheduled_date', { ascending: true });
 
       if (error) throw error;
-      setContentItems(data || []);
+      setContentItems((data || []) as ContentItem[]);
     } catch (error) {
       console.error('Error fetching content:', error);
       toast({
@@ -112,12 +109,13 @@ const KairaCalendar = () => {
       const { error } = await supabase
         .from('content_calendar')
         .insert({
-          user_id: 'user-id', // In a real app, get from auth
           topic: newTopic,
           scheduled_date: selectedDate.toISOString().split('T')[0],
           priority: newPriority,
           notes: newNotes || null,
-          status: 'planned'
+          status: 'planned',
+          content_source: 'manual',
+          category: 'Entertainment'
         });
 
       if (error) throw error;
@@ -327,9 +325,16 @@ const KairaCalendar = () => {
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {item.topic}
                               </p>
-                              <Badge className={`text-xs mt-1 ${statusColors[item.status]}`}>
-                                {item.status.replace('_', ' ')}
-                              </Badge>
+                              <div className="flex gap-1 mt-1">
+                                <Badge className={`text-xs ${statusColors[item.status]}`}>
+                                  {item.status.replace('_', ' ')}
+                                </Badge>
+                                {item.content_source === 'generated' && (
+                                  <Badge className="text-xs bg-purple-100 text-purple-800">
+                                    AI Generated
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>

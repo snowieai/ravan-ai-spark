@@ -159,11 +159,12 @@ const KairaIdeas = () => {
       const { error } = await supabase
         .from('content_calendar')
         .insert({
-          user_id: 'user-id', // In a real app, get from auth
           topic: selectedIdea,
           scheduled_date: scheduledDate,
           status: 'planned',
-          priority: 2
+          priority: 2,
+          content_source: 'generated',
+          category: 'Entertainment'
         });
 
       if (error) throw error;

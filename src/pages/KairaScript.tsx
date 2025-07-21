@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, ArrowRight, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
+import { FileText, ArrowRight, Loader2, Sparkles, ArrowLeft, Video, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Script {
   label: string;
@@ -73,11 +74,41 @@ const KairaScript = () => {
     }
   };
 
-  const selectScript = () => {
-    toast({
-      title: "Coming Soon! 🎬",
-      description: "Video generation with Kaira will be available soon for you. Stay tuned!",
-    });
+  const selectScript = (script: Script) => {
+    localStorage.setItem('selectedScript', JSON.stringify(script));
+    navigate('/video');
+  };
+
+  const scheduleWithScript = async (script: Script) => {
+    try {
+      const { error } = await supabase
+        .from('content_calendar')
+        .insert({
+          topic: topic,
+          script_content: script.content,
+          scheduled_date: new Date().toISOString().split('T')[0],
+          status: 'script_ready',
+          priority: 2,
+          content_source: 'generated',
+          category: 'Entertainment'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Script scheduled in content calendar",
+      });
+
+      navigate('/kaira-calendar');
+    } catch (error) {
+      console.error('Error scheduling script:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule script",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -190,13 +221,23 @@ const KairaScript = () => {
                         {script.content}
                       </p>
                     </div>
-                    <Button
-                      onClick={selectScript}
-                      className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 mt-auto rounded-full py-3 px-4 text-sm sm:text-base font-medium"
-                    >
-                      Use this script to generate video with Kaira
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                      <Button
+                        onClick={() => selectScript(script)}
+                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Generate Video
+                      </Button>
+                      <Button
+                        onClick={() => scheduleWithScript(script)}
+                        variant="outline"
+                        className="flex-1 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Schedule
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

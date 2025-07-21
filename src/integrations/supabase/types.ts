@@ -16,40 +16,49 @@ export type Database = {
     Tables: {
       content_calendar: {
         Row: {
+          category: string | null
+          content_source: string | null
           created_at: string | null
           id: string
           notes: string | null
           priority: number | null
           scheduled_date: string
+          script_content: string | null
           status: Database["public"]["Enums"]["content_status"] | null
           topic: string
           topic_id: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          category?: string | null
+          content_source?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
           priority?: number | null
           scheduled_date: string
+          script_content?: string | null
           status?: Database["public"]["Enums"]["content_status"] | null
           topic: string
           topic_id?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          category?: string | null
+          content_source?: string | null
           created_at?: string | null
           id?: string
           notes?: string | null
           priority?: number | null
           scheduled_date?: string
+          script_content?: string | null
           status?: Database["public"]["Enums"]["content_status"] | null
           topic?: string
           topic_id?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
