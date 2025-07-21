@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft, Calendar, Plus, ChevronRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const KairaIdeas = () => {
@@ -11,11 +14,13 @@ const KairaIdeas = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<string>('');
+  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const generateIdeas = async () => {
     setIsLoading(true);
-    console.log("Generating ideas for Kaira...");
     
     try {
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=Generating Ideas', {
@@ -23,7 +28,6 @@ const KairaIdeas = () => {
       });
 
       const data = await response.json();
-      console.log("Kaira ideas webhook response:", data);
       
       // Parse ideas from the formatted output - same as Aisha's page
       const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
@@ -65,7 +69,6 @@ const KairaIdeas = () => {
     setIsLoading(true);
     setIsRegenerating(true);
     setLoadingProgress(0);
-    console.log("Regenerating ideas for Kaira...");
     
     // Simulate progress over 90 seconds (1.5 minutes)
     const progressInterval = setInterval(() => {
@@ -88,7 +91,6 @@ const KairaIdeas = () => {
       }
 
       const data = await response.json();
-      console.log("Kaira regenerate webhook response:", data);
       
       if (!data || !data.output) {
         throw new Error('Invalid response format from webhook');
@@ -146,9 +148,41 @@ const KairaIdeas = () => {
   };
 
   const selectIdea = (idea: string) => {
-    console.log("Selected idea:", idea);
     localStorage.setItem('selectedIdea', idea);
     navigate('/kaira-script');
+  };
+
+  const scheduleIdea = async () => {
+    if (!selectedIdea || !scheduledDate) return;
+
+    try {
+      const { error } = await supabase
+        .from('content_calendar')
+        .insert({
+          user_id: 'user-id', // In a real app, get from auth
+          topic: selectedIdea,
+          scheduled_date: scheduledDate,
+          status: 'planned',
+          priority: 2
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Idea added to content calendar",
+      });
+
+      setIsScheduleDialogOpen(false);
+      setSelectedIdea('');
+    } catch (error) {
+      console.error('Error scheduling idea:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule idea",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -240,8 +274,7 @@ const KairaIdeas = () => {
               {ideas.map((idea, index) => (
                 <Card 
                   key={`${idea}-${index}`}
-                  className={`bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 ${!isRegenerating ? 'animate-scale-in' : ''}`}
-                  onClick={() => selectIdea(idea)}
+                  className={`bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${!isRegenerating ? 'animate-scale-in' : ''}`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-4 sm:p-6">
@@ -250,19 +283,60 @@ const KairaIdeas = () => {
                         <h3 className="text-gray-900 font-semibold text-lg mb-2">
                           Idea {index + 1}
                         </h3>
-                        <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                        <p className="text-gray-600 leading-relaxed text-sm sm:text-base mb-4">
                           {idea}
                         </p>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-orange-500 ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <div className="mt-4 pt-4 border-t border-orange-100">
+                    <div className="flex justify-between items-center gap-3 pt-4 border-t border-orange-100">
                       <Button
-                        size="sm"
-                        className="bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full"
+                        onClick={() => selectIdea(idea)}
+                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105"
                       >
-                        Use This Idea
+                        Select This Idea
+                        <ChevronRight className="w-4 h-4" />
                       </Button>
+                      <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button
+                            onClick={() => setSelectedIdea(idea)}
+                            variant="outline"
+                            className="border-blue-500 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-full flex items-center gap-2"
+                          >
+                            <Calendar className="w-4 h-4" />
+                            Schedule
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Schedule Idea</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium">Selected Idea</label>
+                              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md mt-1">
+                                {selectedIdea}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Scheduled Date</label>
+                              <Input
+                                type="date"
+                                value={scheduledDate}
+                                onChange={(e) => setScheduledDate(e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <Button 
+                              onClick={scheduleIdea} 
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add to Calendar
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </CardContent>
                 </Card>

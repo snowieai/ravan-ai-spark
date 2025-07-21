@@ -14,7 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      content_calendar: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          priority: number | null
+          scheduled_date: string
+          status: Database["public"]["Enums"]["content_status"] | null
+          topic: string
+          topic_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          scheduled_date: string
+          status?: Database["public"]["Enums"]["content_status"] | null
+          topic: string
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: number | null
+          scheduled_date?: string
+          status?: Database["public"]["Enums"]["content_status"] | null
+          topic?: string
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_calendar_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "content_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_topics: {
+        Row: {
+          approval_status: string | null
+          category: string | null
+          created_at: string | null
+          id: string
+          source: string | null
+          topic_text: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          approval_status?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          source?: string | null
+          topic_text: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          approval_status?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          source?: string | null
+          topic_text?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +102,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_status:
+        | "planned"
+        | "approved"
+        | "script_ready"
+        | "in_production"
+        | "published"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +235,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      content_status: [
+        "planned",
+        "approved",
+        "script_ready",
+        "in_production",
+        "published",
+        "cancelled",
+      ],
+    },
   },
 } as const

@@ -13,6 +13,7 @@ import BaileyDashboard from "./pages/BaileyDashboard";
 import MayraDashboard from "./pages/MayraDashboard";
 import Ideas from "./pages/Ideas";
 import KairaIdeas from "./pages/KairaIdeas";
+import KairaCalendar from "./pages/KairaCalendar";
 import BaileyIdeas from "./pages/BaileyIdeas";
 import MayraIdeas from "./pages/MayraIdeas";
 import Script from "./pages/Script";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/mayra-dashboard" element={<MayraDashboard />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/kaira-ideas" element={<KairaIdeas />} />
+            <Route path="/kaira-calendar" element={<KairaCalendar />} />
             <Route path="/bailey-ideas" element={<BaileyIdeas />} />
             <Route path="/mayra-ideas" element={<MayraIdeas />} />
             <Route path="/script" element={<Script />} />
