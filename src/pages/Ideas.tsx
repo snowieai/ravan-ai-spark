@@ -285,14 +285,14 @@ const Ideas = () => {
         )}
 
         {ideas.length === 0 && !isLoading && (
-          <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-6 opacity-50">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+            <div className="w-32 h-32 mx-auto mb-8 opacity-70">
               <Lightbulb className="w-full h-full text-blue-400" />
             </div>
-            <p className="text-xl text-gray-500 mb-6">Ready to generate creative ideas?</p>
+            <p className="text-xl text-gray-500 mb-12 max-w-md mx-auto">Ready to generate creative ideas?</p>
             <Button
               onClick={generateIdeas}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-4 text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border-0"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 text-xl rounded-full shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-4 border-0 font-semibold"
             >
               <Lightbulb className="w-6 h-6" />
               <span>Generate AI Ideas</span>
