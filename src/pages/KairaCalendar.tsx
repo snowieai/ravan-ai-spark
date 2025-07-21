@@ -44,6 +44,12 @@ const priorityColors = {
   3: 'border-l-red-500'
 };
 
+const categoryColors = {
+  'Real Estate News': 'bg-blue-100 text-blue-800',
+  'Entertainment': 'bg-pink-100 text-pink-800',
+  'Educational': 'bg-emerald-100 text-emerald-800'
+};
+
 const KairaCalendar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -54,6 +60,7 @@ const KairaCalendar = () => {
   const [newTopic, setNewTopic] = useState('');
   const [newNotes, setNewNotes] = useState('');
   const [newPriority, setNewPriority] = useState<1 | 2 | 3>(1);
+  const [newCategory, setNewCategory] = useState<'Real Estate News' | 'Entertainment' | 'Educational'>('Entertainment');
 
   // Remove authentication check - calendar is now public
 
@@ -115,7 +122,7 @@ const KairaCalendar = () => {
           notes: newNotes || null,
           status: 'planned',
           content_source: 'manual',
-          category: 'Entertainment'
+          category: newCategory
         });
 
       if (error) throw error;
@@ -129,6 +136,7 @@ const KairaCalendar = () => {
       setNewTopic('');
       setNewNotes('');
       setNewPriority(1);
+      setNewCategory('Entertainment');
       fetchContentItems();
     } catch (error) {
       console.error('Error adding content:', error);
@@ -282,6 +290,19 @@ const KairaCalendar = () => {
                     </Select>
                   </div>
                   <div>
+                    <label className="text-sm font-medium">Category</label>
+                    <Select value={newCategory} onValueChange={(value) => setNewCategory(value as 'Real Estate News' | 'Entertainment' | 'Educational')}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Real Estate News">Real Estate News</SelectItem>
+                        <SelectItem value="Entertainment">Entertainment</SelectItem>
+                        <SelectItem value="Educational">Educational</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <label className="text-sm font-medium">Notes (Optional)</label>
                     <Textarea
                       value={newNotes}
@@ -325,10 +346,15 @@ const KairaCalendar = () => {
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {item.topic}
                               </p>
-                              <div className="flex gap-1 mt-1">
+                              <div className="flex gap-1 mt-1 flex-wrap">
                                 <Badge className={`text-xs ${statusColors[item.status]}`}>
                                   {item.status.replace('_', ' ')}
                                 </Badge>
+                                {item.category && (
+                                  <Badge className={`text-xs ${categoryColors[item.category]}`}>
+                                    {item.category}
+                                  </Badge>
+                                )}
                                 {item.content_source === 'generated' && (
                                   <Badge className="text-xs bg-purple-100 text-purple-800">
                                     AI Generated
