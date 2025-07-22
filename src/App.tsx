@@ -21,6 +21,7 @@ import KairaScript from "./pages/KairaScript";
 import BaileyScript from "./pages/BaileyScript";
 import MayraScript from "./pages/MayraScript";
 import Video from "./pages/Video";
+import Diagnostics from "./pages/Diagnostics";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/bailey-script" element={<BaileyScript />} />
             <Route path="/mayra-script" element={<MayraScript />} />
             <Route path="/video" element={<Video />} />
+            <Route path="/diagnostics" element={<Diagnostics />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
