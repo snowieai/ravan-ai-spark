@@ -85,15 +85,26 @@ const KairaCalendar = () => {
   // Fetch content items
   const fetchContentItems = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('content_calendar')
         .select('*')
         .order('scheduled_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error fetching content:', error);
+        toast({
+          title: "Database Error",
+          description: `Failed to fetch content: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Fetched content items:', data?.length || 0);
       setContentItems((data || []) as ContentItem[]);
     } catch (error) {
-      console.error('Error fetching content:', error);
+      console.error('Unexpected error fetching content:', error);
       toast({
         title: "Error",
         description: "Failed to fetch content calendar",
@@ -110,10 +121,24 @@ const KairaCalendar = () => {
 
   // Add new content item
   const addContentItem = async () => {
-    if (!newTopic.trim()) return;
+    if (!newTopic.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Topic is required",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      const { error } = await supabase
+      console.log('Adding content item:', {
+        topic: newTopic,
+        scheduled_date: selectedDate.toISOString().split('T')[0],
+        priority: newPriority,
+        category: newCategory
+      });
+
+      const { data, error } = await supabase
         .from('content_calendar')
         .insert({
           topic: newTopic,
@@ -123,10 +148,20 @@ const KairaCalendar = () => {
           status: 'planned',
           content_source: 'manual',
           category: newCategory
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error adding content:', error);
+        toast({
+          title: "Database Error",
+          description: `Failed to add content: ${error.message}`,
+          variant: "destructive",
         });
+        return;
+      }
 
-      if (error) throw error;
-
+      console.log('Successfully added content:', data);
       toast({
         title: "Success",
         description: "Content added to calendar",
@@ -139,7 +174,7 @@ const KairaCalendar = () => {
       setNewCategory('Entertainment');
       fetchContentItems();
     } catch (error) {
-      console.error('Error adding content:', error);
+      console.error('Unexpected error adding content:', error);
       toast({
         title: "Error",
         description: "Failed to add content",
