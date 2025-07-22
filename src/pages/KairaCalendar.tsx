@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Plus, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SparklesCore } from '@/components/ui/sparkles';
-
-// Debug logging utility
-const debugLog = (action: string, data?: any) => {
-  console.log(`[KAIRA-CALENDAR] ${action}:`, data);
-};
 
 interface ContentItem {
   id: string;
@@ -66,63 +62,16 @@ const KairaCalendar = () => {
   const [newNotes, setNewNotes] = useState('');
   const [newPriority, setNewPriority] = useState<1 | 2 | 3>(1);
   const [newCategory, setNewCategory] = useState<'Real Estate News' | 'Entertainment' | 'Educational'>('Entertainment');
-  const [debugInfo, setDebugInfo] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
 
-  // Test Supabase connection on component mount
   useEffect(() => {
-    debugLog('Component mounted, testing Supabase connection');
-    testSupabaseConnection();
+    fetchContentItems();
   }, []);
-
-  const testSupabaseConnection = async () => {
-    try {
-      debugLog('Testing Supabase client initialization');
-      
-      // Test 1: Check if supabase client exists
-      if (!supabase) {
-        debugLog('CRITICAL: Supabase client is null/undefined');
-        setDebugInfo('CRITICAL: Supabase client not initialized');
-        return;
-      }
-      
-      debugLog('Supabase client exists, testing basic connection');
-      
-      // Test 2: Try a simple query to test connection
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .select('id')
-        .limit(1);
-      
-      if (error) {
-        debugLog('Supabase connection test FAILED', error);
-        setDebugInfo(`Connection test failed: ${error.message}`);
-        toast({
-          title: "Connection Test Failed",
-          description: `Database connection error: ${error.message}`,
-          variant: "destructive",
-        });
-      } else {
-        debugLog('Supabase connection test SUCCESS', data);
-        setDebugInfo('Connection test passed');
-        // If connection test passes, fetch actual content
-        fetchContentItems();
-      }
-    } catch (err) {
-      debugLog('CRITICAL: Connection test threw exception', err);
-      setDebugInfo(`Connection test exception: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      toast({
-        title: "Critical Error",
-        description: "Failed to initialize database connection",
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  };
 
   const getWeekDates = () => {
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // Start from Sunday
+    startOfWeek.setDate(today.getDate() - today.getDay());
     
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
@@ -136,25 +85,19 @@ const KairaCalendar = () => {
   const weekDates = getWeekDates();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Enhanced fetch function with detailed logging
   const fetchContentItems = async () => {
     try {
-      debugLog('Starting fetchContentItems');
       setLoading(true);
-      
-      // Log the exact query being made
-      debugLog('Making Supabase query: SELECT * FROM content_calendar ORDER BY scheduled_date ASC');
+      setConnectionStatus('connecting');
       
       const { data, error } = await supabase
         .from('content_calendar')
         .select('*')
         .order('scheduled_date', { ascending: true });
 
-      debugLog('Supabase query completed', { data, error });
-
       if (error) {
-        debugLog('Supabase error fetching content', error);
-        setDebugInfo(`Fetch error: ${error.message}`);
+        console.error('Supabase error:', error);
+        setConnectionStatus('error');
         toast({
           title: "Database Error",
           description: `Failed to fetch content: ${error.message}`,
@@ -163,16 +106,14 @@ const KairaCalendar = () => {
         return;
       }
 
-      debugLog('Successfully fetched content items', { count: data?.length || 0, items: data });
       setContentItems((data || []) as ContentItem[]);
-      setDebugInfo(`Loaded ${data?.length || 0} items successfully`);
+      setConnectionStatus('connected');
     } catch (error) {
-      debugLog('Unexpected error in fetchContentItems', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setDebugInfo(`Fetch exception: ${errorMessage}`);
+      console.error('Network error:', error);
+      setConnectionStatus('error');
       toast({
         title: "Network Error",
-        description: `Failed to fetch content: ${errorMessage}`,
+        description: "Failed to connect to the database. Please check your connection.",
         variant: "destructive",
       });
     } finally {
@@ -180,12 +121,8 @@ const KairaCalendar = () => {
     }
   };
 
-  // Enhanced add function with detailed logging
   const addContentItem = async () => {
-    debugLog('addContentItem called', { newTopic, selectedDate, newPriority, newCategory });
-    
     if (!newTopic.trim()) {
-      debugLog('Validation failed: Topic is empty');
       toast({
         title: "Validation Error",
         description: "Topic is required",
@@ -204,18 +141,14 @@ const KairaCalendar = () => {
         content_source: 'manual',
         category: newCategory
       };
-      
-      debugLog('Inserting content item', insertData);
 
       const { data, error } = await supabase
         .from('content_calendar')
         .insert(insertData)
         .select();
 
-      debugLog('Insert query completed', { data, error });
-
       if (error) {
-        debugLog('Supabase error adding content', error);
+        console.error('Insert error:', error);
         toast({
           title: "Database Error",
           description: `Failed to add content: ${error.message}`,
@@ -224,55 +157,29 @@ const KairaCalendar = () => {
         return;
       }
 
-      debugLog('Successfully added content', data);
       toast({
         title: "Success",
         description: "Content added to calendar",
       });
 
-      // Reset form and close dialog
       setIsDialogOpen(false);
       setNewTopic('');
       setNewNotes('');
       setNewPriority(1);
       setNewCategory('Entertainment');
       
-      // Refresh the content list
       fetchContentItems();
     } catch (error) {
-      debugLog('Unexpected error adding content', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Network error:', error);
       toast({
         title: "Network Error",
-        description: `Failed to add content: ${errorMessage}`,
+        description: "Failed to add content. Please check your connection.",
         variant: "destructive",
       });
     }
-  };
-
-  // Enhanced button click handlers with logging
-  const handleBackClick = () => {
-    debugLog('Back button clicked');
-    try {
-      navigate('/kaira-dashboard');
-    } catch (error) {
-      debugLog('Navigation failed', error);
-      toast({
-        title: "Navigation Error",
-        description: "Failed to navigate back",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddContentClick = () => {
-    debugLog('Add Content button clicked');
-    setIsDialogOpen(true);
   };
 
   const updateContentStatus = async (id: string, newStatus: ContentItem['status']) => {
-    debugLog('updateContentStatus called', { id, newStatus });
-    
     try {
       const { error } = await supabase
         .from('content_calendar')
@@ -280,11 +187,10 @@ const KairaCalendar = () => {
         .eq('id', id);
 
       if (error) {
-        debugLog('Update status error', error);
+        console.error('Update error:', error);
         throw error;
       }
 
-      debugLog('Status updated successfully');
       toast({
         title: "Success",
         description: "Content status updated",
@@ -292,7 +198,7 @@ const KairaCalendar = () => {
 
       fetchContentItems();
     } catch (error) {
-      debugLog('Error updating status', error);
+      console.error('Error updating status:', error);
       toast({
         title: "Error",
         description: "Failed to update status",
@@ -302,8 +208,6 @@ const KairaCalendar = () => {
   };
 
   const deleteContentItem = async (id: string) => {
-    debugLog('deleteContentItem called', { id });
-    
     try {
       const { error } = await supabase
         .from('content_calendar')
@@ -311,11 +215,10 @@ const KairaCalendar = () => {
         .eq('id', id);
 
       if (error) {
-        debugLog('Delete error', error);
+        console.error('Delete error:', error);
         throw error;
       }
 
-      debugLog('Item deleted successfully');
       toast({
         title: "Success",
         description: "Content deleted",
@@ -323,7 +226,7 @@ const KairaCalendar = () => {
 
       fetchContentItems();
     } catch (error) {
-      debugLog('Error deleting content', error);
+      console.error('Error deleting content:', error);
       toast({
         title: "Error",
         description: "Failed to delete content",
@@ -342,11 +245,9 @@ const KairaCalendar = () => {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-orange-600 mb-4">Loading calendar...</div>
-          {debugInfo && (
-            <div className="text-sm text-gray-500 bg-white/50 p-2 rounded">
-              Debug: {debugInfo}
-            </div>
-          )}
+          <div className="text-sm text-gray-500">
+            Status: {connectionStatus}
+          </div>
         </div>
       </div>
     );
@@ -367,22 +268,30 @@ const KairaCalendar = () => {
         />
       </div>
 
-      {/* Debug Info Bar (visible in development) */}
-      {debugInfo && (
-        <div className="fixed top-0 left-0 right-0 bg-yellow-100 border-b border-yellow-300 p-2 text-sm text-yellow-800 z-50">
-          <strong>Debug:</strong> {debugInfo}
+      {/* Connection Status Bar */}
+      {connectionStatus === 'error' && (
+        <div className="fixed top-0 left-0 right-0 bg-red-100 border-b border-red-300 p-2 text-sm text-red-800 z-50">
+          <strong>Connection Error:</strong> Unable to connect to database. 
+          <Button 
+            variant="link" 
+            size="sm" 
+            onClick={() => navigate('/diagnostics')}
+            className="text-red-800 underline ml-2"
+          >
+            Run Diagnostics
+          </Button>
         </div>
       )}
 
       {/* Header */}
-      <div className="relative z-10 bg-white/10 backdrop-blur-sm border-b border-white/20" style={{ marginTop: debugInfo ? '40px' : '0' }}>
+      <div className="relative z-10 bg-white/10 backdrop-blur-sm border-b border-white/20" style={{ marginTop: connectionStatus === 'error' ? '40px' : '0' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleBackClick}
+                onClick={() => navigate('/kaira-dashboard')}
                 className="text-orange-700 hover:bg-orange-100"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -397,7 +306,7 @@ const KairaCalendar = () => {
               <DialogTrigger asChild>
                 <Button 
                   className="bg-orange-600 hover:bg-orange-700 text-white"
-                  onClick={handleAddContentClick}
+                  disabled={connectionStatus === 'error'}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Content
@@ -412,10 +321,7 @@ const KairaCalendar = () => {
                     <label className="text-sm font-medium">Topic</label>
                     <Input
                       value={newTopic}
-                      onChange={(e) => {
-                        debugLog('Topic input changed', e.target.value);
-                        setNewTopic(e.target.value);
-                      }}
+                      onChange={(e) => setNewTopic(e.target.value)}
                       placeholder="Enter video topic..."
                     />
                   </div>
@@ -424,18 +330,12 @@ const KairaCalendar = () => {
                     <Input
                       type="date"
                       value={selectedDate.toISOString().split('T')[0]}
-                      onChange={(e) => {
-                        debugLog('Date input changed', e.target.value);
-                        setSelectedDate(new Date(e.target.value));
-                      }}
+                      onChange={(e) => setSelectedDate(new Date(e.target.value))}
                     />
                   </div>
                   <div>
                     <label className="text-sm font-medium">Priority</label>
-                    <Select value={newPriority.toString()} onValueChange={(value) => {
-                      debugLog('Priority changed', value);
-                      setNewPriority(parseInt(value) as 1 | 2 | 3);
-                    }}>
+                    <Select value={newPriority.toString()} onValueChange={(value) => setNewPriority(parseInt(value) as 1 | 2 | 3)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -448,10 +348,7 @@ const KairaCalendar = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium">Category</label>
-                    <Select value={newCategory} onValueChange={(value) => {
-                      debugLog('Category changed', value);
-                      setNewCategory(value as 'Real Estate News' | 'Entertainment' | 'Educational');
-                    }}>
+                    <Select value={newCategory} onValueChange={(value) => setNewCategory(value as 'Real Estate News' | 'Entertainment' | 'Educational')}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -466,10 +363,7 @@ const KairaCalendar = () => {
                     <label className="text-sm font-medium">Notes (Optional)</label>
                     <Textarea
                       value={newNotes}
-                      onChange={(e) => {
-                        debugLog('Notes changed', e.target.value);
-                        setNewNotes(e.target.value);
-                      }}
+                      onChange={(e) => setNewNotes(e.target.value)}
                       placeholder="Add any notes..."
                     />
                   </div>
