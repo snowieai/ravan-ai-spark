@@ -46,7 +46,7 @@ const KairaScript = () => {
     console.log("Generating script for topic:", topic);
     
     try {
-      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook-test/3205b796-624b-450a-b2e5-54dec2d3a73e?message=${encodeURIComponent(topic)}`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/3205b796-624b-450a-b2e5-54dec2d3a73e?message=${encodeURIComponent(topic)}`, {
         method: 'GET',
       });
 
