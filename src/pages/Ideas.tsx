@@ -23,7 +23,7 @@ const Ideas = () => {
     console.log("Generating ideas via webhook...");
     
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Generating ideas', {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Generating ideas', {
         method: 'GET',
       });
 
@@ -80,7 +80,7 @@ const Ideas = () => {
     }, 2000);
     
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Regenerate', {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Regenerate', {
         method: 'GET',
       });
 

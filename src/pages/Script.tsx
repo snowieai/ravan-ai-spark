@@ -45,7 +45,7 @@ const Script = () => {
     console.log("Generating script for topic:", topic);
     
     try {
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}`, {
         method: 'GET',
       });
 
@@ -87,7 +87,7 @@ const Script = () => {
     console.log("Generating script for topic:", topic, "in Hindi");
     
     try {
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}&language=Hindi`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=${encodeURIComponent(topic)}&language=Hindi`, {
         method: 'GET',
       });
 
