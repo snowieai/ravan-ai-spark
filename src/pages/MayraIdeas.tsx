@@ -33,7 +33,7 @@ const MayraIdeas = () => {
     try {
       console.log('Loading ideas for Mayra...');
       
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generating Ideas`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generating Ideas`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ const MayraIdeas = () => {
     try {
       console.log('Regenerating ideas for Mayra...');
       
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Regenerate`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -40,7 +40,7 @@ const MayraScript = () => {
     try {
       console.log('Generating script for Mayra with idea:', idea);
       
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(idea)}`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(idea)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ const MayraScript = () => {
     try {
       console.log('Generating script for Mayra with idea:', selectedIdea);
       
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(selectedIdea)}`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/31fda247-1f1b-48ac-8d53-50e26cb92728?message=Generate Script&idea=${encodeURIComponent(selectedIdea)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
