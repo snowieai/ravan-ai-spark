@@ -56,7 +56,7 @@ const BaileyScript = () => {
     }, 1000);
 
     try {
-      const response = await fetch(`https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=${encodeURIComponent(idea)}`, {
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=${encodeURIComponent(idea)}`, {
         method: 'GET',
       });
 

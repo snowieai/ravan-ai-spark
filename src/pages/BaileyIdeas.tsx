@@ -29,7 +29,7 @@ const BaileyIdeas = () => {
   const loadIdeas = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Generating Ideas', {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Generating Ideas', {
         method: 'GET',
       });
 
@@ -161,7 +161,7 @@ const BaileyIdeas = () => {
     }, 1000); // Update every second
 
     try {
-      const response = await fetch('https://ravanai.app.n8n.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Regenerate', {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/a1deb79b-ccda-4db4-8b80-f0d595d4e0b1?message=Regenerate', {
         method: 'GET',
       });
 
