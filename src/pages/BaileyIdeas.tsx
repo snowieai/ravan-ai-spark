@@ -106,8 +106,11 @@ const BaileyIdeas = () => {
               cleanIdea = cleanIdea.slice(0, -1).trim();
             }
             
+            // Remove emojis from the end of ideas
+            cleanIdea = cleanIdea.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+            
             return cleanIdea;
-          }).filter(idea => idea.length > 15);
+          }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas')).slice(1);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
@@ -134,11 +137,11 @@ const BaileyIdeas = () => {
       });
       // Set fallback ideas
       setIdeas([
-        "Share a virtual tour of a stunning waterfront property in Sydney",
-        "Create a comparison post: Apartment vs House living in Melbourne", 
-        "Showcase the best suburbs for families in Brisbane",
-        "Tips for first-time home buyers in Australia",
-        "Market trends: What's hot in Australian real estate right now"
+        "Share a virtual tour of a stunning waterfront property in Miami",
+        "Create a comparison post: Apartment vs House living in New York", 
+        "Showcase the best suburbs for families in Los Angeles",
+        "Tips for first-time home buyers in the United States",
+        "Market trends: What's hot in US real estate right now"
       ]);
     } finally {
       setIsLoading(false);
@@ -236,8 +239,11 @@ const BaileyIdeas = () => {
               cleanIdea = cleanIdea.slice(0, -1).trim();
             }
             
+            // Remove emojis from the end of ideas
+            cleanIdea = cleanIdea.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+            
             return cleanIdea;
-          }).filter(idea => idea.length > 15);
+          }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas')).slice(1);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
@@ -314,8 +320,8 @@ const BaileyIdeas = () => {
             </Button>
             <div className="flex items-center justify-center">
               <img 
-                src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
-                alt="Ravan.ai Logo" 
+                src="/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png" 
+                alt="Bailey Profile" 
                 className="h-12 w-auto"
               />
             </div>
@@ -351,7 +357,7 @@ const BaileyIdeas = () => {
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Bailey</h2>
             <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-600 font-medium text-sm">Australia's Premier AI Real Estate Agent</p>
+            <p className="text-gray-600 font-medium text-sm">US First AI Real Estate Agent</p>
           </div>
         </div>
 
