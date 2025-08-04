@@ -91,7 +91,6 @@ const BaileyIdeas = () => {
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
               .trim();
             
             // Extract just the main title before any category or extra info
@@ -135,11 +134,11 @@ const BaileyIdeas = () => {
       });
       // Set fallback ideas
       setIdeas([
-        "Share a virtual tour of a stunning waterfront property in Miami",
-        "Create a comparison post: Apartment vs House living in New York", 
-        "Showcase the best neighborhoods for families in Los Angeles",
-        "Tips for first-time home buyers in the United States",
-        "Market trends: What's hot in US real estate right now"
+        "Share a virtual tour of a stunning waterfront property in Sydney",
+        "Create a comparison post: Apartment vs House living in Melbourne", 
+        "Showcase the best suburbs for families in Brisbane",
+        "Tips for first-time home buyers in Australia",
+        "Market trends: What's hot in Australian real estate right now"
       ]);
     } finally {
       setIsLoading(false);
@@ -222,7 +221,6 @@ const BaileyIdeas = () => {
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
               .trim();
             
             // Extract just the main title before any category or extra info
@@ -316,8 +314,8 @@ const BaileyIdeas = () => {
             </Button>
             <div className="flex items-center justify-center">
               <img 
-                src="/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png" 
-                alt="Bailey Profile" 
+                src="/lovable-uploads/c994a09f-d72a-4d41-9517-57b6af00219b.png" 
+                alt="Ravan.ai Logo" 
                 className="h-12 w-auto"
               />
             </div>
@@ -353,7 +351,7 @@ const BaileyIdeas = () => {
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Bailey</h2>
             <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-600 font-medium text-sm">US First AI Real Estate Agent</p>
+            <p className="text-gray-600 font-medium text-sm">Australia's Premier AI Real Estate Agent</p>
           </div>
         </div>
 
@@ -392,7 +390,7 @@ const BaileyIdeas = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-lg text-gray-800 leading-relaxed mb-4 font-medium">{idea}</p>
+                  <p className="text-gray-700 leading-relaxed mb-4">{idea}</p>
                   <Button
                     onClick={() => handleUseIdea(idea)}
                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
