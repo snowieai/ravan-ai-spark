@@ -106,10 +106,18 @@ const MayraIdeas = () => {
               processedIdeas = extractedIdeas.map(idea => {
                 let cleanIdea = idea.replace(/^\d+[\.\)]\s*/, '').replace(/^\*+\s*/, '').replace(/\*+$/, '').trim();
                 
+                // Remove category and type information more aggressively
+                if (cleanIdea.includes('Category:') || cleanIdea.includes('category:')) {
+                  cleanIdea = cleanIdea.split(/\*?[Cc]ategory:?\*?/)[0].trim();
+                }
+                if (cleanIdea.includes('Type:') || cleanIdea.includes('type:')) {
+                  cleanIdea = cleanIdea.split(/\*?[Tt]ype:?\*?/)[0].trim();
+                }
+                if (cleanIdea.includes('Genre:') || cleanIdea.includes('genre:')) {
+                  cleanIdea = cleanIdea.split(/\*?[Gg]enre:?\*?/)[0].trim();
+                }
+                
                 cleanIdea = cleanIdea
-                  .replace(/\*?Category:?\*?.*$/i, '')
-                  .replace(/\*?Type:?\*?.*$/i, '')
-                  .replace(/\*?Genre:?\*?.*$/i, '')
                   .replace(/\*?\[.*?\]\*?/g, '')
                   .replace(/\*?\(.*?\)\*?/g, '')
                   .replace(/\*+/g, '')
@@ -250,10 +258,18 @@ const MayraIdeas = () => {
               .replace(/\n+/g, ' ')
               .trim();
             
+            // Remove category and type information more aggressively
+            if (cleanIdea.includes('Category:') || cleanIdea.includes('category:')) {
+              cleanIdea = cleanIdea.split(/\*?[Cc]ategory:?\*?/)[0].trim();
+            }
+            if (cleanIdea.includes('Type:') || cleanIdea.includes('type:')) {
+              cleanIdea = cleanIdea.split(/\*?[Tt]ype:?\*?/)[0].trim();
+            }
+            if (cleanIdea.includes('Genre:') || cleanIdea.includes('genre:')) {
+              cleanIdea = cleanIdea.split(/\*?[Gg]enre:?\*?/)[0].trim();
+            }
+            
             cleanIdea = cleanIdea
-              .replace(/\*?Category:?\*?.*$/i, '')
-              .replace(/\*?Type:?\*?.*$/i, '')
-              .replace(/\*?Genre:?\*?.*$/i, '')
               .replace(/\*?\[.*?\]\*?/g, '')
               .replace(/\*?\(.*?\)\*?/g, '')
               .replace(/\*+/g, '')
@@ -388,7 +404,7 @@ const MayraIdeas = () => {
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Mayra</h2>
             <div className="h-1 w-24 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-600 font-medium text-sm">Lifestyle & Personal Development Creator</p>
+            <p className="text-gray-600 font-medium text-sm">UK's First AI Real Estate Agent</p>
           </div>
         </div>
 
