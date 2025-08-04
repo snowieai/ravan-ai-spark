@@ -113,6 +113,8 @@ const MayraIdeas = () => {
                   .replace(/\*?\[.*?\]\*?/g, '')
                   .replace(/\*?\(.*?\)\*?/g, '')
                   .replace(/\*+/g, '')
+                  .replace(/🏷/g, '')
+                  .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
                   .replace(/\s+/g, ' ')
                   .trim();
                 
@@ -255,6 +257,8 @@ const MayraIdeas = () => {
               .replace(/\*?\[.*?\]\*?/g, '')
               .replace(/\*?\(.*?\)\*?/g, '')
               .replace(/\*+/g, '')
+              .replace(/🏷/g, '')
+              .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
               .replace(/\s+/g, ' ')
               .trim();
             
@@ -377,7 +381,7 @@ const MayraIdeas = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 w-full mx-auto shadow-lg border border-white/40 mb-8">
             <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <img 
-                src="/lovable-uploads/a97fae0f-f382-4663-afe8-7491cbcc07c9.png" 
+                src="/lovable-uploads/53a222fc-70a0-4d06-b75c-52872d3d1172.png" 
                 alt="Mayra Profile"
                 className="w-full h-full object-cover"
               />
