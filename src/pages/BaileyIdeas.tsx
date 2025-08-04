@@ -91,7 +91,6 @@ const BaileyIdeas = () => {
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .replace(/[^\w\s\-:?!.,]/g, '') // Remove emojis and special characters
               .trim();
             
             // Extract just the main title before any category or extra info
@@ -108,7 +107,7 @@ const BaileyIdeas = () => {
             }
             
             return cleanIdea;
-          }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
+          }).filter(idea => idea.length > 15);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
@@ -135,11 +134,11 @@ const BaileyIdeas = () => {
       });
       // Set fallback ideas
       setIdeas([
-        "Share a virtual tour of a stunning waterfront property in Miami",
-        "Create a comparison post: Apartment vs House living in New York City", 
-        "Showcase the best neighborhoods for families in Los Angeles",
-        "Tips for first-time home buyers in the United States",
-        "Market trends: What's hot in US real estate right now"
+        "Share a virtual tour of a stunning waterfront property in Sydney",
+        "Create a comparison post: Apartment vs House living in Melbourne", 
+        "Showcase the best suburbs for families in Brisbane",
+        "Tips for first-time home buyers in Australia",
+        "Market trends: What's hot in Australian real estate right now"
       ]);
     } finally {
       setIsLoading(false);
@@ -222,7 +221,6 @@ const BaileyIdeas = () => {
               .replace(/^\d+\.\s*/, '') // Remove leading numbers
               .replace(/^[-•*]\s*/, '') // Remove leading bullets
               .replace(/\n+/g, ' ') // Replace line breaks with spaces
-              .replace(/[^\w\s\-:?!.,]/g, '') // Remove emojis and special characters
               .trim();
             
             // Extract just the main title before any category or extra info
@@ -239,7 +237,7 @@ const BaileyIdeas = () => {
             }
             
             return cleanIdea;
-          }).filter(idea => idea.length > 15 && !idea.toLowerCase().includes('sorted reel ideas'));
+          }).filter(idea => idea.length > 15);
           
           console.log('Final processed ideas count:', processedIdeas.length);
           console.log('First 3 processed ideas:', processedIdeas.slice(0, 3));
@@ -346,14 +344,14 @@ const BaileyIdeas = () => {
           <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 w-full mx-auto shadow-lg border border-white/40 mb-8">
             <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
               <img 
-                src="/lovable-uploads/9781dab5-bb1f-4a3c-b00c-5d15db71f54d.png" 
+                src="/lovable-uploads/a8037233-c2be-4b97-8739-3631486f9761.png" 
                 alt="Bailey Profile"
                 className="w-full h-full object-cover"
               />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Bailey</h2>
             <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-600 font-medium text-sm">US First AI Real Estate Agent</p>
+            <p className="text-gray-600 font-medium text-sm">Australia's Premier AI Real Estate Agent</p>
           </div>
         </div>
 
@@ -392,7 +390,7 @@ const BaileyIdeas = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <p className="text-gray-900 text-lg font-medium leading-relaxed mb-4">{idea}</p>
+                  <p className="text-gray-700 leading-relaxed mb-4">{idea}</p>
                   <Button
                     onClick={() => handleUseIdea(idea)}
                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
