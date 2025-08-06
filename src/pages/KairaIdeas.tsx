@@ -295,7 +295,7 @@ const KairaIdeas = () => {
                 )}
               </Button>
               <p className="mt-3 text-xs sm:text-sm italic text-muted-foreground text-center">
-                *Regeneration updates AI-generated ideas only. Sidecar and video content refreshes automatically every 24 hours
+                *Regeneration updates AI-generated ideas only. Scraped content refreshes automatically every 24 hours
               </p>
             </CardContent>
           </Card>
