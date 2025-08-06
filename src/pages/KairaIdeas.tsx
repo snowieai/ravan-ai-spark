@@ -265,9 +265,14 @@ const KairaIdeas = () => {
           </p>
           
           {isLoading && (
-            <div className="flex items-center justify-center">
-              <Loader2 className="w-8 h-8 mr-3 animate-spin text-orange-500" />
-              <span className="text-xl text-gray-700">Kaira is thinking...</span>
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex items-center justify-center">
+                <Loader2 className="w-8 h-8 mr-3 animate-spin text-orange-500" />
+                <span className="text-xl text-gray-700">Kaira is thinking...</span>
+              </div>
+              <p className="mt-2 text-sm italic text-muted-foreground text-center">
+                *Regeneration updates AI-generated ideas only. Sidecar and video content refreshes automatically every 24 hours
+              </p>
             </div>
           )}
         </div>
