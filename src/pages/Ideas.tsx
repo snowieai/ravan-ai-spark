@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+type IdeaType = 'AI-Generated' | 'Scraped'
+interface IdeaItem { title: string; type: IdeaType }
 
 const Ideas = () => {
-  const [ideas, setIdeas] = useState<string[]>([]);
+  const [ideas, setIdeas] = useState<IdeaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -21,6 +24,12 @@ const Ideas = () => {
   const generateIdeas = async () => {
     setIsLoading(true);
     console.log("Generating ideas via webhook...");
+
+    const normalizeType = (raw?: string): IdeaType => {
+      const s = (raw || '').toLowerCase();
+      if (s.includes('scrap')) return 'Scraped';
+      return 'AI-Generated';
+    };
     
     try {
       const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Generating ideas', {
@@ -31,27 +40,44 @@ const Ideas = () => {
       console.log("Webhook response:", data);
       
       // Parse ideas from the formatted output
-      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      const ideaMatches = data.output?.match(/\*\d+\.\s*([^*]+)\*/g);
       if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string) => 
+        const titles = ideaMatches.map((match: string) =>
           match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
         );
-        setIdeas(parsedIdeas);
+
+        // Try to extract corresponding types from the output
+        const typeRegex = /(?:📋\s*)?Type:\s*([^\n\r]+)/gi;
+        const typeCaptures: string[] = [];
+        let m: RegExpExecArray | null;
+        while ((m = typeRegex.exec(data.output)) !== null) {
+          typeCaptures.push(m[1].trim());
+        }
+
+        const items: IdeaItem[] = titles.map((title: string, i: number) => ({
+          title,
+          type: normalizeType(typeCaptures[i])
+        }));
+
+        setIdeas(items);
         toast({
           title: "Ideas Generated!",
-          description: `Found ${parsedIdeas.length} creative ideas for you.`,
+          description: `Found ${items.length} creative ideas for you.`,
         });
       } else {
-        const lines = data.output.split('\n').filter((line: string) => 
-          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
-          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
-          !line.startsWith('👉') && line.includes('*')
-        );
-        const fallbackIdeas = lines.slice(0, 10);
-        setIdeas(fallbackIdeas);
+        const lines = (data.output || '')
+          .split('\n')
+          .filter((line: string) =>
+            line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') &&
+            !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') &&
+            !line.startsWith('👉') && line.includes('*')
+          );
+        const fallbackTitles = lines.slice(0, 10).map((l: string) => l.replace(/\*/g, '').trim());
+        const items: IdeaItem[] = fallbackTitles.map((title: string) => ({ title, type: 'AI-Generated' }));
+        setIdeas(items);
         toast({
           title: "Ideas Generated!",
-          description: `Found ${fallbackIdeas.length} ideas for you.`,
+          description: `Found ${items.length} ideas for you.`,
         });
       }
     } catch (error) {
@@ -101,19 +127,35 @@ const Ideas = () => {
       // Parse ideas from the formatted output
       const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
       if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string) => 
+        const titles = ideaMatches.map((match: string) => 
           match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
         );
+
+        const normalizeType = (raw?: string): IdeaType => {
+          const s = (raw || '').toLowerCase();
+          if (s.includes('scrap')) return 'Scraped';
+          return 'AI-Generated';
+        };
+        const typeRegex = /(?:📋\s*)?Type:\s*([^\n\r]+)/gi;
+        const typeCaptures: string[] = [];
+        let m: RegExpExecArray | null;
+        while ((m = typeRegex.exec(data.output)) !== null) {
+          typeCaptures.push(m[1].trim());
+        }
+        const items: IdeaItem[] = titles.map((title: string, i: number) => ({
+          title,
+          type: normalizeType(typeCaptures[i])
+        }));
         
         // Animate out old ideas first
         setIdeas([]);
         
         // Then animate in new ideas after a brief delay
         setTimeout(() => {
-          setIdeas(parsedIdeas);
+          setIdeas(items);
           toast({
             title: "New Ideas Generated!",
-            description: `Generated ${parsedIdeas.length} fresh creative ideas for you.`,
+            description: `Generated ${items.length} fresh creative ideas for you.`,
           });
         }, 300);
       } else {
@@ -122,17 +164,18 @@ const Ideas = () => {
           !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
           !line.startsWith('👉') && line.includes('*')
         );
-        const fallbackIdeas = lines.slice(0, 10);
+        const fallbackTitles = lines.slice(0, 10).map((l: string) => l.replace(/\*/g, '').trim());
+        const items: IdeaItem[] = fallbackTitles.map((title: string) => ({ title, type: 'AI-Generated' }));
         
         // Animate out old ideas first
         setIdeas([]);
         
         // Then animate in new ideas after a brief delay
         setTimeout(() => {
-          setIdeas(fallbackIdeas);
+          setIdeas(items);
           toast({
             title: "New Ideas Generated!",
-            description: `Generated ${fallbackIdeas.length} fresh ideas for you.`,
+            description: `Generated ${items.length} fresh ideas for you.`,
           });
         }, 300);
       }
@@ -216,22 +259,25 @@ const Ideas = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in mb-32">
             {ideas.map((idea, index) => (
               <Card 
-                key={`${idea}-${index}`}
+                key={`${idea.title}-${index}`}
                 className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 animate-scale-in"
                 style={{
                   animationDelay: `${index * 100}ms`,
                   animationFillMode: 'both'
                 }}
-                onClick={() => selectIdea(idea)}
+                onClick={() => selectIdea(idea.title)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-gray-900 font-semibold text-lg mb-2">
-                        Idea {index + 1}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-gray-900 font-semibold text-lg">Idea {index + 1}</h3>
+                        <Badge variant={idea.type === 'Scraped' ? 'secondary' : 'default'}>
+                          {idea.type}
+                        </Badge>
+                      </div>
                       <p className="text-gray-600 leading-relaxed">
-                        {idea}
+                        {idea.title}
                       </p>
                     </div>
                     <ArrowRight className="w-5 h-5 text-blue-500 ml-4 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -281,6 +327,9 @@ const Ideas = () => {
                 </>
               )}
             </Button>
+            <p className="mt-3 text-xs sm:text-sm italic text-muted-foreground text-center">
+              *Regeneration updates AI-generated ideas only. Scraped content refreshes automatically every 24 hours
+            </p>
           </div>
         )}
 
@@ -297,6 +346,9 @@ const Ideas = () => {
               <Lightbulb className="w-6 h-6" />
               <span>Generate AI Ideas</span>
             </Button>
+            <p className="mt-3 text-xs sm:text-sm italic text-muted-foreground text-center">
+              *Regeneration updates AI-generated ideas only. Scraped content refreshes automatically every 24 hours
+            </p>
           </div>
         )}
       </div>
