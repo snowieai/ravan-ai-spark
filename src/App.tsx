@@ -14,6 +14,7 @@ import MayraDashboard from "./pages/MayraDashboard";
 import Ideas from "./pages/Ideas";
 import KairaIdeas from "./pages/KairaIdeas";
 import KairaCalendar from "./pages/KairaCalendar";
+import KairaCalendarThemes from "./pages/KairaCalendarThemes";
 import BaileyIdeas from "./pages/BaileyIdeas";
 import MayraIdeas from "./pages/MayraIdeas";
 import Script from "./pages/Script";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/kaira-ideas" element={<KairaIdeas />} />
             <Route path="/kaira-calendar" element={<KairaCalendar />} />
+            <Route path="/kaira-calendar-themes" element={<KairaCalendarThemes />} />
             <Route path="/bailey-ideas" element={<BaileyIdeas />} />
             <Route path="/mayra-ideas" element={<MayraIdeas />} />
             <Route path="/script" element={<Script />} />
