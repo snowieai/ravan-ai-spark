@@ -3,11 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+interface GeneratedIdea {
+  title: string;
+  type: string;
+}
+
 const KairaIdeas = () => {
-  const [ideas, setIdeas] = useState<string[]>([]);
+  const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -23,29 +29,37 @@ const KairaIdeas = () => {
 
       const data = await response.json();
       
-      // Parse ideas from the formatted output - same as Aisha's page
-      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      // Parse ideas from the new formatted output
+      const ideaMatches = data.output.match(/\*(\d+)\.\s*([^*]+)\*[\s\S]*?📋\s*Type:\s*([^\n]+)/g);
       if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string) => 
-          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
-        );
+        const parsedIdeas = ideaMatches.map((match: string) => {
+          const titleMatch = match.match(/\*\d+\.\s*([^*]+)\*/);
+          const typeMatch = match.match(/📋\s*Type:\s*([^\n]+)/);
+          
+          const title = titleMatch ? titleMatch[1].trim() : 'Untitled Idea';
+          const type = typeMatch ? typeMatch[1].trim() : 'Unknown';
+          
+          return { title, type };
+        });
         setIdeas(parsedIdeas);
         toast({
           title: "Ideas Generated!",
           description: `Kaira created ${parsedIdeas.length} creative ideas for you.`,
         });
       } else {
-        const lines = data.output.split('\n').filter((line: string) => 
-          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
-          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
-          !line.startsWith('👉') && line.includes('*')
-        );
-        const fallbackIdeas = lines.slice(0, 10);
-        setIdeas(fallbackIdeas);
-        toast({
-          title: "Ideas Generated!",
-          description: `Kaira created ${fallbackIdeas.length} ideas for you.`,
-        });
+        // Fallback to old format
+        const oldMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+        if (oldMatches) {
+          const fallbackIdeas = oldMatches.map((match: string) => ({
+            title: match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim(),
+            type: 'AI - GENERATED'
+          }));
+          setIdeas(fallbackIdeas);
+          toast({
+            title: "Ideas Generated!",
+            description: `Kaira created ${fallbackIdeas.length} ideas for you.`,
+          });
+        }
       }
     } catch (error) {
       console.error('Error generating ideas:', error);
@@ -93,12 +107,18 @@ const KairaIdeas = () => {
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
-      // Parse ideas from the formatted output - same as generate
-      const ideaMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+      // Parse ideas from the new formatted output
+      const ideaMatches = data.output.match(/\*(\d+)\.\s*([^*]+)\*[\s\S]*?📋\s*Type:\s*([^\n]+)/g);
       if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string) => 
-          match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
-        );
+        const parsedIdeas = ideaMatches.map((match: string) => {
+          const titleMatch = match.match(/\*\d+\.\s*([^*]+)\*/);
+          const typeMatch = match.match(/📋\s*Type:\s*([^\n]+)/);
+          
+          const title = titleMatch ? titleMatch[1].trim() : 'Untitled Idea';
+          const type = typeMatch ? typeMatch[1].trim() : 'Unknown';
+          
+          return { title, type };
+        });
         
         // Add delay for completion animation
         setTimeout(() => {
@@ -109,20 +129,22 @@ const KairaIdeas = () => {
           });
         }, 500);
       } else {
-        const lines = data.output.split('\n').filter((line: string) => 
-          line.trim() && !line.startsWith('💡') && !line.startsWith('🏷️') && 
-          !line.startsWith('👤') && !line.startsWith('🔗') && !line.startsWith('📝') && 
-          !line.startsWith('👉') && line.includes('*')
-        );
-        const fallbackIdeas = lines.slice(0, 10);
-        
-        setTimeout(() => {
-          setIdeas(fallbackIdeas);
-          toast({
-            title: "✨ Fresh Ideas Generated!",
-            description: `Kaira created ${fallbackIdeas.length} brand new ideas for you.`,
-          });
-        }, 500);
+        // Fallback to old format
+        const oldMatches = data.output.match(/\*\d+\.\s*([^*]+)\*/g);
+        if (oldMatches) {
+          const fallbackIdeas = oldMatches.map((match: string) => ({
+            title: match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim(),
+            type: 'AI - GENERATED'
+          }));
+          
+          setTimeout(() => {
+            setIdeas(fallbackIdeas);
+            toast({
+              title: "✨ Fresh Ideas Generated!",
+              description: `Kaira created ${fallbackIdeas.length} brand new ideas for you.`,
+            });
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('Error regenerating ideas:', error);
@@ -141,9 +163,31 @@ const KairaIdeas = () => {
     }
   };
 
-  const selectIdea = (idea: string) => {
-    localStorage.setItem('selectedIdea', idea);
+  const selectIdea = (idea: GeneratedIdea) => {
+    localStorage.setItem('selectedIdea', idea.title);
     navigate('/kaira-script');
+  };
+
+  const getTypeBadgeVariant = (type: string) => {
+    if (type.toLowerCase().includes('ai') && type.toLowerCase().includes('generated')) {
+      return 'default'; // Purple/violet for AI-generated
+    } else if (type.toLowerCase() === 'sidecar') {
+      return 'secondary'; // Blue for sidecar
+    } else if (type.toLowerCase() === 'video') {
+      return 'outline'; // Green for video
+    }
+    return 'default';
+  };
+
+  const getTypeBadgeStyle = (type: string) => {
+    if (type.toLowerCase().includes('ai') && type.toLowerCase().includes('generated')) {
+      return 'bg-violet-100 text-violet-800 border-violet-200';
+    } else if (type.toLowerCase() === 'sidecar') {
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    } else if (type.toLowerCase() === 'video') {
+      return 'bg-green-100 text-green-800 border-green-200';
+    }
+    return 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
 
@@ -235,18 +279,25 @@ const KairaIdeas = () => {
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 transition-all duration-500 ${isRegenerating ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
               {ideas.map((idea, index) => (
                 <Card 
-                  key={`${idea}-${index}`}
+                  key={`${idea.title}-${index}`}
                   className={`bg-white/80 backdrop-blur-sm border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${!isRegenerating ? 'animate-scale-in' : ''}`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="text-gray-900 font-semibold text-lg mb-2">
-                          Idea {index + 1}
-                        </h3>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-gray-900 font-semibold text-lg">
+                            Idea {index + 1}
+                          </h3>
+                          <Badge 
+                            className={`ml-2 text-xs font-medium ${getTypeBadgeStyle(idea.type)}`}
+                          >
+                            {idea.type}
+                          </Badge>
+                        </div>
                         <p className="text-gray-600 leading-relaxed text-sm sm:text-base mb-4">
-                          {idea}
+                          {idea.title}
                         </p>
                       </div>
                     </div>
