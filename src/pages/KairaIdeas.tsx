@@ -29,42 +29,25 @@ const KairaIdeas = () => {
 
       const data = await response.json();
       
-      console.log('Raw webhook response:', data.output);
+      // Parse each idea block based on the exact format from webhook
+      const ideaBlocks = data.output.split(/(?=\*\d+\.)/);
       
-      // More flexible regex to handle various formats
-      const ideaMatches = data.output.match(/\*\d+\.\s*[^*]+\*[\s\S]*?(?=\*\d+\.|$)/g);
-      console.log('Idea matches found:', ideaMatches);
-      
-      if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string, index: number) => {
-          console.log(`Processing idea ${index + 1}:`, match);
-          
-          // Extract title
-          const titleMatch = match.match(/\*\d+\.\s*([^*]+)\*/);
+      if (ideaBlocks.length > 1) {
+        const parsedIdeas = ideaBlocks.slice(1).map((block: string) => {
+          // Extract title from the first line
+          const titleMatch = block.match(/\*\d+\.\s*([^*]+)\*/);
           const title = titleMatch ? titleMatch[1].trim() : 'Untitled Idea';
           
-          // Extract type with more flexible pattern
-          const typePatterns = [
-            /📋\s*Type:\s*([^\n\r]+)/i,
-            /Type:\s*([^\n\r]+)/i,
-            /🏷️\s*Type:\s*([^\n\r]+)/i
-          ];
-          
+          // Extract type specifically from the 📋 Type: line
+          const typeMatch = block.match(/📋\s*Type:\s*([^\n\r]+)/);
           let type = 'AI - GENERATED'; // Default fallback
           
-          for (const pattern of typePatterns) {
-            const typeMatch = match.match(pattern);
-            if (typeMatch) {
-              type = typeMatch[1].trim();
-              console.log(`Found type for idea ${index + 1}:`, type);
-              break;
-            }
+          if (typeMatch) {
+            type = typeMatch[1].trim();
           }
           
           return { title, type };
         });
-        
-        console.log('Final parsed ideas:', parsedIdeas);
         setIdeas(parsedIdeas);
         toast({
           title: "Ideas Generated!",
@@ -131,30 +114,21 @@ const KairaIdeas = () => {
       clearInterval(progressInterval);
       setLoadingProgress(100);
       
-      // Parse ideas from the new formatted output with improved regex
-      const ideaMatches = data.output.match(/\*\d+\.\s*[^*]+\*[\s\S]*?(?=\*\d+\.|$)/g);
+      // Parse each idea block based on the exact format from webhook
+      const ideaBlocks = data.output.split(/(?=\*\d+\.)/);
       
-      if (ideaMatches) {
-        const parsedIdeas = ideaMatches.map((match: string) => {
-          // Extract title
-          const titleMatch = match.match(/\*\d+\.\s*([^*]+)\*/);
+      if (ideaBlocks.length > 1) {
+        const parsedIdeas = ideaBlocks.slice(1).map((block: string) => {
+          // Extract title from the first line
+          const titleMatch = block.match(/\*\d+\.\s*([^*]+)\*/);
           const title = titleMatch ? titleMatch[1].trim() : 'Untitled Idea';
           
-          // Extract type with more flexible pattern
-          const typePatterns = [
-            /📋\s*Type:\s*([^\n\r]+)/i,
-            /Type:\s*([^\n\r]+)/i,
-            /🏷️\s*Type:\s*([^\n\r]+)/i
-          ];
-          
+          // Extract type specifically from the 📋 Type: line
+          const typeMatch = block.match(/📋\s*Type:\s*([^\n\r]+)/);
           let type = 'AI - GENERATED'; // Default fallback
           
-          for (const pattern of typePatterns) {
-            const typeMatch = match.match(pattern);
-            if (typeMatch) {
-              type = typeMatch[1].trim();
-              break;
-            }
+          if (typeMatch) {
+            type = typeMatch[1].trim();
           }
           
           return { title, type };
