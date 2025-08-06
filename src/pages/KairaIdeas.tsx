@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft, Calendar, Plus, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Lightbulb, ArrowRight, Loader2, Sparkles, ArrowLeft, ChevronRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const KairaIdeas = () => {
@@ -14,9 +11,6 @@ const KairaIdeas = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [selectedIdea, setSelectedIdea] = useState<string>('');
-  const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const generateIdeas = async () => {
@@ -152,39 +146,6 @@ const KairaIdeas = () => {
     navigate('/kaira-script');
   };
 
-  const scheduleIdea = async () => {
-    if (!selectedIdea || !scheduledDate) return;
-
-    try {
-      const { error } = await supabase
-        .from('content_calendar')
-        .insert({
-          topic: selectedIdea,
-          scheduled_date: scheduledDate,
-          status: 'planned',
-          priority: 2,
-          content_source: 'generated',
-          category: 'Entertainment'
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Idea added to content calendar",
-      });
-
-      setIsScheduleDialogOpen(false);
-      setSelectedIdea('');
-    } catch (error) {
-      console.error('Error scheduling idea:', error);
-      toast({
-        title: "Error",
-        description: "Failed to schedule idea",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50">
@@ -289,7 +250,7 @@ const KairaIdeas = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center gap-3 pt-4 border-t border-orange-100">
+                    <div className="flex justify-center pt-4 border-t border-orange-100">
                       <Button
                         onClick={() => selectIdea(idea)}
                         className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full flex items-center gap-2 transition-all duration-300 hover:scale-105"
@@ -297,47 +258,6 @@ const KairaIdeas = () => {
                         Select This Idea
                         <ChevronRight className="w-4 h-4" />
                       </Button>
-                      <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            onClick={() => setSelectedIdea(idea)}
-                            variant="outline"
-                            className="border-blue-500 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-full flex items-center gap-2"
-                          >
-                            <Calendar className="w-4 h-4" />
-                            Schedule
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Schedule Idea</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium">Selected Idea</label>
-                              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md mt-1">
-                                {selectedIdea}
-                              </p>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Scheduled Date</label>
-                              <Input
-                                type="date"
-                                value={scheduledDate}
-                                onChange={(e) => setScheduledDate(e.target.value)}
-                                className="mt-1"
-                              />
-                            </div>
-                            <Button 
-                              onClick={scheduleIdea} 
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Add to Calendar
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
                     </div>
                   </CardContent>
                 </Card>

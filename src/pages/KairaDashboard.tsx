@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Video, Lightbulb, ArrowRight, ArrowLeft, User, Calendar } from 'lucide-react';
+import { Lightbulb, ArrowRight, ArrowLeft, User } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 
 const KairaDashboard = () => {
@@ -15,9 +15,6 @@ const KairaDashboard = () => {
     }
   }, [navigate]);
 
-  const handleVideoRedirect = () => {
-    window.open('https://kaira-video-forge.lovable.app', '_blank');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 relative overflow-hidden">
@@ -111,32 +108,14 @@ const KairaDashboard = () => {
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
+          {/* CTA Button */}
+          <div className="flex justify-center items-center mb-20">
             <Button
               onClick={() => navigate('/kaira-ideas')}
               className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
               <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
               Generate Ideas
-              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
-            </Button>
-
-            <Button
-              onClick={() => navigate('/kaira-calendar')}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
-            >
-              <Calendar className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-              Content Calendar
-              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            
-            <Button
-              onClick={handleVideoRedirect}
-              className="bg-gray-800 hover:bg-gray-900 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
-            >
-              <Video className="w-7 h-7 mr-3 group-hover:scale-110 transition-transform" />
-              Create AI Video with Kaira
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
