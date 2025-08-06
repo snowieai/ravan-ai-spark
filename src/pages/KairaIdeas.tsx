@@ -270,9 +270,6 @@ const KairaIdeas = () => {
                 <Loader2 className="w-8 h-8 mr-3 animate-spin text-orange-500" />
                 <span className="text-xl text-gray-700">Kaira is thinking...</span>
               </div>
-              <p className="mt-2 text-sm italic text-muted-foreground text-center">
-                *Regeneration updates AI-generated ideas only. Sidecar and video content refreshes automatically every 24 hours
-              </p>
             </div>
           )}
         </div>
@@ -297,6 +294,9 @@ const KairaIdeas = () => {
                   </>
                 )}
               </Button>
+              <p className="mt-3 text-xs sm:text-sm italic text-muted-foreground text-center">
+                *Regeneration updates AI-generated ideas only. Sidecar and video content refreshes automatically every 24 hours
+              </p>
             </CardContent>
           </Card>
         </div>
