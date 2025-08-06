@@ -101,9 +101,35 @@ const KairaCalendarThemes = () => {
     }
   ];
 
+  // Send webhook notification
+  const sendDayWebhook = async (day: string) => {
+    try {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook-test/cd662191-3c6e-4542-bb4e-e75e3b16009c', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: day }),
+      });
+
+      if (response.ok) {
+        console.log(`Webhook sent successfully for ${day}`);
+        toast.success(`Day tracking sent: ${day}`);
+      } else {
+        console.warn(`Webhook failed for ${day}:`, response.status);
+      }
+    } catch (error) {
+      console.error(`Webhook error for ${day}:`, error);
+      // Don't show error toast for webhook failures to avoid cluttering UI
+    }
+  };
+
   const generateThemedIdeas = async (theme: string, day: string) => {
     setIsLoading(true);
     setSelectedTheme(theme);
+    
+    // Send webhook notification first
+    await sendDayWebhook(day);
     
     try {
       const prompt = `Generate 3 creative video content ideas for ${theme} specifically for ${day}. Focus on Dubai real estate market. Each idea should be engaging, informative, and suitable for social media content.`;
