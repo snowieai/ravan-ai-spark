@@ -8,6 +8,17 @@ import { Badge } from '@/components/ui/badge';
 type IdeaType = 'AI-Generated' | 'Scraped'
 interface IdeaItem { title: string; type: IdeaType }
 
+const normalizeType = (raw?: string): IdeaType => {
+  const s = (raw || '').toLowerCase();
+  // Map IG media types to Scraped
+  if (s.includes('video') || s.includes('sidecar')) return 'Scraped';
+  // Explicit scraped wording
+  if (s.includes('scrap')) return 'Scraped';
+  // AI variants like 'AI - GENERATED'
+  if (s.includes('ai') && s.includes('generated')) return 'AI-Generated';
+  return 'AI-Generated';
+};
+
 const Ideas = () => {
   const [ideas, setIdeas] = useState<IdeaItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,11 +36,7 @@ const Ideas = () => {
     setIsLoading(true);
     console.log("Generating ideas via webhook...");
 
-    const normalizeType = (raw?: string): IdeaType => {
-      const s = (raw || '').toLowerCase();
-      if (s.includes('scrap')) return 'Scraped';
-      return 'AI-Generated';
-    };
+    // using shared normalizeType
     
     try {
       const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/9562157b-c2d8-4e1f-a79e-03bd7c3337a2?message=Generating ideas', {
@@ -131,11 +138,7 @@ const Ideas = () => {
           match.replace(/\*\d+\.\s*/, '').replace(/\*$/, '').trim()
         );
 
-        const normalizeType = (raw?: string): IdeaType => {
-          const s = (raw || '').toLowerCase();
-          if (s.includes('scrap')) return 'Scraped';
-          return 'AI-Generated';
-        };
+        // using shared normalizeType
         const typeRegex = /(?:📋\s*)?Type:\s*([^\n\r]+)/gi;
         const typeCaptures: string[] = [];
         let m: RegExpExecArray | null;
