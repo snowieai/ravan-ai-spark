@@ -19,6 +19,14 @@ const KairaIdeas = () => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const navigate = useNavigate();
 
+  // Normalize idea type to only two labels: 'AI - GENERATED' or 'Scraped'
+  const normalizeIdeaType = (raw: string) => {
+    const s = (raw || '').toLowerCase().trim();
+    if (s.includes('ai') && s.includes('generated')) return 'AI - GENERATED';
+    if (s.includes('sidecar') || s.includes('video')) return 'Scraped';
+    return 'AI - GENERATED';
+  };
+
   const generateIdeas = async () => {
     setIsLoading(true);
     
@@ -45,6 +53,9 @@ const KairaIdeas = () => {
           if (typeMatch) {
             type = typeMatch[1].trim();
           }
+          
+          // Normalize to either 'AI - GENERATED' or 'Scraped'
+          type = normalizeIdeaType(type);
           
           return { title, type };
         });
@@ -131,6 +142,9 @@ const KairaIdeas = () => {
             type = typeMatch[1].trim();
           }
           
+          // Normalize to either 'AI - GENERATED' or 'Scraped'
+          type = normalizeIdeaType(type);
+          
           return { title, type };
         });
         
@@ -183,23 +197,21 @@ const KairaIdeas = () => {
   };
 
   const getTypeBadgeVariant = (type: string) => {
-    if (type.toLowerCase().includes('ai') && type.toLowerCase().includes('generated')) {
-      return 'default'; // Purple/violet for AI-generated
-    } else if (type.toLowerCase() === 'sidecar') {
-      return 'secondary'; // Blue for sidecar
-    } else if (type.toLowerCase() === 'video') {
-      return 'outline'; // Green for video
+    const t = type.toLowerCase();
+    if (t.includes('ai') && t.includes('generated')) {
+      return 'default'; // Primary for AI-generated
+    } else if (t === 'scraped') {
+      return 'secondary'; // Secondary for scraped
     }
     return 'default';
   };
 
   const getTypeBadgeStyle = (type: string) => {
-    if (type.toLowerCase().includes('ai') && type.toLowerCase().includes('generated')) {
+    const t = type.toLowerCase();
+    if (t.includes('ai') && t.includes('generated')) {
       return 'bg-violet-100 text-violet-800 border-violet-200';
-    } else if (type.toLowerCase() === 'sidecar') {
+    } else if (t === 'scraped') {
       return 'bg-blue-100 text-blue-800 border-blue-200';
-    } else if (type.toLowerCase() === 'video') {
-      return 'bg-green-100 text-green-800 border-green-200';
     }
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
