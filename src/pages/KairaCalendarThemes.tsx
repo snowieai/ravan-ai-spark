@@ -41,6 +41,14 @@ const KairaCalendarThemes = () => {
   const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Get current day of the week
+  const getCurrentDay = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[new Date().getDay()];
+  };
+
+  const currentDay = getCurrentDay();
+
   const themeDays: ThemeDay[] = [
     {
       day: 'Monday',
@@ -248,10 +256,15 @@ const KairaCalendarThemes = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {themeDays.map((themeDay) => {
               const IconComponent = themeDay.icon;
+              const isToday = themeDay.day === currentDay;
               return (
                 <Card 
                   key={themeDay.day}
-                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white/90 backdrop-blur-sm border-orange-100"
+                  className={`group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm ${
+                    isToday 
+                      ? 'bg-gradient-to-br from-orange-200 via-orange-100 to-amber-100 border-orange-300 shadow-lg ring-2 ring-orange-400/50' 
+                      : 'bg-white/90 border-orange-100'
+                  }`}
                   onClick={() => generateThemedIdeas(themeDay.theme, themeDay.day)}
                 >
                   <CardHeader className="text-center">
