@@ -104,12 +104,8 @@ const KairaCalendarThemes = () => {
   // Send webhook notification
   const sendDayWebhook = async (day: string) => {
     try {
-      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook-test/cd662191-3c6e-4542-bb4e-e75e3b16009c', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: day }),
+      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook-test/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(day)}`, {
+        method: 'GET',
       });
 
       if (response.ok) {
