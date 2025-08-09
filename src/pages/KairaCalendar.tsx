@@ -229,35 +229,71 @@ const KairaCalendar = () => {
   };
 
   const generateIdeasForDay = async (dayName: string) => {
+    console.log('🚀 generateIdeasForDay called with:', dayName);
+    console.log('🔗 Connection status:', isConnected);
+    console.log('⏳ Currently generating for:', generatingIdeas);
+    
     setGeneratingIdeas(dayName);
     
+    const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
+    const payload = { day: dayName };
+    
+    console.log('📤 Sending request to:', webhookUrl);
+    console.log('📦 Payload:', payload);
+    
     try {
-      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c', {
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ day: dayName }),
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
+      
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const result = await response.text();
-        console.log('Ideas generated for', dayName, ':', result);
+        console.log('✅ Success! Ideas generated for', dayName, ':', result);
         toast({
           title: "Success",
           description: `Ideas generated for ${dayName}`,
         });
       } else {
-        throw new Error(`Failed to generate ideas: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ HTTP Error:', response.status, response.statusText, errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
     } catch (error) {
-      console.error('Error generating ideas:', error);
+      console.error('❌ Network/Request Error for', dayName, ':', error);
+      
+      let errorMessage = `Failed to generate ideas for ${dayName}`;
+      
+      if (error.name === 'AbortError') {
+        errorMessage += ' (Request timed out)';
+      } else if (error.message.includes('CORS')) {
+        errorMessage += ' (CORS error)';
+      } else if (error.message.includes('NetworkError')) {
+        errorMessage += ' (Network error)';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage += ' (Connection failed)';
+      }
+      
       toast({
         title: "Error",
-        description: `Failed to generate ideas for ${dayName}`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 Finished processing for:', dayName);
       setGeneratingIdeas(null);
     }
   };
