@@ -13,5 +13,40 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+    detectSessionInUrl: false,
+  },
+  global: {
+    headers: {
+      'apikey': SUPABASE_PUBLISHABLE_KEY,
+    },
+  },
+  db: {
+    schema: 'public',
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 });
+
+// Test connection function
+export const testConnection = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('content_calendar')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log('Supabase connection test successful');
+    return { success: true, data };
+  } catch (err) {
+    console.error('Network error during connection test:', err);
+    return { success: false, error: 'Network connection failed' };
+  }
+};
