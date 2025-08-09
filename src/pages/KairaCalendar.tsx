@@ -66,6 +66,7 @@ const KairaCalendar = () => {
   const [newPriority, setNewPriority] = useState<1 | 2 | 3>(1);
   const [newCategory, setNewCategory] = useState<'Real Estate News' | 'Entertainment' | 'Educational'>('Entertainment');
   const [isConnected, setIsConnected] = useState(false);
+  const [generatingIdeas, setGeneratingIdeas] = useState<string | null>(null);
 
   useEffect(() => {
     fetchContentItems();
@@ -91,12 +92,13 @@ const KairaCalendar = () => {
   const fetchContentItems = async () => {
     setLoading(true);
     
-    const { data, error } = await safeSupabaseQuery(() =>
-      supabase
+    const { data, error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
         .from('content_calendar')
         .select('*')
-        .order('scheduled_date', { ascending: true })
-    );
+        .order('scheduled_date', { ascending: true });
+      return result;
+    });
 
     if (error) {
       console.error('Failed to fetch content:', error);
@@ -133,12 +135,13 @@ const KairaCalendar = () => {
       category: newCategory
     };
 
-    const { data, error } = await safeSupabaseQuery(() =>
-      supabase
+    const { data, error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
         .from('content_calendar')
         .insert(insertData)
-        .select()
-    );
+        .select();
+      return result;
+    });
 
     if (error) {
       console.error('Insert error:', error);
@@ -165,13 +168,14 @@ const KairaCalendar = () => {
   };
 
   const updateContentStatus = async (id: string, newStatus: ContentItem['status']) => {
-    const { error } = await safeSupabaseQuery(() =>
-      supabase
+    const { error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
         .from('content_calendar')
         .update({ status: newStatus })
         .eq('id', id)
-        .select()
-    );
+        .select();
+      return result;
+    });
 
     if (error) {
       console.error('Update error:', error);
@@ -192,13 +196,14 @@ const KairaCalendar = () => {
   };
 
   const deleteContentItem = async (id: string) => {
-    const { error } = await safeSupabaseQuery(() =>
-      supabase
+    const { error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
         .from('content_calendar')
         .delete()
         .eq('id', id)
-        .select()
-    );
+        .select();
+      return result;
+    });
 
     if (error) {
       console.error('Delete error:', error);
@@ -221,6 +226,40 @@ const KairaCalendar = () => {
   const getContentForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return contentItems.filter(item => item.scheduled_date === dateStr);
+  };
+
+  const generateIdeasForDay = async (dayName: string) => {
+    setGeneratingIdeas(dayName);
+    
+    try {
+      const response = await fetch('https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ day: dayName }),
+      });
+
+      if (response.ok) {
+        const result = await response.text();
+        console.log('Ideas generated for', dayName, ':', result);
+        toast({
+          title: "Success",
+          description: `Ideas generated for ${dayName}`,
+        });
+      } else {
+        throw new Error(`Failed to generate ideas: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error generating ideas:', error);
+      toast({
+        title: "Error",
+        description: `Failed to generate ideas for ${dayName}`,
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingIdeas(null);
+    }
   };
 
   if (loading) {
@@ -360,6 +399,19 @@ const KairaCalendar = () => {
                     <div className={`text-lg font-bold ${isToday ? 'text-orange-600' : 'text-orange-900'}`}>
                       {date.getDate()}
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateIdeasForDay(dayNames[index])}
+                      disabled={!isConnected || generatingIdeas === dayNames[index]}
+                      className="mt-2 h-7 text-xs bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700"
+                    >
+                      {generatingIdeas === dayNames[index] ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        "Generate Ideas"
+                      )}
+                    </Button>
                   </div>
                   
                   <div className="space-y-2">
