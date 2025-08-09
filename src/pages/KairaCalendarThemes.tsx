@@ -101,55 +101,100 @@ const KairaCalendarThemes = () => {
     }
   ];
 
-  // Send webhook notification
+  // Send webhook notification and generate ideas
   const sendDayWebhook = async (day: string) => {
+    console.log(`🚀 generateIdeasForDay called with: ${day}`);
+    
     try {
-      const response = await fetch(`https://n8n.srv905291.hstgr.cloud/webhook-test/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(day)}`, {
-        method: 'GET',
+      const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
+      const payload = { day };
+      
+      console.log(`📤 Sending request to: ${webhookUrl}`);
+      console.log(`📦 Payload:`, payload);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30000) // 30 second timeout
       });
 
+      console.log(`📨 Response status: ${response.status}`);
+      
       if (response.ok) {
-        console.log(`Webhook sent successfully for ${day}`);
-        toast.success(`Day tracking sent: ${day}`);
+        const responseData = await response.text();
+        console.log(`✅ Webhook response:`, responseData);
+        toast.success(`Ideas generated for ${day}!`);
+        
+        // Try to parse the response as ideas
+        if (responseData) {
+          return parseWebhookResponse(responseData, day);
+        }
       } else {
-        console.warn(`Webhook failed for ${day}:`, response.status);
+        const errorText = await response.text();
+        console.error(`❌ Webhook failed for ${day}:`, response.status, errorText);
+        toast.error(`Failed to generate ideas for ${day}. Please try again.`);
+        throw new Error(`Webhook failed: ${response.status}`);
       }
     } catch (error) {
-      console.error(`Webhook error for ${day}:`, error);
-      // Don't show error toast for webhook failures to avoid cluttering UI
+      console.error(`🚨 Webhook error for ${day}:`, error);
+      toast.error(`Failed to generate ideas. Please try again.`);
+      throw error;
     }
+  };
+
+  // Parse webhook response into ideas
+  const parseWebhookResponse = (responseText: string, day: string): GeneratedIdea[] => {
+    try {
+      // Try to parse as JSON first
+      const jsonData = JSON.parse(responseText);
+      if (jsonData.ideas && Array.isArray(jsonData.ideas)) {
+        return jsonData.ideas.map((idea: any, index: number) => ({
+          id: `webhook-${Date.now()}-${index}`,
+          title: idea.title || `${day} Idea ${index + 1}`,
+          description: idea.description || idea.content || String(idea),
+          videoStyle: idea.style || 'Professional',
+          duration: idea.duration || '60-90 seconds',
+          targetAudience: idea.audience || 'Real Estate Professionals & Clients'
+        }));
+      }
+    } catch (e) {
+      // If not JSON, treat as plain text and split into ideas
+      const ideas = responseText.split('\n\n').filter(idea => idea.trim()).slice(0, 3);
+      return ideas.map((idea, index) => ({
+        id: `webhook-text-${Date.now()}-${index}`,
+        title: `${day} Idea ${index + 1}`,
+        description: idea.trim(),
+        videoStyle: 'Professional',
+        duration: '60-90 seconds',
+        targetAudience: 'Real Estate Professionals & Clients'
+      }));
+    }
+    
+    // Return empty array if parsing fails
+    return [];
   };
 
   const generateThemedIdeas = async (theme: string, day: string) => {
     setIsLoading(true);
     setSelectedTheme(theme);
     
-    // Send webhook notification first
-    await sendDayWebhook(day);
-    
     try {
-      const prompt = `Generate 3 creative video content ideas for ${theme} specifically for ${day}. Focus on Dubai real estate market. Each idea should be engaging, informative, and suitable for social media content.`;
+      // Send webhook and wait for ideas
+      const webhookIdeas = await sendDayWebhook(day);
       
-      const response = await fetch('https://hook.us2.make.com/yoa8dpx1c6h0k2p4jqh7dv4n7tq95wgh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate ideas');
+      if (webhookIdeas && webhookIdeas.length > 0) {
+        setIdeas(webhookIdeas);
+        toast.success(`Generated ${day} themed ideas successfully!`);
+      } else {
+        // If webhook doesn't return ideas, use fallback
+        throw new Error('No ideas returned from webhook');
       }
-
-      const data = await response.text();
-      const generatedIdeas = parseIdeas(data, theme);
-      setIdeas(generatedIdeas);
-      toast.success(`Generated ${day} themed ideas successfully!`);
     } catch (error) {
       console.error('Error generating themed ideas:', error);
-      toast.error('Failed to generate themed ideas. Please try again.');
-      // Fallback ideas
+      // Show fallback ideas
       setIdeas(generateFallbackIdeas(theme, day));
     } finally {
       setIsLoading(false);
