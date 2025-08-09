@@ -230,7 +230,6 @@ const KairaCalendar = () => {
 
   const generateIdeasForDay = async (dayName: string) => {
     console.log('🚀 generateIdeasForDay called with:', dayName);
-    console.log('🔗 Connection status:', isConnected);
     console.log('⏳ Currently generating for:', generatingIdeas);
     
     setGeneratingIdeas(dayName);
@@ -238,13 +237,18 @@ const KairaCalendar = () => {
     const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
     const payload = { day: dayName };
     
+    // Get the date for the selected day
+    const dayIndex = dayNames.indexOf(dayName);
+    const selectedDayDate = weekDates[dayIndex];
+    const dateStr = selectedDayDate.toISOString().split('T')[0];
+    
     console.log('📤 Sending request to:', webhookUrl);
     console.log('📦 Payload:', payload);
+    console.log('📅 Target date:', dateStr);
     
     try {
-      // Add timeout to prevent hanging requests
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -258,15 +262,79 @@ const KairaCalendar = () => {
       clearTimeout(timeoutId);
       
       console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const result = await response.text();
-        console.log('✅ Success! Ideas generated for', dayName, ':', result);
-        toast({
-          title: "Success",
-          description: `Ideas generated for ${dayName}`,
-        });
+        console.log('✅ Raw webhook response:', result);
+        
+        // Parse the webhook response to extract ideas
+        let parsedIdeas = [];
+        try {
+          // Try to parse as JSON first
+          const jsonResult = JSON.parse(result);
+          if (Array.isArray(jsonResult)) {
+            parsedIdeas = jsonResult;
+          } else if (jsonResult.ideas && Array.isArray(jsonResult.ideas)) {
+            parsedIdeas = jsonResult.ideas;
+          } else {
+            // Fallback: treat as single idea
+            parsedIdeas = [{ title: jsonResult.title || result, description: jsonResult.description || '' }];
+          }
+        } catch (jsonError) {
+          // If not JSON, try to parse as text with lines
+          const lines = result.split('\n').filter(line => line.trim());
+          parsedIdeas = lines.map((line, index) => ({
+            title: line.trim(),
+            description: `Generated idea ${index + 1} for ${dayName}`
+          }));
+        }
+        
+        console.log('📝 Parsed ideas:', parsedIdeas);
+        
+        // Create content items for each generated idea
+        let successCount = 0;
+        for (const idea of parsedIdeas) {
+          const title = idea.title || idea.topic || idea.name || 'Generated Idea';
+          if (title.trim()) {
+            const insertData = {
+              topic: title.trim(),
+              scheduled_date: dateStr,
+              priority: 1,
+              notes: idea.description || idea.notes || `AI generated idea for ${dayName}`,
+              status: 'planned' as const,
+              content_source: 'generated',
+              category: (idea.category as 'Real Estate News' | 'Entertainment' | 'Educational') || 'Entertainment'
+            };
+
+            const { data, error } = await safeSupabaseQuery(async () => {
+              const result = await supabase
+                .from('content_calendar')
+                .insert(insertData)
+                .select();
+              return result;
+            });
+
+            if (!error) {
+              successCount++;
+              console.log('✅ Created content item:', title);
+            } else {
+              console.error('❌ Failed to create content item:', title, error);
+            }
+          }
+        }
+
+        if (successCount > 0) {
+          toast({
+            title: "Success!",
+            description: `Generated ${successCount} idea${successCount > 1 ? 's' : ''} for ${dayName}`,
+          });
+          
+          // Refresh the calendar to show new content
+          fetchContentItems();
+        } else {
+          throw new Error('No valid ideas could be created from the response');
+        }
+        
       } else {
         const errorText = await response.text();
         console.error('❌ HTTP Error:', response.status, response.statusText, errorText);
@@ -439,7 +507,7 @@ const KairaCalendar = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => generateIdeasForDay(dayNames[index])}
-                      disabled={!isConnected || generatingIdeas === dayNames[index]}
+                      disabled={generatingIdeas === dayNames[index]}
                       className="mt-2 h-7 text-xs bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700"
                     >
                       {generatingIdeas === dayNames[index] ? (
