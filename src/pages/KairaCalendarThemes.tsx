@@ -178,23 +178,28 @@ const KairaCalendarThemes = () => {
   };
 
   const generateThemedIdeas = async (theme: string, day: string) => {
+    // 🚨 DEBUGGING: Function called
+    console.log('🎯 generateThemedIdeas called!', { theme, day });
+    alert(`generateThemedIdeas called for ${day}!`);
+    
     setIsLoading(true);
     setSelectedTheme(theme);
     
     try {
-      // Send webhook and wait for ideas
+      console.log('📞 About to call sendDayWebhook...');
       const webhookIdeas = await sendDayWebhook(day);
+      console.log('✅ Webhook completed, ideas received:', webhookIdeas);
       
       if (webhookIdeas && webhookIdeas.length > 0) {
         setIdeas(webhookIdeas);
         toast.success(`Generated ${day} themed ideas successfully!`);
       } else {
-        // If webhook doesn't return ideas, use fallback
+        console.warn('⚠️ No ideas returned from webhook, throwing error');
         throw new Error('No ideas returned from webhook');
       }
     } catch (error) {
-      console.error('Error generating themed ideas:', error);
-      // Show fallback ideas
+      console.error('❌ Error in generateThemedIdeas:', error);
+      toast.error(`Webhook failed: ${error.message}. Using fallback ideas.`);
       setIdeas(generateFallbackIdeas(theme, day));
     } finally {
       setIsLoading(false);
@@ -332,7 +337,10 @@ const KairaCalendarThemes = () => {
                       ? 'bg-gradient-to-br from-orange-200 via-orange-100 to-amber-100 border-orange-300 shadow-lg ring-2 ring-orange-400/50' 
                       : 'bg-white/90 border-orange-100'
                   }`}
-                  onClick={() => generateThemedIdeas(themeDay.theme, themeDay.day)}
+                  onClick={() => {
+                    console.log('📅 Day card clicked:', themeDay.day, themeDay.theme);
+                    generateThemedIdeas(themeDay.theme, themeDay.day);
+                  }}
                 >
                   <CardHeader className="text-center">
                     <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${themeDay.color} flex items-center justify-center mb-4 group-hover:animate-pulse`}>
@@ -347,7 +355,14 @@ const KairaCalendarThemes = () => {
                     <p className="text-sm text-gray-600 text-center leading-relaxed">
                       {themeDay.description}
                     </p>
-                    <Button className="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0">
+                    <Button 
+                      className="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('🔥 Generate Ideas button clicked for:', themeDay.day);
+                        generateThemedIdeas(themeDay.theme, themeDay.day);
+                      }}
+                    >
                       <Lightbulb className="w-4 h-4 mr-2" />
                       Generate Ideas
                     </Button>
@@ -367,7 +382,11 @@ const KairaCalendarThemes = () => {
               </h2>
               <div className="flex gap-4">
                 <Button
-                  onClick={() => generateThemedIdeas(selectedTheme, 'Theme')}
+                  onClick={() => {
+                    console.log('🔄 Regenerate button clicked');
+                    const currentDay = themeDays.find(td => td.theme === selectedTheme)?.day || 'Monday';
+                    generateThemedIdeas(selectedTheme, currentDay);
+                  }}
                   disabled={isLoading}
                   className="bg-blue-500 hover:bg-blue-600 text-white border-0"
                 >
