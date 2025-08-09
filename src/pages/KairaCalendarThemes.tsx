@@ -106,31 +106,34 @@ const KairaCalendarThemes = () => {
     console.log(`🚀 generateIdeasForDay called with: ${day}`);
     
     try {
-      const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
-      const payload = { day };
+      const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(day)}`;
       
-      console.log(`📤 Sending request to: ${webhookUrl}`);
-      console.log(`📦 Payload:`, payload);
+      console.log(`📤 Sending GET request to: ${webhookUrl}`);
       
       const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        method: 'GET',
         signal: AbortSignal.timeout(30000) // 30 second timeout
       });
 
       console.log(`📨 Response status: ${response.status}`);
       
       if (response.ok) {
-        const responseData = await response.text();
+        const responseData = await response.json();
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // Try to parse the response as ideas
-        if (responseData) {
-          return parseWebhookResponse(responseData, day);
+        // Return the JSON array directly from webhook
+        if (Array.isArray(responseData)) {
+          return responseData.map((idea: any, index: number) => ({
+            id: `webhook-${Date.now()}-${index}`,
+            title: idea.title || `${day} Idea ${index + 1}`,
+            description: idea.description || idea.content || String(idea),
+            videoStyle: idea.style || 'Professional',
+            duration: idea.duration || '60-90 seconds',
+            targetAudience: idea.audience || 'Real Estate Professionals & Clients'
+          }));
+        } else {
+          throw new Error('Webhook did not return an array');
         }
       } else {
         const errorText = await response.text();
@@ -145,42 +148,9 @@ const KairaCalendarThemes = () => {
     }
   };
 
-  // Parse webhook response into ideas
-  const parseWebhookResponse = (responseText: string, day: string): GeneratedIdea[] => {
-    try {
-      // Try to parse as JSON first
-      const jsonData = JSON.parse(responseText);
-      if (jsonData.ideas && Array.isArray(jsonData.ideas)) {
-        return jsonData.ideas.map((idea: any, index: number) => ({
-          id: `webhook-${Date.now()}-${index}`,
-          title: idea.title || `${day} Idea ${index + 1}`,
-          description: idea.description || idea.content || String(idea),
-          videoStyle: idea.style || 'Professional',
-          duration: idea.duration || '60-90 seconds',
-          targetAudience: idea.audience || 'Real Estate Professionals & Clients'
-        }));
-      }
-    } catch (e) {
-      // If not JSON, treat as plain text and split into ideas
-      const ideas = responseText.split('\n\n').filter(idea => idea.trim()).slice(0, 3);
-      return ideas.map((idea, index) => ({
-        id: `webhook-text-${Date.now()}-${index}`,
-        title: `${day} Idea ${index + 1}`,
-        description: idea.trim(),
-        videoStyle: 'Professional',
-        duration: '60-90 seconds',
-        targetAudience: 'Real Estate Professionals & Clients'
-      }));
-    }
-    
-    // Return empty array if parsing fails
-    return [];
-  };
 
   const generateThemedIdeas = async (theme: string, day: string) => {
-    // 🚨 DEBUGGING: Function called
     console.log('🎯 generateThemedIdeas called!', { theme, day });
-    alert(`generateThemedIdeas called for ${day}!`);
     
     setIsLoading(true);
     setSelectedTheme(theme);
@@ -194,13 +164,12 @@ const KairaCalendarThemes = () => {
         setIdeas(webhookIdeas);
         toast.success(`Generated ${day} themed ideas successfully!`);
       } else {
-        console.warn('⚠️ No ideas returned from webhook, throwing error');
         throw new Error('No ideas returned from webhook');
       }
     } catch (error) {
-      console.error('❌ Error in generateThemedIdeas:', error);
-      toast.error(`Webhook failed: ${error.message}. Using fallback ideas.`);
-      setIdeas(generateFallbackIdeas(theme, day));
+      console.error('❌ Error generating themed ideas:', error);
+      toast.error(`Webhook failed: ${error.message}`);
+      setIdeas([]);
     } finally {
       setIsLoading(false);
     }
