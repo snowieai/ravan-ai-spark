@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { 
   ArrowLeft, 
@@ -30,6 +31,8 @@ interface GeneratedIdea {
   id: string;
   title: string;
   description: string;
+  summary: string;
+  detailedContent: string;
   videoStyle: string;
   duration: string;
   targetAudience: string;
@@ -38,6 +41,7 @@ interface GeneratedIdea {
 const KairaCalendarThemes = () => {
   const navigate = useNavigate();
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [expandedIdea, setExpandedIdea] = useState<GeneratedIdea | null>(null);
   const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -118,23 +122,40 @@ const KairaCalendarThemes = () => {
       console.log(`📨 Response status: ${response.status}`);
       
       if (response.ok) {
-        const responseData = await response.json();
+        const responseData = await response.text();
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // Return the JSON array directly from webhook
-        if (Array.isArray(responseData)) {
-          return responseData.map((idea: any, index: number) => ({
+        // Parse tab-separated response data
+        const lines = responseData.trim().split('\n');
+        const ideas: GeneratedIdea[] = lines.map((line, index) => {
+          const columns = line.split('\t');
+          if (columns.length >= 6) {
+            const [id, timestamp, dayColumn, title, summary, detailedContent, date] = columns;
+            return {
+              id: id || `webhook-${Date.now()}-${index}`,
+              title: title || `${day} Idea ${index + 1}`,
+              description: summary || 'No summary available',
+              summary: summary || 'No summary available',
+              detailedContent: detailedContent || 'No detailed content available',
+              videoStyle: 'Professional',
+              duration: '60-90 seconds',
+              targetAudience: 'Real Estate Professionals & Clients'
+            };
+          }
+          return {
             id: `webhook-${Date.now()}-${index}`,
-            title: idea.title || `${day} Idea ${index + 1}`,
-            description: idea.description || idea.content || String(idea),
-            videoStyle: idea.style || 'Professional',
-            duration: idea.duration || '60-90 seconds',
-            targetAudience: idea.audience || 'Real Estate Professionals & Clients'
-          }));
-        } else {
-          throw new Error('Webhook did not return an array');
-        }
+            title: `${day} Idea ${index + 1}`,
+            description: line,
+            summary: line,
+            detailedContent: line,
+            videoStyle: 'Professional',
+            duration: '60-90 seconds',
+            targetAudience: 'Real Estate Professionals & Clients'
+          };
+        });
+        
+        return ideas;
       } else {
         const errorText = await response.text();
         console.error(`❌ Webhook failed for ${day}:`, response.status, errorText);
@@ -182,6 +203,8 @@ const KairaCalendarThemes = () => {
         id: `themed-${Date.now()}-${index}`,
         title: `${theme} - Idea ${index + 1}`,
         description: idea.trim(),
+        summary: idea.trim(),
+        detailedContent: idea.trim(),
         videoStyle: 'Professional',
         duration: '60-90 seconds',
         targetAudience: 'Real Estate Professionals & Clients'
@@ -197,6 +220,8 @@ const KairaCalendarThemes = () => {
         id: `fallback-1-${Date.now()}`,
         title: `${theme} - Market Spotlight`,
         description: `Create engaging content showcasing ${theme.toLowerCase()} with professional insights and market data visualization.`,
+        summary: `Create engaging content showcasing ${theme.toLowerCase()} with professional insights and market data visualization.`,
+        detailedContent: `Create engaging content showcasing ${theme.toLowerCase()} with professional insights and market data visualization.`,
         videoStyle: 'Professional',
         duration: '60-90 seconds',
         targetAudience: 'Real Estate Professionals & Clients'
@@ -205,6 +230,8 @@ const KairaCalendarThemes = () => {
         id: `fallback-2-${Date.now()}`,
         title: `${theme} - Expert Analysis`,
         description: `Develop expert commentary on ${theme.toLowerCase()} trends with actionable insights for viewers.`,
+        summary: `Develop expert commentary on ${theme.toLowerCase()} trends with actionable insights for viewers.`,
+        detailedContent: `Develop expert commentary on ${theme.toLowerCase()} trends with actionable insights for viewers.`,
         videoStyle: 'Educational',
         duration: '90-120 seconds',
         targetAudience: 'Property Investors & Buyers'
@@ -213,6 +240,8 @@ const KairaCalendarThemes = () => {
         id: `fallback-3-${Date.now()}`,
         title: `${theme} - Quick Tips`,
         description: `Share quick, practical tips related to ${theme.toLowerCase()} in an easy-to-digest format.`,
+        summary: `Share quick, practical tips related to ${theme.toLowerCase()} in an easy-to-digest format.`,
+        detailedContent: `Share quick, practical tips related to ${theme.toLowerCase()} in an easy-to-digest format.`,
         videoStyle: 'Informal',
         duration: '30-60 seconds',
         targetAudience: 'General Audience'
@@ -411,12 +440,21 @@ const KairaCalendarThemes = () => {
                         </div>
                       </div>
                       
-                      <Button 
-                        onClick={() => selectIdea(idea)}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500"
-                      >
-                        Select This Idea
-                      </Button>
+                      <div className="space-y-2">
+                        <Button 
+                          onClick={() => setExpandedIdea(idea)}
+                          variant="outline"
+                          className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
+                        >
+                          Expand Details
+                        </Button>
+                        <Button 
+                          onClick={() => selectIdea(idea)}
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500"
+                        >
+                          Select This Idea
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -425,6 +463,72 @@ const KairaCalendarThemes = () => {
           </div>
         )}
       </div>
+
+      {/* Expanded Idea Dialog */}
+      <Dialog open={!!expandedIdea} onOpenChange={() => setExpandedIdea(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-900">
+              {expandedIdea?.title}
+            </DialogTitle>
+            <DialogDescription className="text-lg text-gray-600">
+              Detailed content breakdown and insights
+            </DialogDescription>
+          </DialogHeader>
+          
+          {expandedIdea && (
+            <div className="space-y-6 mt-4">
+              <div>
+                <h3 className="text-lg font-semibold text-orange-600 mb-2">Summary</h3>
+                <p className="text-gray-700 leading-relaxed">{expandedIdea.summary}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold text-orange-600 mb-2">Detailed Content</h3>
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {expandedIdea.detailedContent.split('\\n').map((line, index) => (
+                    <p key={index} className="mb-2">{line}</p>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-orange-50 rounded-lg">
+                <div>
+                  <h4 className="font-medium text-gray-800">Video Style</h4>
+                  <p className="text-orange-600">{expandedIdea.videoStyle}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-800">Duration</h4>
+                  <p className="text-orange-600">{expandedIdea.duration}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-800">Target Audience</h4>
+                  <p className="text-orange-600">{expandedIdea.targetAudience}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button 
+                  onClick={() => setExpandedIdea(null)}
+                  variant="outline"
+                  className="border-orange-200 text-orange-600 hover:bg-orange-50"
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    selectIdea(expandedIdea);
+                    setExpandedIdea(null);
+                  }}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  Select This Idea
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
