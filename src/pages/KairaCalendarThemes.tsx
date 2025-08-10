@@ -343,12 +343,49 @@ const KairaCalendarThemes = () => {
   };
 
   const parseUnstructuredText = (responseText: string, requestedDay: string): GeneratedIdea[] => {
-    console.log(`🔍 Simplified universal parsing for "${requestedDay}"`);
+    console.log(`🔍 Enhanced universal parsing for "${requestedDay}"`);
     console.log(`📝 Raw response preview:`, responseText.substring(0, 500));
     
     let ideas: GeneratedIdea[] = [];
     
-    // Pattern 1: Try Wednesday format (*1. TITLE ... 📄 Summary: ... 🔍 Detailed:)
+    // Pattern 1: Friday format (*1. **TITLE*** ... 📄 Summary: ... 🔍 Detailed Explanation:)
+    const fridayPattern = /\*(\d+)\.\s*\*\*([^*]+)\*\*\*[\s\S]*?📄\s*Summary:\s*([\s\S]*?)🔍\s*Detailed[^:]*:\s*([\s\S]*?)(?=\*\d+\.|$)/g;
+    const fridayMatches = [...responseText.matchAll(fridayPattern)];
+    console.log(`🔍 Friday pattern: Found ${fridayMatches.length} matches`);
+    
+    if (fridayMatches.length > 0) {
+      ideas = fridayMatches.map((match, index) => {
+        const title = match[2]?.trim() || `Idea ${index + 1}`;
+        const summary = match[3]?.trim() || 'No summary available';
+        let detailedContent = match[4]?.trim() || 'No detailed content available';
+        
+        // Clean up detailed content from complex markdown
+        detailedContent = detailedContent
+          .replace(/## Detailed Explanation/g, '')
+          .replace(/### Key Insights/g, '**Key Insights:**')
+          .replace(/### Investment Opportunities/g, '**Investment Opportunities:**')
+          .replace(/### Reasons for Popularity/g, '**Reasons for Popularity:**')
+          .replace(/### Market Trends/g, '**Market Trends:**')
+          .replace(/### Visual Suggestions/g, '**Visual Suggestions:**')
+          .trim();
+        
+        return {
+          id: `friday-${Date.now()}-${index}`,
+          title: title,
+          description: summary.substring(0, 150) + (summary.length > 150 ? '...' : ''),
+          summary: summary,
+          detailedContent: detailedContent,
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients'
+        };
+      });
+      
+      console.log(`✅ Successfully parsed ${ideas.length} ideas using Friday format`);
+      return ideas;
+    }
+    
+    // Pattern 2: Wednesday format (*1. TITLE ... 📄 Summary: ... 🔍 Detailed:)
     const wednesdayPattern = /\*(\d+)\.\s*([^*\n]+)\*[\s\S]*?📄 Summary:\s*([\s\S]*?)🔍 Detailed Explanation:\s*([\s\S]*?)(?=\*\d+\.|$)/g;
     const wednesdayMatches = [...responseText.matchAll(wednesdayPattern)];
     console.log(`🔍 Wednesday pattern: Found ${wednesdayMatches.length} matches`);
@@ -426,7 +463,48 @@ const KairaCalendarThemes = () => {
       return ideas;
     }
     
-    // Pattern 3: Simple numbered list (1. TITLE ...)
+    // Pattern 4: Enhanced Saturday patterns (multiple bullet/numbering styles)
+    const saturdayPatterns = [
+      // Various bullet styles
+      /(?:•|\*|\►|\▸|\→)\s*(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=(?:•|\*|\►|\▸|\→)\s*\d+\.|$)/g,
+      // Parentheses numbering
+      /\((\d+)\)\s*([^\n]+)\n([\s\S]*?)(?=\(\d+\)|$)/g,
+      // Number with closing parenthesis
+      /(\d+)\)\s*([^\n]+)\n([\s\S]*?)(?=\d+\)|$)/g,
+      // Bold numbered format
+      /\*\*(\d+)\.\*\*\s*([^\n]+)\n([\s\S]*?)(?=\*\*\d+\.|$)/g,
+      // Emoji-based numbering (common in Saturday content)
+      /(?:🏠|🏢|📈|💼|🌟|⭐|🔥|💡|📊|🎯)\s*(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=(?:🏠|🏢|📈|💼|🌟|⭐|🔥|💡|📊|🎯)\s*\d+\.|$)/g
+    ];
+
+    for (const [patternIndex, pattern] of saturdayPatterns.entries()) {
+      pattern.lastIndex = 0; // Reset regex
+      const matches = [...responseText.matchAll(pattern)];
+      console.log(`🔍 Saturday pattern ${patternIndex + 1}: Found ${matches.length} matches`);
+      
+      if (matches.length > 0) {
+        ideas = matches.map((match, index) => {
+          const title = match[2]?.trim() || `Idea ${index + 1}`;
+          const content = match[3]?.trim() || 'No content available';
+          
+          return {
+            id: `saturday-${Date.now()}-${index}`,
+            title: title,
+            description: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+            summary: content.substring(0, 200),
+            detailedContent: content,
+            videoStyle: 'Professional',
+            duration: '60-90 seconds',
+            targetAudience: 'Real Estate Professionals & Clients'
+          };
+        });
+        
+        console.log(`✅ Successfully parsed ${ideas.length} ideas using Saturday pattern ${patternIndex + 1}`);
+        return ideas;
+      }
+    }
+
+    // Pattern 5: Simple numbered list (1. TITLE ...)
     const numberedPattern = /(\d+)\.\s*([^\n]+)(?:\n([\s\S]*?))?(?=\d+\.|$)/g;
     const numberedMatches = [...responseText.matchAll(numberedPattern)];
     console.log(`🔍 Simple numbered pattern: Found ${numberedMatches.length} matches`);
