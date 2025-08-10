@@ -157,9 +157,14 @@ const KairaCalendarThemes = () => {
 
     const normalizedDay = day.toLowerCase();
     console.log(`🚀 Making SINGLE webhook request for day: ${normalizedDay}`);
+    console.log(`🎯 REQUESTED DAY: "${normalizedDay}" (length: ${normalizedDay.length})`);
     
     const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(normalizedDay)}`;
-    console.log(`📤 Calling webhook URL: ${webhookUrl}`);
+    console.log(`📤 FULL URL BEING CALLED: ${webhookUrl}`);
+    console.log(`🔍 URL BREAKDOWN:`)
+    console.log(`   Base: https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c`);
+    console.log(`   Query: ?day=${encodeURIComponent(normalizedDay)}`);
+    console.log(`   Encoded day: ${encodeURIComponent(normalizedDay)}`);
     
     const response = await fetch(webhookUrl, {
       method: 'GET',
@@ -176,6 +181,27 @@ const KairaCalendarThemes = () => {
 
     const responseData = await response.text();
     console.log(`📥 FULL webhook response for ${normalizedDay}:`, responseData);
+    
+    // 🚨 CRITICAL DEBUG: Check if response content mentions wrong day
+    const contentLower = responseData.toLowerCase();
+    console.log(`🔍 CONTENT VALIDATION for ${normalizedDay}:`);
+    console.log(`   Response contains "${normalizedDay}": ${contentLower.includes(normalizedDay)}`);
+    console.log(`   Response contains "tuesday": ${contentLower.includes('tuesday')}`);
+    console.log(`   Response contains "monday": ${contentLower.includes('monday')}`);
+    console.log(`   Response contains "wednesday": ${contentLower.includes('wednesday')}`);
+    console.log(`   Response contains "thursday": ${contentLower.includes('thursday')}`);
+    console.log(`   Response contains "friday": ${contentLower.includes('friday')}`);
+    console.log(`   Response contains "saturday": ${contentLower.includes('saturday')}`);
+    console.log(`   Response contains "sunday": ${contentLower.includes('sunday')}`);
+    
+    // 🚨 WARNING: Check if wrong day content returned
+    const wrongDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      .filter(day => day !== normalizedDay && contentLower.includes(day + ' themed') || contentLower.includes(day + ' content'));
+    
+    if (wrongDays.length > 0) {
+      console.warn(`⚠️ BACKEND ISSUE DETECTED: Requested "${normalizedDay}" but response contains content for: ${wrongDays.join(', ')}`);
+      toast.error(`Backend returned wrong day content: Expected ${normalizedDay}, got ${wrongDays.join(', ')}`);
+    }
     
     // Validate we got actual response content
     if (!responseData || responseData.trim().length === 0) {
