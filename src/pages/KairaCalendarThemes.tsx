@@ -45,6 +45,14 @@ const KairaCalendarThemes = () => {
   const [ideas, setIdeas] = useState<GeneratedIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Debug logging for state changes
+  console.log('🎯 KairaCalendarThemes render state:', { 
+    selectedTheme, 
+    isLoading, 
+    ideasLength: ideas.length,
+    ideas: ideas.map(idea => ({ id: idea.id, title: idea.title }))
+  });
+
   // Get current day of the week
   const getCurrentDay = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -292,9 +300,12 @@ const KairaCalendarThemes = () => {
       console.log('📞 Making single webhook call for:', day);
       const webhookIdeas = await sendDayWebhook(day);
       console.log('✅ Webhook response received:', webhookIdeas.length, 'ideas');
+      console.log('🔄 About to set ideas in state:', webhookIdeas.map(idea => ({ id: idea.id, title: idea.title })));
       
       // Display webhook content immediately - no conditions that cause fallbacks
       setIdeas(webhookIdeas);
+      console.log('🎯 setIdeas called with length:', webhookIdeas.length);
+      
       toast.success(`Generated ${webhookIdeas.length} ${day} themed ideas successfully!`);
       
     } catch (error) {
@@ -308,6 +319,7 @@ const KairaCalendarThemes = () => {
       toast.error(`Webhook request failed: ${error.message}`);
     } finally {
       setIsLoading(false);
+      console.log('🎯 setIsLoading(false) called');
     }
   };
 
@@ -526,13 +538,18 @@ const KairaCalendarThemes = () => {
               </div>
             </div>
 
+            {/* Debug Info */}
+            <div className="text-xs text-muted-foreground text-center mb-4 bg-gray-100 p-2 rounded">
+              Debug: ideas.length = {ideas.length}, isLoading = {isLoading.toString()}, selectedTheme = {selectedTheme}
+            </div>
+
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
                 <p className="text-lg text-gray-600">Generating themed ideas...</p>
                 <p className="text-sm text-orange-600 mt-2">This may take up to 5 minutes, please be patient!</p>
               </div>
-            ) : (
+            ) : ideas.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {ideas.map((idea, index) => (
                   <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
@@ -562,6 +579,11 @@ const KairaCalendarThemes = () => {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-lg text-gray-600">No ideas available to display</p>
+                <p className="text-sm text-gray-500 mt-2">Debug: selectedTheme={selectedTheme}, isLoading={isLoading.toString()}, ideas.length={ideas.length}</p>
               </div>
             )}
           </div>
