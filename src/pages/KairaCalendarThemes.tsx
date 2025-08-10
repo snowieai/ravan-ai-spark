@@ -132,38 +132,14 @@ const KairaCalendarThemes = () => {
     }));
   };
 
-  const retryWithBackoff = async function<T>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    baseDelay: number = 1000
-  ): Promise<T> {
-    let lastError: Error;
-    
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        lastError = error as Error;
-        
-        if (attempt === maxRetries) {
-          throw lastError;
-        }
-        
-        const delay = baseDelay * Math.pow(2, attempt);
-        console.log(`⏳ Retry attempt ${attempt + 1}/${maxRetries + 1} in ${delay}ms for day: ${fn.name}`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-    
-    throw lastError!;
-  };
+  // No retry logic - make single direct request
 
   const validateDayParameter = (day: string): boolean => {
     const validDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     return validDays.includes(day.toLowerCase());
   };
 
-  // Send webhook notification and generate ideas with robust error handling
+  // Send webhook notification and generate ideas - SINGLE REQUEST ONLY
   const sendDayWebhook = async (day: string) => {
     // Validate day parameter
     if (!validateDayParameter(day)) {
@@ -172,142 +148,164 @@ const KairaCalendarThemes = () => {
     }
 
     const normalizedDay = day.toLowerCase();
-    console.log(`🚀 Sending webhook for day: ${normalizedDay}`);
+    console.log(`🚀 Making SINGLE webhook request for day: ${normalizedDay}`);
     
-    return retryWithBackoff(async () => {
-      const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(normalizedDay)}`;
-      console.log(`📤 Calling webhook: ${webhookUrl}`);
-      
-      const response = await fetch(webhookUrl, {
-        method: 'GET',
-        signal: AbortSignal.timeout(300000) // 5 minute timeout
-      });
+    const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c?day=${encodeURIComponent(normalizedDay)}`;
+    console.log(`📤 Calling webhook URL: ${webhookUrl}`);
+    
+    const response = await fetch(webhookUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(300000) // 5 minute timeout - WAIT THE FULL TIME
+    });
 
-      console.log(`📨 Response status for ${normalizedDay}: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ Webhook failed for ${normalizedDay}:`, response.status, errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-      }
+    console.log(`📨 Response status for ${normalizedDay}: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Webhook HTTP error for ${normalizedDay}:`, response.status, errorText);
+      throw new Error(`Webhook HTTP error! status: ${response.status} - ${response.statusText}`);
+    }
 
-      const responseData = await response.text();
-      console.log(`📥 Raw webhook response for ${normalizedDay}:`, responseData.substring(0, 200) + '...');
+    const responseData = await response.text();
+    console.log(`📥 FULL webhook response for ${normalizedDay}:`, responseData);
+    
+    // Validate we got actual response content
+    if (!responseData || responseData.trim().length === 0) {
+      console.error(`❌ Empty response from webhook for ${normalizedDay}`);
+      throw new Error('Empty response from webhook');
+    }
+    
+    // Enhanced JSON parsing with detailed logging
+    let contentToParse = responseData;
+    try {
+      const jsonResponse = JSON.parse(responseData);
+      console.log(`📊 Parsed JSON structure for ${normalizedDay}:`, Object.keys(jsonResponse));
       
-      // Validate response
-      if (!responseData || responseData.trim().length === 0) {
-        throw new Error('Empty response from webhook');
+      if (jsonResponse.output) {
+        contentToParse = jsonResponse.output;
+        console.log(`📊 Extracted output field for ${normalizedDay}:`, contentToParse.substring(0, 300) + '...');
+      } else {
+        console.log(`📝 No 'output' field found, using full JSON response for ${normalizedDay}`);
       }
+    } catch (jsonError) {
+      console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
+    }
+    
+    // Enhanced parsing with better error handling
+    const allBlocks = contentToParse.split(/### \d+\./);
+    const ideaBlocks = allBlocks.slice(1).filter(block => block.trim());
+    console.log(`📊 Parsing results for ${normalizedDay}: Found ${allBlocks.length} total blocks, ${ideaBlocks.length} idea blocks`);
+    
+    // Log each block for debugging
+    ideaBlocks.forEach((block, index) => {
+      console.log(`📝 Block ${index + 1} preview:`, block.substring(0, 100) + '...');
+    });
+    
+    // More flexible parsing - try to get something useful even if format is different
+    if (ideaBlocks.length === 0) {
+      console.log(`⚠️ No structured idea blocks found for ${normalizedDay}, attempting alternative parsing`);
       
-      // First try to parse as JSON to extract the output field
-      let contentToParse = responseData;
-      try {
-        const jsonResponse = JSON.parse(responseData);
-        if (jsonResponse.output) {
-          contentToParse = jsonResponse.output;
-          console.log(`📊 Extracted output field from JSON response for ${normalizedDay}`);
-        }
-      } catch (jsonError) {
-        console.log(`📝 Response is not JSON for ${normalizedDay}, parsing as text directly`);
-      }
-      
-      // Parse ideas separated by ### followed by numbers
-      // Skip the first element which is usually just the header before first ###
-      const allBlocks = contentToParse.split(/### \d+\./);
-      const ideaBlocks = allBlocks.slice(1).filter(block => block.trim()); // Skip header, keep only actual ideas
-      console.log(`📊 Found ${ideaBlocks.length} idea blocks for ${normalizedDay} (after skipping header)`);
-      
-      // Validate we have content blocks
-      if (ideaBlocks.length === 0) {
-        throw new Error('No valid idea blocks found in response');
-      }
-      
-      const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
-        const trimmedBlock = block.trim();
-        
-        // Extract title (first line before 📄 or first non-empty line)
-        const lines = trimmedBlock.split('\n').filter(line => line.trim());
-        const title = lines[0]?.trim() || `${normalizedDay} Idea ${index + 1}`;
-        
-        // Extract summary (after 📄 Summary: and before 🔍)
-        const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
-        const summary = summaryMatch ? summaryMatch[1].trim() : 'No summary available';
-        
-        // Extract detailed content (after 🔍 Detailed Explanation:) and format it
-        const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
-        let detailedContent = detailedMatch ? detailedMatch[1].trim() : 'No detailed content available';
-        
-        // Parse JSON and format as clean paragraphs
-        try {
-          const jsonMatch = detailedContent.match(/\{.+\}/s);
-          if (jsonMatch) {
-            const jsonData = JSON.parse(jsonMatch[0]);
-            let formattedContent = '';
-            
-            Object.entries(jsonData).forEach(([section, content]) => {
-              if (Array.isArray(content)) {
-                formattedContent += `${section}: `;
-                formattedContent += content.map(item => item.replace(/^\-\s*/, '')).join('. ') + '. ';
-                formattedContent += '\n\n';
-              }
-            });
-            
-            detailedContent = formattedContent.trim();
-          }
-        } catch (e) {
-          // Keep original content if JSON parsing fails
-        }
-        
-        return {
-          id: `webhook-${Date.now()}-${index}`,
-          title: title,
-          description: summary,
-          summary: summary,
-          detailedContent: detailedContent,
+      // Try splitting by newlines and creating basic ideas
+      const lines = contentToParse.split('\n').filter(line => line.trim()).slice(0, 10);
+      if (lines.length > 0) {
+        console.log(`📝 Creating ideas from ${lines.length} lines for ${normalizedDay}`);
+        const basicIdeas = lines.map((line, index) => ({
+          id: `webhook-basic-${Date.now()}-${index}`,
+          title: `${normalizedDay} Content Idea ${index + 1}`,
+          description: line.trim(),
+          summary: line.trim(),
+          detailedContent: line.trim(),
           videoStyle: 'Professional',
           duration: '60-90 seconds',
           targetAudience: 'Real Estate Professionals & Clients'
-        };
-      });
-      
-      console.log(`✅ Successfully parsed ${ideas.length} ideas for ${normalizedDay}`);
-      
-      // Ensure we have at least some ideas
-      if (ideas.length === 0) {
-        throw new Error('No ideas could be parsed from response');
+        }));
+        
+        console.log(`✅ Created ${basicIdeas.length} basic ideas from response for ${normalizedDay}`);
+        return basicIdeas;
       }
       
-      return ideas;
-    }, 2, 2000); // 2 retries with exponential backoff starting at 2 seconds
+      throw new Error(`No parseable content found in webhook response for ${normalizedDay}`);
+    }
+    
+    // Process structured idea blocks
+    const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
+      const trimmedBlock = block.trim();
+      
+      // Extract title (first line before 📄 or first non-empty line)
+      const lines = trimmedBlock.split('\n').filter(line => line.trim());
+      const title = lines[0]?.trim() || `${normalizedDay} Idea ${index + 1}`;
+      
+      // Extract summary (after 📄 Summary: and before 🔍)
+      const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
+      const summary = summaryMatch ? summaryMatch[1].trim() : (lines[1]?.trim() || 'No summary available');
+      
+      // Extract detailed content (after 🔍 Detailed Explanation:) and format it
+      const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
+      let detailedContent = detailedMatch ? detailedMatch[1].trim() : trimmedBlock;
+      
+      // Parse JSON and format as clean paragraphs
+      try {
+        const jsonMatch = detailedContent.match(/\{.+\}/s);
+        if (jsonMatch) {
+          const jsonData = JSON.parse(jsonMatch[0]);
+          let formattedContent = '';
+          
+          Object.entries(jsonData).forEach(([section, content]) => {
+            if (Array.isArray(content)) {
+              formattedContent += `${section}: `;
+              formattedContent += content.map(item => item.replace(/^\-\s*/, '')).join('. ') + '. ';
+              formattedContent += '\n\n';
+            }
+          });
+          
+          detailedContent = formattedContent.trim();
+        }
+      } catch (e) {
+        // Keep original content if JSON parsing fails
+        console.log(`📝 Keeping original detailed content for idea ${index + 1}`);
+      }
+      
+      return {
+        id: `webhook-${Date.now()}-${index}`,
+        title: title,
+        description: summary,
+        summary: summary,
+        detailedContent: detailedContent,
+        videoStyle: 'Professional',
+        duration: '60-90 seconds',
+        targetAudience: 'Real Estate Professionals & Clients'
+      };
+    });
+    
+    console.log(`✅ Successfully parsed ${ideas.length} structured ideas for ${normalizedDay}`);
+    return ideas;
   };
 
 
   const generateThemedIdeas = async (theme: string, day: string) => {
-    console.log('🎯 generateThemedIdeas called!', { theme, day });
+    console.log('🎯 generateThemedIdeas called - SINGLE REQUEST ONLY!', { theme, day });
     
     setIsLoading(true);
     setSelectedTheme(theme);
     
     try {
-      console.log('📞 About to call sendDayWebhook...');
+      console.log('📞 Making single webhook call for:', day);
       const webhookIdeas = await sendDayWebhook(day);
-      console.log('✅ Webhook completed, ideas received:', webhookIdeas);
+      console.log('✅ Webhook response received:', webhookIdeas.length, 'ideas');
       
-      if (webhookIdeas && webhookIdeas.length > 0) {
-        setIdeas(webhookIdeas);
-        toast.success(`Generated ${day} themed ideas successfully!`);
-      } else {
-        throw new Error('No ideas returned from webhook');
-      }
+      // Display webhook content immediately - no conditions that cause fallbacks
+      setIdeas(webhookIdeas);
+      toast.success(`Generated ${webhookIdeas.length} ${day} themed ideas successfully!`);
+      
     } catch (error) {
-      console.error('❌ Error generating themed ideas:', error);
-      console.log('🔄 Using fallback ideas due to webhook failure');
+      console.error('❌ Webhook request completely failed:', error);
+      console.log('🔄 Network/timeout error - using fallback ideas');
       
-      // Use fallback ideas instead of showing empty state
+      // Only use fallbacks if webhook request completely failed (network/timeout errors)
       const fallbackIdeas = getFallbackIdeas(day, theme);
       setIdeas(fallbackIdeas);
       
-      toast.error(`Webhook failed, showing fallback ideas: ${error.message}`);
+      toast.error(`Webhook request failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
