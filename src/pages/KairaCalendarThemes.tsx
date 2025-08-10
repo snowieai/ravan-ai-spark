@@ -349,22 +349,161 @@ const KairaCalendarThemes = () => {
     }
   };
 
-  const parseIdeas = (responseText: string, theme: string): GeneratedIdea[] => {
+  const parseIdeas = (responseText: string, requestedDay: string): GeneratedIdea[] => {
+    console.log(`🔍 Parsing response for "${requestedDay}" - text length: ${responseText.length}`);
+    
+    // First, try to detect response format
+    const responseFormat = detectResponseFormat(responseText);
+    console.log(`📊 Detected response format: ${responseFormat}`);
+    
     try {
-      const ideas = responseText.split('\n\n').filter(idea => idea.trim()).slice(0, 3);
-      return ideas.map((idea, index) => ({
-        id: `themed-${Date.now()}-${index}`,
-        title: `${theme} - Idea ${index + 1}`,
-        description: idea.trim(),
-        summary: idea.trim(),
-        detailedContent: idea.trim(),
-        videoStyle: 'Professional',
-        duration: '60-90 seconds',
-        targetAudience: 'Real Estate Professionals & Clients'
-      }));
-    } catch (error) {
-      return generateFallbackIdeas(theme, 'Theme');
+      // Try JSON parsing first
+      const parsed = JSON.parse(responseText);
+      console.log(`✅ Successfully parsed JSON:`, parsed);
+      
+      if (Array.isArray(parsed)) {
+        const ideas = parsed.map((idea: any, index: number) => ({
+          id: idea.id || `idea-${index}`,
+          title: idea.title || `Idea ${index + 1}`,
+          description: idea.description || idea.summary || 'No description available',
+          summary: idea.summary || idea.description || 'No summary available',
+          detailedContent: idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
+          videoStyle: idea.videoStyle || idea.video_style || 'Professional',
+          duration: idea.duration || '60 seconds',
+          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals'
+        }));
+        console.log(`📋 Parsed ${ideas.length} structured ideas from array`);
+        return ideas;
+      } else if (parsed.ideas && Array.isArray(parsed.ideas)) {
+        const ideas = parsed.ideas.map((idea: any, index: number) => ({
+          id: idea.id || `idea-${index}`,
+          title: idea.title || `Idea ${index + 1}`,
+          description: idea.description || idea.summary || 'No description available',
+          summary: idea.summary || idea.description || 'No summary available',
+          detailedContent: idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
+          videoStyle: idea.videoStyle || idea.video_style || 'Professional',
+          duration: idea.duration || '60 seconds',
+          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals'
+        }));
+        console.log(`📋 Parsed ${ideas.length} structured ideas from nested object`);
+        return ideas;
+      }
+    } catch (parseError) {
+      console.warn(`⚠️ JSON parse failed:`, parseError);
+      console.log(`📝 Attempting advanced text parsing for unstructured content...`);
     }
+    
+    // Advanced text parsing for unstructured responses
+    const textParsedIdeas = parseUnstructuredText(responseText, requestedDay);
+    if (textParsedIdeas.length > 0) {
+      console.log(`📝 Successfully parsed ${textParsedIdeas.length} ideas from unstructured text`);
+      return textParsedIdeas;
+    }
+    
+    console.warn(`🚨 All parsing attempts failed, using fallback ideas`);
+    return generateFallbackIdeas(requestedDay, requestedDay);
+  };
+
+  const detectResponseFormat = (responseText: string): string => {
+    const text = responseText.trim();
+    
+    if (text.startsWith('{') || text.startsWith('[')) {
+      return 'JSON';
+    } else if (text.includes('**') || text.includes('##') || text.includes('1.') || text.includes('- ')) {
+      return 'MARKDOWN/STRUCTURED_TEXT';
+    } else if (text.includes('\n\n') || text.includes('Idea:') || text.includes('Title:')) {
+      return 'UNSTRUCTURED_TEXT';
+    } else {
+      return 'UNKNOWN';
+    }
+  };
+
+  const parseUnstructuredText = (responseText: string, requestedDay: string): GeneratedIdea[] => {
+    console.log(`📝 Parsing unstructured text for ${requestedDay}`);
+    
+    const ideas: GeneratedIdea[] = [];
+    const text = responseText.trim();
+    
+    // Strategy 1: Look for numbered lists or bullet points
+    const numberedSections = text.split(/(?:\d+\.|[-*])\s+/).filter(section => section.trim().length > 10);
+    
+    if (numberedSections.length > 1) {
+      console.log(`📝 Found ${numberedSections.length} numbered/bulleted sections`);
+      
+      numberedSections.slice(1).forEach((section, index) => {
+        const lines = section.split('\n').filter(line => line.trim());
+        const title = extractTitle(lines[0]) || `${requestedDay.charAt(0).toUpperCase() + requestedDay.slice(1)} Content Idea ${index + 1}`;
+        const content = lines.slice(1).join('\n').trim();
+        
+        ideas.push({
+          id: `parsed-${index}`,
+          title: title,
+          description: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+          summary: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+          detailedContent: content || `Detailed content for ${title}`,
+          videoStyle: 'Professional',
+          duration: '60 seconds',
+          targetAudience: 'Real estate professionals'
+        });
+      });
+    }
+    
+    // Strategy 2: Look for paragraph-based content
+    if (ideas.length === 0) {
+      const paragraphs = text.split('\n\n').filter(p => p.trim().length > 20);
+      console.log(`📝 Found ${paragraphs.length} paragraphs`);
+      
+      paragraphs.forEach((paragraph, index) => {
+        const lines = paragraph.split('\n').filter(line => line.trim());
+        const title = extractTitle(lines[0]) || `${requestedDay.charAt(0).toUpperCase() + requestedDay.slice(1)} Idea ${index + 1}`;
+        const content = lines.slice(1).join('\n').trim() || paragraph;
+        
+        ideas.push({
+          id: `paragraph-${index}`,
+          title: title,
+          description: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+          summary: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+          detailedContent: content,
+          videoStyle: 'Professional',
+          duration: '60 seconds',
+          targetAudience: 'Real estate professionals'
+        });
+      });
+    }
+    
+    // Strategy 3: Create single comprehensive idea if no structure found
+    if (ideas.length === 0 && text.length > 50) {
+      console.log(`📝 Creating single comprehensive idea from full text`);
+      ideas.push({
+        id: 'single-comprehensive',
+        title: `${requestedDay.charAt(0).toUpperCase() + requestedDay.slice(1)} Content Strategy`,
+        description: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
+        summary: text.substring(0, 150) + (text.length > 150 ? '...' : ''),
+        detailedContent: text,
+        videoStyle: 'Professional',
+        duration: '60 seconds',
+        targetAudience: 'Real estate professionals'
+      });
+    }
+    
+    console.log(`📝 Text parsing created ${ideas.length} ideas`);
+    return ideas;
+  };
+
+  const extractTitle = (line: string): string => {
+    if (!line) return '';
+    
+    // Remove common prefixes and clean up
+    const cleaned = line
+      .replace(/^(?:\d+\.|[-*])\s*/, '') // Remove numbering/bullets
+      .replace(/^(?:Title:|Idea:|Content:)\s*/i, '') // Remove common prefixes
+      .replace(/^\*\*(.+?)\*\*/, '$1') // Remove markdown bold
+      .replace(/^##?\s*/, '') // Remove markdown headers
+      .trim();
+    
+    // Take first sentence or up to 80 characters
+    const firstSentence = cleaned.split(/[.!?]/)[0];
+    return firstSentence.length > 80 ? firstSentence.substring(0, 80) + '...' : firstSentence;
   };
 
   const generateFallbackIdeas = (theme: string, day: string): GeneratedIdea[] => {
