@@ -415,44 +415,49 @@ const KairaCalendarThemes = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ideas.map((idea) => (
-                  <Card key={idea.id} className="group hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white/90 backdrop-blur-sm border-orange-100">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
+                {ideas.map((idea, index) => (
+                  <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Idea {index + 1}
+                        </h3>
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                          AI - GENERATED
+                        </span>
+                      </div>
+                      <CardTitle className="text-gray-800 font-medium text-base leading-relaxed line-clamp-3">
                         {idea.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-gray-700 leading-relaxed">{idea.description}</p>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-600">Style:</span>
-                          <span className="text-orange-600">{idea.videoStyle}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-600">Duration:</span>
-                          <span className="text-orange-600">{idea.duration}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-600">Audience:</span>
-                          <span className="text-orange-600">{idea.targetAudience}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Button 
-                          onClick={() => setExpandedIdea(idea)}
-                          variant="outline"
-                          className="w-full border-orange-200 text-orange-600 hover:bg-orange-50"
-                        >
-                          Expand Details
-                        </Button>
+                    
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        {idea.summary && idea.summary !== idea.title && (
+                          <div>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                              {idea.summary}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {idea.detailedContent && idea.detailedContent !== idea.summary && (
+                          <div>
+                            <button
+                              onClick={() => setExpandedIdea(idea)}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              View detailed explanation →
+                            </button>
+                          </div>
+                        )}
+                        
                         <Button 
                           onClick={() => selectIdea(idea)}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500"
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium py-3 flex items-center justify-center gap-2"
                         >
                           Select This Idea
+                          <span>→</span>
                         </Button>
                       </div>
                     </CardContent>
