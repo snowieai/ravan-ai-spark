@@ -139,9 +139,11 @@ const KairaCalendarThemes = () => {
         }
         
         // Parse ideas separated by ### followed by numbers
-        const ideaBlocks = contentToParse.split(/### \d+\./).filter(block => block.trim());
-        console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
-        console.log('🔍 First few blocks:', ideaBlocks.slice(0, 3));
+        // Skip the first element which is usually just the header before first ###
+        const allBlocks = contentToParse.split(/### \d+\./);
+        const ideaBlocks = allBlocks.slice(1).filter(block => block.trim()); // Skip header, keep only actual ideas
+        console.log(`📊 Found ${ideaBlocks.length} idea blocks (after skipping header)`);
+        console.log('🔍 First few blocks:', ideaBlocks.slice(0, 2));
         
         const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
           const trimmedBlock = block.trim();
