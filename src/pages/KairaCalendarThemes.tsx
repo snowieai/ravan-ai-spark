@@ -225,91 +225,15 @@ const KairaCalendarThemes = () => {
       console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
     }
     
-    // Enhanced parsing with better error handling
-    const allBlocks = contentToParse.split(/### \d+\./);
-    const ideaBlocks = allBlocks.slice(1).filter(block => block.trim());
-    console.log(`📊 Parsing results for ${normalizedDay}: Found ${allBlocks.length} total blocks, ${ideaBlocks.length} idea blocks`);
+    // Use universal parser for all formats
+    console.log(`🔄 Using universal parser for ${normalizedDay}`);
+    const ideas = parseUnstructuredText(contentToParse, normalizedDay);
     
-    // Log each block for debugging
-    ideaBlocks.forEach((block, index) => {
-      console.log(`📝 Block ${index + 1} preview:`, block.substring(0, 100) + '...');
-    });
-    
-    // More flexible parsing - try to get something useful even if format is different
-    if (ideaBlocks.length === 0) {
-      console.log(`⚠️ No structured idea blocks found for ${normalizedDay}, attempting alternative parsing`);
-      
-      // Try splitting by newlines and creating basic ideas
-      const lines = contentToParse.split('\n').filter(line => line.trim()).slice(0, 10);
-      if (lines.length > 0) {
-        console.log(`📝 Creating ideas from ${lines.length} lines for ${normalizedDay}`);
-        const basicIdeas = lines.map((line, index) => ({
-          id: `webhook-basic-${Date.now()}-${index}`,
-          title: `${normalizedDay} Content Idea ${index + 1}`,
-          description: line.trim(),
-          summary: line.trim(),
-          detailedContent: line.trim(),
-          videoStyle: 'Professional',
-          duration: '60-90 seconds',
-          targetAudience: 'Real Estate Professionals & Clients'
-        }));
-        
-        console.log(`✅ Created ${basicIdeas.length} basic ideas from response for ${normalizedDay}`);
-        return basicIdeas;
-      }
-      
-      throw new Error(`No parseable content found in webhook response for ${normalizedDay}`);
+    if (ideas.length === 0) {
+      console.log(`⚠️ Universal parser returned no ideas for ${normalizedDay}, using fallback`);
+      const themeData = themeDays.find(td => td.day.toLowerCase() === normalizedDay);
+      return generateFallbackIdeas(normalizedDay, themeData?.theme || normalizedDay);
     }
-    
-    // Process structured idea blocks
-    const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
-      const trimmedBlock = block.trim();
-      
-      // Extract title (first line before 📄 or first non-empty line)
-      const lines = trimmedBlock.split('\n').filter(line => line.trim());
-      const title = lines[0]?.trim() || `${normalizedDay} Idea ${index + 1}`;
-      
-      // Extract summary (after 📄 Summary: and before 🔍)
-      const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
-      const summary = summaryMatch ? summaryMatch[1].trim() : (lines[1]?.trim() || 'No summary available');
-      
-      // Extract detailed content (after 🔍 Detailed Explanation:) and format it
-      const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
-      let detailedContent = detailedMatch ? detailedMatch[1].trim() : trimmedBlock;
-      
-      // Parse JSON and format as clean paragraphs
-      try {
-        const jsonMatch = detailedContent.match(/\{.+\}/s);
-        if (jsonMatch) {
-          const jsonData = JSON.parse(jsonMatch[0]);
-          let formattedContent = '';
-          
-          Object.entries(jsonData).forEach(([section, content]) => {
-            if (Array.isArray(content)) {
-              formattedContent += `${section}: `;
-              formattedContent += content.map(item => item.replace(/^\-\s*/, '')).join('. ') + '. ';
-              formattedContent += '\n\n';
-            }
-          });
-          
-          detailedContent = formattedContent.trim();
-        }
-      } catch (e) {
-        // Keep original content if JSON parsing fails
-        console.log(`📝 Keeping original detailed content for idea ${index + 1}`);
-      }
-      
-      return {
-        id: `webhook-${Date.now()}-${index}`,
-        title: title,
-        description: summary,
-        summary: summary,
-        detailedContent: detailedContent,
-        videoStyle: 'Professional',
-        duration: '60-90 seconds',
-        targetAudience: 'Real Estate Professionals & Clients'
-      };
-    });
     
     console.log(`✅ Successfully parsed ${ideas.length} structured ideas for ${normalizedDay}`);
     return ideas;
