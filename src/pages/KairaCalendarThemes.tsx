@@ -180,7 +180,7 @@ const KairaCalendarThemes = () => {
       
       const response = await fetch(webhookUrl, {
         method: 'GET',
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(300000) // 5 minute timeout
       });
 
       console.log(`📨 Response status for ${normalizedDay}: ${response.status}`);
@@ -278,7 +278,7 @@ const KairaCalendarThemes = () => {
       }
       
       return ideas;
-    }, 3, 1000); // 3 retries with exponential backoff starting at 1 second
+    }, 2, 2000); // 2 retries with exponential backoff starting at 2 seconds
   };
 
 
@@ -436,6 +436,9 @@ const KairaCalendarThemes = () => {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Choose a day to generate themed content ideas for your weekly calendar
           </p>
+          <p className="text-sm text-orange-600 mt-2 font-medium">
+            ⏰ Idea generation may take up to 5 minutes - please be patient!
+          </p>
         </div>
 
         {!selectedTheme ? (
@@ -529,6 +532,7 @@ const KairaCalendarThemes = () => {
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
                 <p className="text-lg text-gray-600">Generating themed ideas...</p>
+                <p className="text-sm text-orange-600 mt-2">This may take up to 5 minutes, please be patient!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
