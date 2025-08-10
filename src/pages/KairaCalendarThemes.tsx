@@ -126,8 +126,20 @@ const KairaCalendarThemes = () => {
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // Parse new webhook response format: ideas separated by ### followed by numbers
-        const ideaBlocks = responseData.split(/### \d+\./).filter(block => block.trim());
+        // First try to parse as JSON to extract the output field
+        let contentToParse = responseData;
+        try {
+          const jsonResponse = JSON.parse(responseData);
+          if (jsonResponse.output) {
+            contentToParse = jsonResponse.output;
+            console.log('📋 Extracted output from JSON:', contentToParse);
+          }
+        } catch (jsonError) {
+          console.log('Response is not JSON, using raw text');
+        }
+        
+        // Parse the content by ideas separated by ### followed by numbers
+        const ideaBlocks = contentToParse.split(/### \d+\./).filter(block => block.trim());
         console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
         console.log('🔍 First few blocks:', ideaBlocks.slice(0, 3));
         
