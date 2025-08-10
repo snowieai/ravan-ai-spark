@@ -417,47 +417,32 @@ const KairaCalendarThemes = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {ideas.map((idea, index) => (
                   <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                    <CardHeader className="pb-4">
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
                           Idea {index + 1}
                         </h3>
-                        <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                          AI - GENERATED
-                        </span>
                       </div>
-                      <CardTitle className="text-gray-800 font-medium text-base leading-relaxed line-clamp-3">
+                      <CardTitle className="text-gray-800 font-medium text-base leading-relaxed">
                         {idea.title}
                       </CardTitle>
                     </CardHeader>
                     
                     <CardContent className="pt-0">
                       <div className="space-y-4">
-                        {idea.summary && idea.summary !== idea.title && (
-                          <div>
-                            <p className="text-gray-700 text-sm leading-relaxed">
-                              {idea.summary}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {idea.detailedContent && idea.detailedContent !== idea.summary && (
-                          <div>
-                            <button
-                              onClick={() => setExpandedIdea(idea)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              View detailed explanation →
-                            </button>
-                          </div>
-                        )}
+                        <Button
+                          onClick={() => setExpandedIdea(idea)}
+                          variant="outline"
+                          className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          View detailed explanation
+                        </Button>
                         
                         <Button 
                           onClick={() => selectIdea(idea)}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium py-3 flex items-center justify-center gap-2"
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium py-3"
                         >
                           Select This Idea
-                          <span>→</span>
                         </Button>
                       </div>
                     </CardContent>
@@ -490,10 +475,27 @@ const KairaCalendarThemes = () => {
               
               <div>
                 <h3 className="text-lg font-semibold text-orange-600 mb-2">Detailed Content</h3>
-                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {expandedIdea.detailedContent.split('\\n').map((line, index) => (
-                    <p key={index} className="mb-2">{line}</p>
-                  ))}
+                <div className="text-gray-700 leading-relaxed">
+                  {expandedIdea.detailedContent.split(/[\n\\n]/).map((line, index) => {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) return null;
+                    
+                    // Format as bullet points
+                    if (trimmedLine.includes(':') || trimmedLine.length > 10) {
+                      return (
+                        <div key={index} className="mb-2 flex items-start">
+                          <span className="text-orange-500 mr-2 mt-1">•</span>
+                          <span>{trimmedLine}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={index} className="mb-2 flex items-start">
+                        <span className="text-orange-500 mr-2 mt-1">•</span>
+                        <span>{trimmedLine}</span>
+                      </div>
+                    );
+                  }).filter(Boolean)}
                 </div>
               </div>
               
