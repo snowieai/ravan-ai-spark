@@ -343,116 +343,113 @@ const KairaCalendarThemes = () => {
   };
 
   const parseUnstructuredText = (responseText: string, requestedDay: string): GeneratedIdea[] => {
-    console.log(`🔍 Universal parsing for "${requestedDay}" - implementing multi-pattern recognition`);
-    
-    // Universal pattern matching - handles ANY format
-    const universalPatterns = [
-      // Emoji-based patterns (like Wednesday) - handle complex structures
-      /💡\s*\*([^*]+)\*\n\n\*(\d+)\.\s*([^*]+)\*\n📄 Summary:\s*([^🔍]+)\n🔍 Detailed Explanation:\s*(.+?)(?=\n\*\d+\.|$)/gs,
-      
-      // Numbered patterns with asterisks (*1. format)
-      /\*(\d+)\.\s*([^*\n]+)\*[^📄]*📄 Summary:\s*([^🔍]+)🔍 Detailed Explanation:\s*(.+?)(?=\*\d+\.|$)/gs,
-      
-      // Standard numbered list (### format)
-      /###\s*(\d+)\.\s*([^\n]+)\n([^#]+?)(?=###|\n\n|$)/gs,
-      
-      // Simple numbered list (1. format)
-      /(\d+)\.\s*([^\n]+)\n([^0-9]+?)(?=\d+\.|$)/gs,
-      
-      // Bullet points with various symbols
-      /[•▸►‣]\s*([^\n]+)\n([^•▸►‣]+?)(?=[•▸►‣]|$)/gs,
-      
-      // Markdown headers
-      /#{1,3}\s*([^\n]+)\n([^#]+?)(?=#|$)/gs,
-      
-      // Bold patterns
-      /\*\*([^*]+)\*\*\n([^*]+?)(?=\*\*|$)/gs,
-      
-      // Mixed emoji patterns
-      /[💡🎯📈🔥✨💰🚀📊🎨🌟]\s*([^\n]+)\n([^💡🎯📈🔥✨💰🚀📊🎨🌟]+?)(?=[💡🎯📈🔥✨💰🚀📊🎨🌟]|$)/gs
-    ];
+    console.log(`🔍 Simplified universal parsing for "${requestedDay}"`);
+    console.log(`📝 Raw response preview:`, responseText.substring(0, 500));
     
     let ideas: GeneratedIdea[] = [];
     
-    // Try each pattern until we find matching content
-    for (let i = 0; i < universalPatterns.length; i++) {
-      const pattern = universalPatterns[i];
-      const matches = [...responseText.matchAll(pattern)];
-      
-      console.log(`🔍 Pattern ${i + 1}: Found ${matches.length} matches`);
-      
-      if (matches.length > 0) {
-        ideas = matches.map((match, index) => {
-          let title, summary, detailedContent;
-          
-          // Handle different match groups based on pattern
-          if (match.length === 6 && match[0].includes('💡')) {
-            // Emoji pattern (Wednesday format)
-            title = match[3] || `Idea ${index + 1}`;
-            summary = match[4]?.trim() || 'No summary available';
-            detailedContent = match[5]?.trim() || 'No detailed content available';
-          } else if (match.length === 5 && match[0].includes('📄')) {
-            // Standard summary/detail pattern
-            title = match[2] || `Idea ${index + 1}`;
-            summary = match[3]?.trim() || 'No summary available';
-            detailedContent = match[4]?.trim() || 'No detailed content available';
-          } else {
-            // Simple title/content pattern
-            title = match[1] || match[2] || `Idea ${index + 1}`;
-            summary = match[2] || match[3] || match[1] || 'No summary available';
-            detailedContent = match[3] || match[2] || match[1] || 'No detailed content available';
-          }
-          
-          // Clean up titles and content
-          title = title.replace(/^\*+|\*+$/g, '').trim();
-          summary = summary.replace(/^\s*-\s*/, '').trim();
-          
-          // Parse and format JSON content if present
-          let formattedDetailedContent = detailedContent;
-          try {
-            const jsonMatch = detailedContent.match(/\{.+\}/s);
-            if (jsonMatch) {
-              const jsonData = JSON.parse(jsonMatch[0]);
-              let formatted = '';
-              
-              Object.entries(jsonData).forEach(([section, content]) => {
-                formatted += `**${section}:**\n`;
-                if (Array.isArray(content)) {
-                  content.forEach(item => {
-                    formatted += `• ${typeof item === 'string' ? item.replace(/^\-\s*/, '').replace(/•\s*/, '') : item}\n`;
-                  });
-                } else if (typeof content === 'object') {
-                  Object.entries(content).forEach(([key, value]) => {
-                    formatted += `• ${key}: ${value}\n`;
-                  });
-                } else {
-                  formatted += `• ${content}\n`;
-                }
-                formatted += '\n';
-              });
-              
-              formattedDetailedContent = formatted.trim();
-            }
-          } catch (e) {
-            // Keep original if JSON parsing fails
-            console.log(`📝 Keeping original detailed content for idea ${index + 1}`);
-          }
-          
-          return {
-            id: `universal-${Date.now()}-${index}`,
-            title: title,
-            description: summary.substring(0, 150) + (summary.length > 150 ? '...' : ''),
-            summary: summary,
-            detailedContent: formattedDetailedContent,
-            videoStyle: 'Professional',
-            duration: '60-90 seconds',
-            targetAudience: 'Real Estate Professionals & Clients'
-          };
-        });
+    // Pattern 1: Try Wednesday format (*1. TITLE ... 📄 Summary: ... 🔍 Detailed:)
+    const wednesdayPattern = /\*(\d+)\.\s*([^*\n]+)\*[\s\S]*?📄 Summary:\s*([\s\S]*?)🔍 Detailed Explanation:\s*([\s\S]*?)(?=\*\d+\.|$)/g;
+    const wednesdayMatches = [...responseText.matchAll(wednesdayPattern)];
+    console.log(`🔍 Wednesday pattern: Found ${wednesdayMatches.length} matches`);
+    
+    if (wednesdayMatches.length > 0) {
+      ideas = wednesdayMatches.map((match, index) => {
+        const title = match[2]?.trim() || `Idea ${index + 1}`;
+        const summary = match[3]?.trim() || 'No summary available';
+        let detailedContent = match[4]?.trim() || 'No detailed content available';
         
-        console.log(`✅ Successfully parsed ${ideas.length} ideas using pattern ${i + 1}`);
-        break;
-      }
+        // Parse JSON content if present
+        try {
+          const jsonMatch = detailedContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const jsonData = JSON.parse(jsonMatch[0]);
+            let formatted = '';
+            
+            Object.entries(jsonData).forEach(([section, content]) => {
+              formatted += `**${section}:**\n`;
+              if (Array.isArray(content)) {
+                content.forEach(item => {
+                  formatted += `• ${typeof item === 'string' ? item.replace(/^\-\s*/, '') : item}\n`;
+                });
+              } else {
+                formatted += `• ${content}\n`;
+              }
+              formatted += '\n';
+            });
+            
+            detailedContent = formatted.trim();
+          }
+        } catch (e) {
+          console.log(`📝 Keeping original detailed content for idea ${index + 1}`);
+        }
+        
+        return {
+          id: `universal-${Date.now()}-${index}`,
+          title: title,
+          description: summary.substring(0, 150) + (summary.length > 150 ? '...' : ''),
+          summary: summary,
+          detailedContent: detailedContent,
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients'
+        };
+      });
+      
+      console.log(`✅ Successfully parsed ${ideas.length} ideas using Wednesday format`);
+      return ideas;
+    }
+    
+    // Pattern 2: Try Thursday format (### 1. TITLE ...)
+    const thursdayPattern = /###\s*(\d+)\.\s*([^\n]+)\n([\s\S]*?)(?=###\s*\d+\.|$)/g;
+    const thursdayMatches = [...responseText.matchAll(thursdayPattern)];
+    console.log(`🔍 Thursday pattern: Found ${thursdayMatches.length} matches`);
+    
+    if (thursdayMatches.length > 0) {
+      ideas = thursdayMatches.map((match, index) => {
+        const title = match[2]?.trim() || `Idea ${index + 1}`;
+        const content = match[3]?.trim() || 'No content available';
+        
+        return {
+          id: `universal-${Date.now()}-${index}`,
+          title: title,
+          description: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+          summary: content.substring(0, 200),
+          detailedContent: content,
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients'
+        };
+      });
+      
+      console.log(`✅ Successfully parsed ${ideas.length} ideas using Thursday format`);
+      return ideas;
+    }
+    
+    // Pattern 3: Simple numbered list (1. TITLE ...)
+    const numberedPattern = /(\d+)\.\s*([^\n]+)(?:\n([\s\S]*?))?(?=\d+\.|$)/g;
+    const numberedMatches = [...responseText.matchAll(numberedPattern)];
+    console.log(`🔍 Simple numbered pattern: Found ${numberedMatches.length} matches`);
+    
+    if (numberedMatches.length > 1) {
+      ideas = numberedMatches.map((match, index) => {
+        const title = match[2]?.trim() || `Idea ${index + 1}`;
+        const content = match[3]?.trim() || match[2]?.trim() || 'No content available';
+        
+        return {
+          id: `universal-${Date.now()}-${index}`,
+          title: title,
+          description: content.substring(0, 150) + (content.length > 150 ? '...' : ''),
+          summary: content.substring(0, 200),
+          detailedContent: content,
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients'
+        };
+      });
+      
+      console.log(`✅ Successfully parsed ${ideas.length} ideas using simple numbered format`);
+      return ideas;
     }
     
     // Fallback: Split by content sections if no patterns match
