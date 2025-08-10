@@ -348,7 +348,45 @@ const KairaCalendarThemes = () => {
     
     let ideas: GeneratedIdea[] = [];
     
-    // Pattern 1: Friday format (*1. **TITLE*** ... 📄 Summary: ... 🔍 Detailed Explanation:)
+    // Pattern 1: Saturday format (*1. 9. **TITLE*** ... 📄 Summary: ... 🔍 Detailed Explanation:)
+    const saturdayPattern = /\*(\d+)\.\s*(\d+)\.\s*\*\*([^*]+)\*\*\*[\s\S]*?📄\s*Summary:\s*([\s\S]*?)🔍\s*Detailed[^:]*:\s*([\s\S]*?)(?=\*\d+\.|$)/g;
+    const saturdayMatches = [...responseText.matchAll(saturdayPattern)];
+    console.log(`🔍 Saturday pattern: Found ${saturdayMatches.length} matches`);
+    
+    if (saturdayMatches.length > 0) {
+      ideas = saturdayMatches.map((match, index) => {
+        const title = match[3]?.trim() || `Idea ${index + 1}`;
+        const summary = match[4]?.trim() || 'No summary available';
+        let detailedContent = match[5]?.trim() || 'No detailed content available';
+        
+        // Clean up detailed content from complex markdown and preserve bullet points
+        detailedContent = detailedContent
+          .replace(/## Detailed Explanation/g, '')
+          .replace(/### Key Insights/g, '**Key Insights:**')
+          .replace(/### Investment Opportunities/g, '**Investment Opportunities:**')
+          .replace(/### Reasons for Popularity/g, '**Reasons for Popularity:**')
+          .replace(/### Market Trends/g, '**Market Trends:**')
+          .replace(/### Visual Suggestions/g, '**Visual Suggestions:**')
+          .replace(/•/g, '•') // Preserve bullet points
+          .trim();
+        
+        return {
+          id: `saturday-${Date.now()}-${index}`,
+          title: title,
+          description: summary.substring(0, 150) + (summary.length > 150 ? '...' : ''),
+          summary: summary,
+          detailedContent: detailedContent,
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients'
+        };
+      });
+      
+      console.log(`✅ Successfully parsed ${ideas.length} ideas using Saturday format`);
+      return ideas;
+    }
+    
+    // Pattern 2: Friday format (*1. **TITLE*** ... 📄 Summary: ... 🔍 Detailed Explanation:)
     const fridayPattern = /\*(\d+)\.\s*\*\*([^*]+)\*\*\*[\s\S]*?📄\s*Summary:\s*([\s\S]*?)🔍\s*Detailed[^:]*:\s*([\s\S]*?)(?=\*\d+\.|$)/g;
     const fridayMatches = [...responseText.matchAll(fridayPattern)];
     console.log(`🔍 Friday pattern: Found ${fridayMatches.length} matches`);
