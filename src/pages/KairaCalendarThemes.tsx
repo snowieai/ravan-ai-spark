@@ -127,7 +127,9 @@ const KairaCalendarThemes = () => {
         toast.success(`Ideas generated for ${day}!`);
         
         // Parse new webhook response format: ideas separated by *\n\n*
-        const ideaBlocks = responseData.split('*\\n\\n*').filter(block => block.trim());
+        const ideaBlocks = responseData.split('*\n\n*').filter(block => block.trim());
+        console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
+        
         const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
           const trimmedBlock = block.replace(/^\*/, '').replace(/\*$/, '').trim();
           
@@ -139,9 +141,32 @@ const KairaCalendarThemes = () => {
           const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
           const summary = summaryMatch ? summaryMatch[1].trim() : 'No summary available';
           
-          // Extract detailed content (after 🔍 Detailed Explanation:)
+          // Extract detailed content (after 🔍 Detailed Explanation:) and format it
           const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
-          const detailedContent = detailedMatch ? detailedMatch[1].trim() : 'No detailed content available';
+          let detailedContent = detailedMatch ? detailedMatch[1].trim() : 'No detailed content available';
+          
+          // Parse JSON and format as clean text
+          try {
+            const jsonMatch = detailedContent.match(/\{.+\}/s);
+            if (jsonMatch) {
+              const jsonData = JSON.parse(jsonMatch[0]);
+              let formattedContent = '';
+              
+              Object.entries(jsonData).forEach(([section, content]) => {
+                if (Array.isArray(content)) {
+                  formattedContent += `${section}:\n`;
+                  content.forEach(item => {
+                    formattedContent += `• ${item.replace(/^\-\s*/, '')}\n`;
+                  });
+                  formattedContent += '\n';
+                }
+              });
+              
+              detailedContent = formattedContent.trim();
+            }
+          } catch (e) {
+            // Keep original content if JSON parsing fails
+          }
           
           return {
             id: `webhook-${Date.now()}-${index}`,
