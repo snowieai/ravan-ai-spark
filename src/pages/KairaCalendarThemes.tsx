@@ -126,16 +126,17 @@ const KairaCalendarThemes = () => {
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // Parse new webhook response format: ideas separated by *\n\n*
-        const ideaBlocks = responseData.split('*\n\n*').filter(block => block.trim());
+        // Parse new webhook response format: ideas separated by ### followed by numbers
+        const ideaBlocks = responseData.split(/### \d+\./).filter(block => block.trim());
         console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
+        console.log('🔍 First few blocks:', ideaBlocks.slice(0, 3));
         
         const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
-          const trimmedBlock = block.replace(/^\*/, '').replace(/\*$/, '').trim();
+          const trimmedBlock = block.trim();
           
-          // Extract title (everything after the number and before 📄)
-          const titleMatch = trimmedBlock.match(/###\s*\d+\.\s*([^📄]+)/);
-          const title = titleMatch ? titleMatch[1].trim() : `${day} Idea ${index + 1}`;
+          // Extract title (first line before 📄 or first non-empty line)
+          const lines = trimmedBlock.split('\n').filter(line => line.trim());
+          const title = lines[0]?.trim() || `${day} Idea ${index + 1}`;
           
           // Extract summary (after 📄 Summary: and before 🔍)
           const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
