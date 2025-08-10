@@ -126,38 +126,10 @@ const KairaCalendarThemes = () => {
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // First try to parse as JSON to extract the output field
-        let contentToParse = responseData;
-        try {
-          const jsonResponse = JSON.parse(responseData);
-          if (jsonResponse.output) {
-            contentToParse = jsonResponse.output;
-            console.log('📋 Extracted output from JSON:', contentToParse);
-          }
-        } catch (jsonError) {
-          console.log('Response is not JSON, using raw text');
-        }
-        
-        // Parse the content by ideas separated by ### followed by numbers
-        const ideaBlocks = contentToParse.split(/### \d+\./).filter(block => block.trim());
+        // Parse new webhook response format: ideas separated by ### followed by numbers
+        const ideaBlocks = responseData.split(/### \d+\./).filter(block => block.trim());
         console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
         console.log('🔍 First few blocks:', ideaBlocks.slice(0, 3));
-        
-        // If no blocks found with ### pattern, try alternative splitting methods
-        if (ideaBlocks.length === 0) {
-          console.log('🔄 No ### pattern found, trying alternative splits...');
-          // Try splitting by numbered ideas (1., 2., 3., etc.)
-          const numberedBlocks = contentToParse.split(/\d+\./).filter(block => block.trim());
-          if (numberedBlocks.length > 1) {
-            ideaBlocks.push(...numberedBlocks);
-            console.log(`📊 Found ${numberedBlocks.length} numbered blocks`);
-          } else {
-            // Last resort: split by double newlines and take up to 3 sections
-            const paragraphBlocks = contentToParse.split(/\n\s*\n/).filter(block => block.trim()).slice(0, 3);
-            ideaBlocks.push(...paragraphBlocks);
-            console.log(`📊 Found ${paragraphBlocks.length} paragraph blocks`);
-          }
-        }
         
         const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
           const trimmedBlock = block.trim();
