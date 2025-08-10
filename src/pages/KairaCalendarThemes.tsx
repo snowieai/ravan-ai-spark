@@ -146,7 +146,7 @@ const KairaCalendarThemes = () => {
           const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
           let detailedContent = detailedMatch ? detailedMatch[1].trim() : 'No detailed content available';
           
-          // Parse JSON and format as clean text
+          // Parse JSON and format as clean paragraphs
           try {
             const jsonMatch = detailedContent.match(/\{.+\}/s);
             if (jsonMatch) {
@@ -155,11 +155,9 @@ const KairaCalendarThemes = () => {
               
               Object.entries(jsonData).forEach(([section, content]) => {
                 if (Array.isArray(content)) {
-                  formattedContent += `${section}:\n`;
-                  content.forEach(item => {
-                    formattedContent += `• ${item.replace(/^\-\s*/, '')}\n`;
-                  });
-                  formattedContent += '\n';
+                  formattedContent += `${section}: `;
+                  formattedContent += content.map(item => item.replace(/^\-\s*/, '')).join('. ') + '. ';
+                  formattedContent += '\n\n';
                 }
               });
               
@@ -444,12 +442,7 @@ const KairaCalendarThemes = () => {
                 {ideas.map((idea, index) => (
                   <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
                     <CardHeader className="pb-4">
-                      <div className="mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          Idea {index + 1}
-                        </h3>
-                      </div>
-                      <CardTitle className="text-gray-800 font-medium text-base leading-relaxed">
+                      <CardTitle className="text-gray-800 font-medium text-lg leading-relaxed">
                         {idea.title}
                       </CardTitle>
                     </CardHeader>
@@ -501,25 +494,15 @@ const KairaCalendarThemes = () => {
               
               <div>
                 <h3 className="text-lg font-semibold text-orange-600 mb-2">Detailed Content</h3>
-                <div className="text-gray-700 leading-relaxed">
-                  {expandedIdea.detailedContent.split(/[\n\\n]/).map((line, index) => {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine) return null;
+                <div className="text-gray-700 leading-relaxed space-y-4">
+                  {expandedIdea.detailedContent.split('\n\n').map((paragraph, index) => {
+                    const trimmedParagraph = paragraph.trim();
+                    if (!trimmedParagraph) return null;
                     
-                    // Format as bullet points
-                    if (trimmedLine.includes(':') || trimmedLine.length > 10) {
-                      return (
-                        <div key={index} className="mb-2 flex items-start">
-                          <span className="text-orange-500 mr-2 mt-1">•</span>
-                          <span>{trimmedLine}</span>
-                        </div>
-                      );
-                    }
                     return (
-                      <div key={index} className="mb-2 flex items-start">
-                        <span className="text-orange-500 mr-2 mt-1">•</span>
-                        <span>{trimmedLine}</span>
-                      </div>
+                      <p key={index} className="text-gray-700 leading-relaxed">
+                        {trimmedParagraph}
+                      </p>
                     );
                   }).filter(Boolean)}
                 </div>
