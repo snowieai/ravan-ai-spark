@@ -143,6 +143,22 @@ const KairaCalendarThemes = () => {
         console.log(`📊 Found ${ideaBlocks.length} idea blocks`);
         console.log('🔍 First few blocks:', ideaBlocks.slice(0, 3));
         
+        // If no blocks found with ### pattern, try alternative splitting methods
+        if (ideaBlocks.length === 0) {
+          console.log('🔄 No ### pattern found, trying alternative splits...');
+          // Try splitting by numbered ideas (1., 2., 3., etc.)
+          const numberedBlocks = contentToParse.split(/\d+\./).filter(block => block.trim());
+          if (numberedBlocks.length > 1) {
+            ideaBlocks.push(...numberedBlocks);
+            console.log(`📊 Found ${numberedBlocks.length} numbered blocks`);
+          } else {
+            // Last resort: split by double newlines and take up to 3 sections
+            const paragraphBlocks = contentToParse.split(/\n\s*\n/).filter(block => block.trim()).slice(0, 3);
+            ideaBlocks.push(...paragraphBlocks);
+            console.log(`📊 Found ${paragraphBlocks.length} paragraph blocks`);
+          }
+        }
+        
         const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
           const trimmedBlock = block.trim();
           
