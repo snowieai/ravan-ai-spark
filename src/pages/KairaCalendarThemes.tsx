@@ -126,29 +126,29 @@ const KairaCalendarThemes = () => {
         console.log(`✅ Webhook response:`, responseData);
         toast.success(`Ideas generated for ${day}!`);
         
-        // Parse tab-separated response data
-        const lines = responseData.trim().split('\n');
-        const ideas: GeneratedIdea[] = lines.map((line, index) => {
-          const columns = line.split('\t');
-          if (columns.length >= 6) {
-            const [id, timestamp, dayColumn, title, summary, detailedContent, date] = columns;
-            return {
-              id: id || `webhook-${Date.now()}-${index}`,
-              title: title || `${day} Idea ${index + 1}`,
-              description: summary || 'No summary available',
-              summary: summary || 'No summary available',
-              detailedContent: detailedContent || 'No detailed content available',
-              videoStyle: 'Professional',
-              duration: '60-90 seconds',
-              targetAudience: 'Real Estate Professionals & Clients'
-            };
-          }
+        // Parse new webhook response format: ideas separated by *\n\n*
+        const ideaBlocks = responseData.split('*\\n\\n*').filter(block => block.trim());
+        const ideas: GeneratedIdea[] = ideaBlocks.map((block, index) => {
+          const trimmedBlock = block.replace(/^\*/, '').replace(/\*$/, '').trim();
+          
+          // Extract title (everything after the number and before 📄)
+          const titleMatch = trimmedBlock.match(/###\s*\d+\.\s*([^📄]+)/);
+          const title = titleMatch ? titleMatch[1].trim() : `${day} Idea ${index + 1}`;
+          
+          // Extract summary (after 📄 Summary: and before 🔍)
+          const summaryMatch = trimmedBlock.match(/📄 Summary:\s*([^🔍]+)/);
+          const summary = summaryMatch ? summaryMatch[1].trim() : 'No summary available';
+          
+          // Extract detailed content (after 🔍 Detailed Explanation:)
+          const detailedMatch = trimmedBlock.match(/🔍 Detailed Explanation:\s*(.+)/s);
+          const detailedContent = detailedMatch ? detailedMatch[1].trim() : 'No detailed content available';
+          
           return {
             id: `webhook-${Date.now()}-${index}`,
-            title: `${day} Idea ${index + 1}`,
-            description: line,
-            summary: line,
-            detailedContent: line,
+            title: title,
+            description: summary,
+            summary: summary,
+            detailedContent: detailedContent,
             videoStyle: 'Professional',
             duration: '60-90 seconds',
             targetAudience: 'Real Estate Professionals & Clients'
