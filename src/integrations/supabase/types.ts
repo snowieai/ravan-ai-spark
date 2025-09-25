@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
   }
   public: {
     Tables: {
@@ -99,6 +99,378 @@ export type Database = {
           source?: string | null
           topic_text?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_summaries: {
+        Row: {
+          accomplishments: string
+          challenges: string | null
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          overall_productivity: number | null
+          tomorrow_plans: string | null
+          total_hours_worked: number | null
+          updated_at: string
+        }
+        Insert: {
+          accomplishments: string
+          challenges?: string | null
+          created_at?: string
+          date: string
+          employee_id: string
+          id?: string
+          overall_productivity?: number | null
+          tomorrow_plans?: string | null
+          total_hours_worked?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accomplishments?: string
+          challenges?: string | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          overall_productivity?: number | null
+          tomorrow_plans?: string | null
+          total_hours_worked?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_summaries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          department: string
+          email: string
+          employee_id: string
+          full_name: string
+          hire_date: string
+          hourly_rate: number | null
+          id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string
+          email: string
+          employee_id: string
+          full_name: string
+          hire_date?: string
+          hourly_rate?: number | null
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          email?: string
+          employee_id?: string
+          full_name?: string
+          hire_date?: string
+          hourly_rate?: number | null
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_activities: {
+        Row: {
+          activity: string
+          created_at: string
+          date: string
+          id: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          date?: string
+          id?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hourly_checkins: {
+        Row: {
+          blockers: string | null
+          checkin_time: string
+          created_at: string
+          current_task: string
+          employee_id: string
+          id: string
+          mood: string
+          notes: string | null
+          productivity_level: number
+        }
+        Insert: {
+          blockers?: string | null
+          checkin_time?: string
+          created_at?: string
+          current_task: string
+          employee_id: string
+          id?: string
+          mood: string
+          notes?: string | null
+          productivity_level: number
+        }
+        Update: {
+          blockers?: string | null
+          checkin_time?: string
+          created_at?: string
+          current_task?: string
+          employee_id?: string
+          id?: string
+          mood?: string
+          notes?: string | null
+          productivity_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hourly_checkins_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      life_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      news_articles: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          link: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          link: string
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          link?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          actual_hours: number | null
+          assigned_by: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          employee_id: string
+          estimated_hours: number | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_hours?: number | null
+          assigned_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          employee_id: string
+          estimated_hours?: number | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_hours?: number | null
+          assigned_by?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          employee_id?: string
+          estimated_hours?: number | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_logs: {
+        Row: {
+          break_time_minutes: number | null
+          clock_in_time: string | null
+          clock_out_time: string | null
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          notes: string | null
+          status: string
+          total_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          break_time_minutes?: number | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string
+          date: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          break_time_minutes?: number | null
+          clock_in_time?: string | null
+          clock_out_time?: string | null
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_logs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_entries: {
+        Row: {
+          activity: string
+          created_at: string
+          date: string
+          id: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          date?: string
+          id?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
