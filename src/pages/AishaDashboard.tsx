@@ -7,13 +7,7 @@ import { SparklesCore } from '@/components/ui/sparkles';
 const AishaDashboard = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      navigate('/');
-    }
-  }, [navigate]);
+  // Auth check now handled by ProtectedRoute
 
   const handleScriptRedirect = () => {
     // Unresponsive for now - will add link later

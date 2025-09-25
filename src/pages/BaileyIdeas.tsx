@@ -14,11 +14,11 @@ const BaileyIdeas = () => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    // Auth check now handled by ProtectedRoute, only check influencer selection
     const selectedInfluencer = localStorage.getItem('selectedInfluencer');
     
-    if (!isLoggedIn || selectedInfluencer !== 'bailey') {
-      navigate('/');
+    if (selectedInfluencer !== 'bailey') {
+      navigate('/influencers');
       return;
     }
 

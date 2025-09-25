@@ -1,42 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" }),
+  password: z.string().trim().min(6, { message: "Password must be at least 6 characters" }).max(100, { message: "Password must be less than 100 characters" })
+});
 
 const Login = () => {
-  const [id, setId] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string }>({});
   const navigate = useNavigate();
+  const { signIn, signUp, user } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/influencers');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setValidationErrors({});
 
-    // Simulate login process
-    setTimeout(() => {
-      if (id.toLowerCase() === 'danube' && password.toLowerCase() === 'danube') {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', id);
-        toast({
-          title: "Login Successful!",
-          description: "Welcome to Ravan AI",
+    // Validate input
+    try {
+      loginSchema.parse({ email, password });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errors: { email?: string; password?: string } = {};
+        error.issues.forEach((err) => {
+          if (err.path[0] === 'email') errors.email = err.message;
+          if (err.path[0] === 'password') errors.password = err.message;
         });
-        navigate('/influencers');
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid ID or password. Please try again.",
-          variant: "destructive",
-        });
+        setValidationErrors(errors);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    }, 1000);
+    }
+
+    const { error } = isSignUp 
+      ? await signUp(email, password)
+      : await signIn(email, password);
+
+    if (error) {
+      toast({
+        title: isSignUp ? "Sign Up Failed" : "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (isSignUp) {
+      toast({
+        title: "Sign Up Successful!",
+        description: "Please check your email to confirm your account.",
+      });
+    } else {
+      toast({
+        title: "Login Successful!",
+        description: "Welcome to Ravan AI",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -59,28 +96,31 @@ const Login = () => {
               />
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Login to Ravan AI
+              {isSignUp ? 'Sign Up for Ravan AI' : 'Login to Ravan AI'}
             </CardTitle>
             <p className="text-gray-600 mt-2">
-              Enter your credentials to access your account
+              {isSignUp ? 'Create your account to get started' : 'Enter your credentials to access your account'}
             </p>
           </CardHeader>
           
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="id" className="text-gray-700 font-medium">
-                  User ID
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Email
                 </Label>
                 <Input
-                  id="id"
-                  type="text"
-                  placeholder="Enter your ID"
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="border-orange-200 focus:border-orange-500"
                 />
+                {validationErrors.email && (
+                  <p className="text-sm text-red-600">{validationErrors.email}</p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -105,6 +145,9 @@ const Login = () => {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {validationErrors.password && (
+                  <p className="text-sm text-red-600">{validationErrors.password}</p>
+                )}
               </div>
               
               <Button
@@ -119,17 +162,22 @@ const Login = () => {
                   </div>
                 ) : (
                   <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    Login
+                    {isSignUp ? <UserPlus className="w-5 h-5 mr-2" /> : <LogIn className="w-5 h-5 mr-2" />}
+                    {isSignUp ? 'Sign Up' : 'Login'}
                   </>
                 )}
               </Button>
             </form>
             
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Demo credentials: ID = "danube", Password = "danube"
-              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-orange-600 hover:text-orange-700"
+              >
+                {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+              </Button>
             </div>
           </CardContent>
         </Card>

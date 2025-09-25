@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, ArrowRight, LogOut, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const Influencers = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   const influencers = [
     {
@@ -43,13 +45,7 @@ const Influencers = () => {
     }
   ];
 
-  useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      navigate('/');
-    }
-  }, [navigate]);
+  // Remove old localStorage check as it's now handled by ProtectedRoute
 
   const handleInfluencerClick = (influencerId: string) => {
     if (influencerId === 'kaira') {
@@ -72,15 +68,26 @@ const Influencers = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('selectedInfluencer');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/');
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    
+    if (error) {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      // Clear any remaining localStorage
+      localStorage.removeItem('selectedInfluencer');
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+      
+      navigate('/');
+    }
   };
 
   return (

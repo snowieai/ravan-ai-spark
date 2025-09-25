@@ -5,16 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Video, Home, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const MayraDashboard = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    // Auth check now handled by ProtectedRoute, only check influencer selection
     const selectedInfluencer = localStorage.getItem('selectedInfluencer');
     
-    if (!isLoggedIn || selectedInfluencer !== 'mayra') {
-      navigate('/');
+    if (selectedInfluencer !== 'mayra') {
+      navigate('/influencers');
     }
   }, [navigate]);
 
@@ -22,15 +24,23 @@ const MayraDashboard = () => {
     navigate(path);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('selectedInfluencer');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/');
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    
+    if (error) {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      localStorage.removeItem('selectedInfluencer');
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/');
+    }
   };
 
   const handleBackToInfluencers = () => {

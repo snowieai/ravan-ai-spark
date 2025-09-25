@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Influencers from "./pages/Influencers";
@@ -32,32 +34,34 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/influencers" element={<Influencers />} />
-            <Route path="/kaira-dashboard" element={<KairaDashboard />} />
-            <Route path="/aisha-dashboard" element={<AishaDashboard />} />
-            <Route path="/bailey-dashboard" element={<BaileyDashboard />} />
-            <Route path="/mayra-dashboard" element={<MayraDashboard />} />
-            <Route path="/ideas" element={<Ideas />} />
-            <Route path="/kaira-ideas" element={<KairaIdeas />} />
-            <Route path="/kaira-calendar" element={<KairaCalendar />} />
-            <Route path="/kaira-calendar-themes" element={<KairaCalendarThemes />} />
-            <Route path="/bailey-ideas" element={<BaileyIdeas />} />
-            <Route path="/mayra-ideas" element={<MayraIdeas />} />
-            <Route path="/script" element={<Script />} />
-            <Route path="/kaira-script" element={<KairaScript />} />
-            <Route path="/bailey-script" element={<BaileyScript />} />
-            <Route path="/mayra-script" element={<MayraScript />} />
-            <Route path="/video" element={<Video />} />
-            <Route path="/diagnostics" element={<Diagnostics />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/influencers" element={<ProtectedRoute><Influencers /></ProtectedRoute>} />
+              <Route path="/kaira-dashboard" element={<ProtectedRoute><KairaDashboard /></ProtectedRoute>} />
+              <Route path="/aisha-dashboard" element={<ProtectedRoute><AishaDashboard /></ProtectedRoute>} />
+              <Route path="/bailey-dashboard" element={<ProtectedRoute><BaileyDashboard /></ProtectedRoute>} />
+              <Route path="/mayra-dashboard" element={<ProtectedRoute><MayraDashboard /></ProtectedRoute>} />
+              <Route path="/ideas" element={<ProtectedRoute><Ideas /></ProtectedRoute>} />
+              <Route path="/kaira-ideas" element={<ProtectedRoute><KairaIdeas /></ProtectedRoute>} />
+              <Route path="/kaira-calendar" element={<ProtectedRoute><KairaCalendar /></ProtectedRoute>} />
+              <Route path="/kaira-calendar-themes" element={<ProtectedRoute><KairaCalendarThemes /></ProtectedRoute>} />
+              <Route path="/bailey-ideas" element={<ProtectedRoute><BaileyIdeas /></ProtectedRoute>} />
+              <Route path="/mayra-ideas" element={<ProtectedRoute><MayraIdeas /></ProtectedRoute>} />
+              <Route path="/script" element={<ProtectedRoute><Script /></ProtectedRoute>} />
+              <Route path="/kaira-script" element={<ProtectedRoute><KairaScript /></ProtectedRoute>} />
+              <Route path="/bailey-script" element={<ProtectedRoute><BaileyScript /></ProtectedRoute>} />
+              <Route path="/mayra-script" element={<ProtectedRoute><MayraScript /></ProtectedRoute>} />
+              <Route path="/video" element={<ProtectedRoute><Video /></ProtectedRoute>} />
+              <Route path="/diagnostics" element={<ProtectedRoute><Diagnostics /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>

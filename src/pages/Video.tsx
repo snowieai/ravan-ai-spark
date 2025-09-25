@@ -6,12 +6,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Video, CheckCircle, Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const scriptSchema = z.object({
+  script: z.string()
+    .trim()
+    .min(10, { message: "Script must be at least 10 characters long" })
+    .max(5000, { message: "Script must be less than 5000 characters" })
+    .refine(
+      (script) => !script.includes('<script>') && !script.includes('</script>'),
+      { message: "Script contains potentially harmful content" }
+    )
+});
 
 const VideoGenerator = () => {
   const [script, setScript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [validationError, setValidationError] = useState<string>('');
 
   useEffect(() => {
     const selectedScript = localStorage.getItem('selectedScript');
@@ -22,28 +35,39 @@ const VideoGenerator = () => {
   }, []);
 
   const generateVideo = async () => {
-    if (!script.trim()) {
-      toast({
-        title: "Missing Script",
-        description: "Please provide a script for video generation.",
-        variant: "destructive",
-      });
-      return;
+    setValidationError('');
+    
+    // Validate input
+    try {
+      scriptSchema.parse({ script });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const errorMessage = error.issues[0]?.message || 'Invalid script';
+        setValidationError(errorMessage);
+        toast({
+          title: "Validation Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
     setResult(null);
     setShowSuccess(false);
-    console.log("Generating video for script:", script);
     
     try {
+      // Sanitize and encode the script for API call
+      const sanitizedScript = script.trim();
+      
       const response = await fetch('https://ravanai.app.n8n.cloud/webhook-test/837c4cfe-e8c9-4243-9e02-2d2872b87417', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          topic: script
+          topic: sanitizedScript
         }),
       });
 
@@ -108,6 +132,9 @@ const VideoGenerator = () => {
                     placeholder="Paste your video script here..."
                     className="min-h-48 bg-white/50 border-orange-200 text-gray-900 placeholder:text-gray-500 text-base resize-none"
                   />
+                  {validationError && (
+                    <p className="text-sm text-red-600 mt-2">{validationError}</p>
+                  )}
                 </div>
                 <Button
                   onClick={generateVideo}
