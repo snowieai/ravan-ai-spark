@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
-import { testConnection } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConnectionStatusProps {
   onConnectionChange?: (isConnected: boolean) => void;
@@ -18,15 +18,16 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ onConnectionChange 
     setErrorMessage('');
     
     try {
-      const result = await testConnection();
+      // Use auth.getSession() as it's publicly accessible and doesn't require RLS
+      const { data, error } = await supabase.auth.getSession();
       
-      if (result.success) {
+      if (error) {
+        setConnectionStatus('error');
+        setErrorMessage(error.message || 'Unknown connection error');
+        onConnectionChange?.(false);
+      } else {
         setConnectionStatus('connected');
         onConnectionChange?.(true);
-      } else {
-        setConnectionStatus('error');
-        setErrorMessage(result.error || 'Unknown connection error');
-        onConnectionChange?.(false);
       }
     } catch (error) {
       setConnectionStatus('disconnected');

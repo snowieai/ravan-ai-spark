@@ -10,11 +10,8 @@ export const checkSupabaseConnection = async (): Promise<ConnectionResult> => {
   try {
     const startTime = Date.now();
     
-    // Test basic connection
-    const { data, error } = await supabase
-      .from('content_calendar')
-      .select('id')
-      .limit(1);
+    // Use auth.getSession() as it's publicly accessible and doesn't require RLS
+    const { data, error } = await supabase.auth.getSession();
     
     const latency = Date.now() - startTime;
     

@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LogIn, Eye, EyeOff, UserPlus, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { testConnection } from '@/integrations/supabase/client';
+
 import { z } from 'zod';
 
 const loginSchema = z.object({
