@@ -88,3 +88,48 @@ export const safeSupabaseQuery = async <T>(
     };
   }
 };
+
+// Supabase Auth health ping to detect CORS/blocked requests
+export const supabaseAuthHealth = async (): Promise<{ ok: boolean; status: number; error?: string }> => {
+  const url = 'https://vkfmtrovrxgalhekzfsu.supabase.co/auth/v1/health';
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: `HTTP ${res.status}` };
+    }
+    return { ok: true, status: res.status };
+  } catch (e) {
+    return { ok: false, status: 0, error: e instanceof Error ? e.message : 'Network error' };
+  }
+};
+
+// Detect if app is running inside an iframe (embedded preview)
+export const isEmbedded = (): boolean => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true; // Cross-origin frame
+  }
+};
+
+// Verify localStorage availability (blocked by some privacy settings)
+export const testLocalStorage = (): { ok: boolean; error?: string } => {
+  try {
+    const key = `ls_test_${Date.now()}`;
+    localStorage.setItem(key, '1');
+    localStorage.removeItem(key);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Storage blocked' };
+  }
+};

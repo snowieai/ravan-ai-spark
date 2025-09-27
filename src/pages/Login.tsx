@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LogIn, Eye, EyeOff, UserPlus, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabaseAuthHealth, isEmbedded } from '@/lib/supabase-utils';
 
 import { z } from 'zod';
 
@@ -32,6 +33,16 @@ const Login = () => {
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
+  const [healthOk, setHealthOk] = useState<boolean | null>(null);
+  const [embedded, setEmbedded] = useState(false);
+
+  useEffect(() => {
+    setEmbedded(isEmbedded());
+    supabaseAuthHealth()
+      .then((h) => setHealthOk(h.ok))
+      .catch(() => setHealthOk(false));
+  }, []);
+
   useEffect(() => {
     if (user) {
       navigate('/influencers');
@@ -44,6 +55,21 @@ const Login = () => {
     setValidationErrors({});
 
     try {
+
+      // Preflight: ensure Supabase Auth is reachable
+      const health = await supabaseAuthHealth();
+      if (!health.ok) {
+        const suggestion = embedded
+          ? 'Open the app in a new tab and try again.'
+          : 'Check your network or run diagnostics.';
+        toast({
+          title: 'Connection Error',
+          description: `Supabase Auth is unreachable. ${suggestion}`,
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
 
       if (isSignUp) {
         signupSchema.parse({ email, password, fullName });
@@ -164,6 +190,14 @@ const Login = () => {
           </CardHeader>
           
           <CardContent>
+            {embedded && healthOk === false && (
+              <div className="mb-4 p-3 rounded-md border border-blue-200 bg-blue-50 text-blue-900">
+                <p className="text-sm mb-2">Requests may be blocked in embedded preview. Open the app in a new tab to continue.</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => window.open(window.location.href, '_blank')}>
+                  Open in new tab
+                </Button>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               {isSignUp && (
                 <div className="space-y-2">

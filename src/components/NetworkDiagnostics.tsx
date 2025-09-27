@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabaseAuthHealth, isEmbedded, testLocalStorage } from '@/lib/supabase-utils';
 interface DiagnosticResult {
   test: string;
   status: 'pass' | 'fail' | 'warning';
@@ -47,113 +47,102 @@ const NetworkDiagnostics = () => {
       });
     }
 
-    // Test 2: Basic Connection Test
+    // Test 2: Supabase Auth Health
     try {
-      const startTime = Date.now();
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .select('id')
-        .limit(1);
-      
-      const responseTime = Date.now() - startTime;
-
-      if (error) {
+      const health = await supabaseAuthHealth();
+      if (!health.ok) {
         testResults.push({
-          test: 'Database Connection',
+          test: 'Supabase Auth Health',
           status: 'fail',
-          message: `Connection failed: ${error.message}`,
-          details: `Error code: ${error.code || 'unknown'}`
+          message: 'Auth service unreachable',
+          details: `Status: ${health.status}${health.error ? ` - ${health.error}` : ''}`
         });
       } else {
         testResults.push({
-          test: 'Database Connection',
+          test: 'Supabase Auth Health',
           status: 'pass',
-          message: `Connection successful (${responseTime}ms)`,
-          details: `Retrieved ${data?.length || 0} records`
+          message: 'Auth service reachable',
+          details: `Status: ${health.status}`
         });
       }
     } catch (error) {
       testResults.push({
-        test: 'Database Connection',
+        test: 'Supabase Auth Health',
         status: 'fail',
-        message: 'Network error occurred',
-        details: error instanceof Error ? error.message : 'Unknown network error'
-      });
-    }
-
-    // Test 3: Table Access Test
-    try {
-      const { data, error } = await supabase
-        .from('content_calendar')
-        .select('*')
-        .limit(5);
-
-      if (error) {
-        testResults.push({
-          test: 'Table Access',
-          status: 'fail',
-          message: `Table access failed: ${error.message}`,
-          details: 'Check RLS policies and permissions'
-        });
-      } else {
-        testResults.push({
-          test: 'Table Access',
-          status: 'pass',
-          message: `Table access successful`,
-          details: `Found ${data?.length || 0} records`
-        });
-      }
-    } catch (error) {
-      testResults.push({
-        test: 'Table Access',
-        status: 'fail',
-        message: 'Table access error',
+        message: 'Health check failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
 
-    // Test 4: Insert Permissions Test
+    // Test 3: Auth Session Access
     try {
-      const testItem = {
-        topic: 'Test Item (Will be deleted)',
-        scheduled_date: new Date().toISOString().split('T')[0],
-        priority: 1,
-        status: 'planned' as const,
-        content_source: 'manual',
-        category: 'Entertainment'
-      };
+      const startTime = Date.now();
+      const { data, error } = await supabase.auth.getSession();
+      const responseTime = Date.now() - startTime;
 
-      const { data: insertData, error: insertError } = await supabase
-        .from('content_calendar')
-        .insert(testItem)
-        .select();
-
-      if (insertError) {
+      if (error) {
         testResults.push({
-          test: 'Insert Permissions',
+          test: 'Auth Session',
           status: 'fail',
-          message: `Insert failed: ${insertError.message}`,
-          details: 'Check RLS policies for INSERT operations'
+          message: `Session fetch failed: ${error.message}`,
+          details: 'Check network, auth configuration, and redirects'
         });
-      } else if (insertData && insertData.length > 0) {
-        // Clean up the test item
-        await supabase
-          .from('content_calendar')
-          .delete()
-          .eq('id', insertData[0].id);
-
+      } else {
         testResults.push({
-          test: 'Insert Permissions',
+          test: 'Auth Session',
           status: 'pass',
-          message: 'Insert permissions working correctly',
-          details: 'Test item created and deleted successfully'
+          message: `Session fetch ok (${responseTime}ms)`,
+          details: data?.session ? 'Active session found' : 'No session (unauthenticated)'
         });
       }
     } catch (error) {
       testResults.push({
-        test: 'Insert Permissions',
+        test: 'Auth Session',
         status: 'fail',
-        message: 'Insert test failed',
+        message: 'Network error occurred during session fetch',
+        details: error instanceof Error ? error.message : 'Unknown network error'
+      });
+    }
+
+    // Test 4: Embedded Environment & Storage
+    try {
+      const embedded = isEmbedded();
+      const storage = testLocalStorage();
+
+      if (embedded && !storage.ok) {
+        testResults.push({
+          test: 'Embedded Environment',
+          status: 'warning',
+          message: 'Running in embedded preview and storage is blocked',
+          details: 'Open in a new tab or allow third‑party cookies/storage.'
+        });
+      } else if (embedded) {
+        testResults.push({
+          test: 'Embedded Environment',
+          status: 'warning',
+          message: 'Running in embedded preview (iframe)',
+          details: 'Some networks/browser settings may block auth. Open in new tab if sign-in fails.'
+        });
+      } else if (!storage.ok) {
+        testResults.push({
+          test: 'LocalStorage',
+          status: 'warning',
+          message: 'LocalStorage unavailable',
+          details: storage.error || 'Unknown storage error'
+        });
+      } else {
+        testResults.push({
+          test: 'Environment & Storage',
+          status: 'pass',
+          message: 'Not embedded and storage OK',
+          details: 'localStorage available'
+        });
+      }
+    } catch (error) {
+      testResults.push({
+        test: 'Environment & Storage',
+        status: 'fail',
+        message: 'Environment check failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
