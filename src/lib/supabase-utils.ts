@@ -101,6 +101,9 @@ export const supabaseAuthHealth = async (): Promise<{ ok: boolean; status: numbe
       credentials: 'omit',
       cache: 'no-store',
       signal: controller.signal,
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZm10cm92cnhnYWxoZWt6ZnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MTA5MzEsImV4cCI6MjA2NzQ4NjkzMX0.UgrqUj1PdficRXSPnk1XDjKUalvOxftl8tGu14euEhY',
+      },
     });
     clearTimeout(timeout);
 
