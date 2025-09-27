@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { LogIn, Eye, EyeOff, UserPlus, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { testConnection } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -43,13 +44,46 @@ const Login = () => {
     setValidationErrors({});
 
     try {
+      // Pre-flight connectivity check
+      const connectionTest = await testConnection();
+      if (!connectionTest.success) {
+        toast({
+          title: "Connection Issue",
+          description: "Unable to connect to servers. Please check your internet connection or run diagnostics.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       if (isSignUp) {
         signupSchema.parse({ email, password, fullName });
         const { error } = await signUp(email, password, fullName, isAdmin);
         if (error) {
+          console.error('Signup error details:', {
+            message: error.message,
+            status: error.status,
+            details: error.details
+          });
+          
+          let errorMessage = error.message;
+          let errorTitle = "Sign Up Failed";
+          
+          // Improved error handling for common issues
+          if (error.message?.includes('fetch') || error.message?.includes('Network')) {
+            errorTitle = "Connection Error";
+            errorMessage = "Network connection failed. Please check your internet connection or try running diagnostics.";
+          } else if (error.message?.includes('Invalid') && error.message?.includes('redirect')) {
+            errorTitle = "Configuration Error";
+            errorMessage = "Authentication redirect configuration issue. Please contact support.";
+          } else if (error.message?.includes('confirm email')) {
+            errorTitle = "Email Confirmation Required";
+            errorMessage = "Please check your email and click the confirmation link before signing in.";
+          }
+          
           toast({
-            title: "Sign Up Failed",
-            description: error.message,
+            title: errorTitle,
+            description: errorMessage,
             variant: "destructive",
           });
         } else {
@@ -63,9 +97,25 @@ const Login = () => {
         loginSchema.parse({ email, password });
         const { error } = await signIn(email, password);
         if (error) {
+          console.error('Login error details:', {
+            message: error.message,
+            status: error.status,
+            details: error.details
+          });
+          
+          let errorMessage = error.message;
+          let errorTitle = "Login Failed";
+          
+          if (error.message?.includes('fetch') || error.message?.includes('Network')) {
+            errorTitle = "Connection Error";
+            errorMessage = "Network connection failed. Please check your internet connection or try running diagnostics.";
+          } else if (error.message?.includes('Invalid login credentials')) {
+            errorMessage = "Invalid email or password. Please check your credentials and try again.";
+          }
+          
           toast({
-            title: "Login Failed",
-            description: error.message,
+            title: errorTitle,
+            description: errorMessage,
             variant: "destructive",
           });
         } else {
@@ -84,6 +134,13 @@ const Login = () => {
           if (err.path[0] === 'fullName') errors.fullName = err.message;
         });
         setValidationErrors(errors);
+      } else {
+        console.error('Unexpected error:', error);
+        toast({
+          title: "Unexpected Error",
+          description: "An unexpected error occurred. Please try again or run diagnostics.",
+          variant: "destructive",
+        });
       }
     }
     
@@ -217,7 +274,17 @@ const Login = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
+              <Link 
+                to="/diagnostics" 
+                className="inline-flex items-center text-sm text-gray-500 hover:text-orange-600 transition-colors"
+              >
+                <Settings className="w-4 h-4 mr-1" />
+                Having trouble? Run diagnostics
+              </Link>
+            </div>
+            
+            <div className="mt-4 text-center">
               <Button
                 type="button"
                 variant="ghost"

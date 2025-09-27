@@ -101,6 +101,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     });
+    
+    // After signup, verify profile creation
+    if (!error) {
+      setTimeout(async () => {
+        // Give the trigger time to create the profile
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const { data: session } = await supabase.auth.getSession();
+        if (session?.session?.user) {
+          const profile = await fetchUserProfile(session.session.user.id);
+          if (!profile) {
+            console.warn('Profile not created automatically, this might indicate a trigger issue');
+          }
+        }
+      }, 0);
+    }
+    
     return { error };
   };
 
