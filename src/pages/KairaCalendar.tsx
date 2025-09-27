@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +65,7 @@ const KairaCalendar = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [generatingIdeas, setGeneratingIdeas] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -81,22 +82,51 @@ const KairaCalendar = () => {
     fetchContentItems();
   }, []);
 
-  const getWeekDates = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay());
+  // Get all dates for the current month view (including previous/next month dates to fill the grid)
+  const getMonthCalendarDates = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
     
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      weekDates.push(date);
+    // Get first day of the month
+    const firstDay = new Date(year, month, 1);
+    // Get last day of the month
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Get the Sunday before the first day of the month
+    const startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+    
+    // Get dates for 6 weeks (42 days)
+    const dates = [];
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      dates.push(date);
     }
-    return weekDates;
+    return dates;
   };
 
-  const weekDates = getWeekDates();
+  const calendarDates = getMonthCalendarDates();
+  
+  // Group dates into weeks
+  const weeks = [];
+  for (let i = 0; i < calendarDates.length; i += 7) {
+    weeks.push(calendarDates.slice(i, i + 7));
+  }
+
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev);
+      if (direction === 'prev') {
+        newMonth.setMonth(prev.getMonth() - 1);
+      } else {
+        newMonth.setMonth(prev.getMonth() + 1);
+      }
+      return newMonth;
+    });
+  };
 
   const fetchContentItems = async () => {
     setLoading(true);
@@ -250,8 +280,8 @@ const KairaCalendar = () => {
     const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
     const payload = { day: dayName };
     
-    const dayIndex = dayNames.indexOf(dayName);
-    const selectedDayDate = weekDates[dayIndex];
+    const today = new Date();
+    const selectedDayDate = new Date(today);
     const dateStr = selectedDayDate.toISOString().split('T')[0];
     
     try {
@@ -396,6 +426,27 @@ const KairaCalendar = () => {
               <div className="flex items-center space-x-2">
                 <Calendar className="h-6 w-6 text-orange-600" />
                 <h1 className="text-xl font-bold text-orange-900">Content Calendar</h1>
+              </div>
+              <div className="flex items-center space-x-2 ml-8">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth('prev')}
+                  className="text-orange-700 hover:bg-orange-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="text-lg font-semibold text-orange-900 min-w-[140px] text-center">
+                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateMonth('next')}
+                  className="text-orange-700 hover:bg-orange-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -548,102 +599,112 @@ const KairaCalendar = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ConnectionStatus onConnectionChange={setIsConnected} />
         
-        <div className="grid grid-cols-7 gap-4">
-          {weekDates.map((date, index) => {
-            const dayContent = getContentForDate(date);
-            const isToday = date.toDateString() === new Date().toDateString();
-            
-            return (
-              <div key={index} className="min-h-[400px]">
-                <div className={`bg-white/20 backdrop-blur-sm rounded-lg border ${isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'} p-4 h-full`}>
-                  <div className="text-center mb-4">
-                    <div className="text-sm font-medium text-orange-800">{dayNames[index]}</div>
-                    <div className={`text-lg font-bold ${isToday ? 'text-orange-600' : 'text-orange-900'}`}>
-                      {date.getDate()}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateIdeasForDay(dayNames[index])}
-                      disabled={generatingIdeas === dayNames[index]}
-                      className="mt-2 h-7 text-xs bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-700"
-                    >
-                      {generatingIdeas === dayNames[index] ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        "Generate Ideas"
-                      )}
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {dayContent.map((item) => (
-                      <div key={item.id} className={`p-3 bg-white rounded-lg shadow-sm border-l-4 ${priorityColors[item.priority]} hover:shadow-md transition-shadow`}>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-lg">{contentTypeIcons[item.content_type]}</span>
-                              <h4 className="font-medium text-gray-900 text-sm">{item.topic}</h4>
-                              <Badge className={`text-xs ${statusColors[item.status]}`}>
-                                {item.status.replace('_', ' ')}
-                              </Badge>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge className={`text-xs ${contentTypeColors[item.content_type]}`}>
-                                {item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}
-                              </Badge>
-                            </div>
-                            
-                            {item.notes && (
-                              <p className="text-xs text-gray-600 mb-2">{item.notes}</p>
-                            )}
-                            
-                            {item.script_content && (
-                              <p className="text-xs text-gray-500 mb-2">📝 Script ready</p>
-                            )}
-                            
-                            {item.inspiration_links && (
-                              <p className="text-xs text-gray-500">🔗 Inspiration saved</p>
-                            )}
-                          </div>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <MoreVertical className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
-                                Mark Approved
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'script_ready')}>
-                                Mark Script Ready
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'in_production')}>
-                                Mark In Production
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
-                                Mark Published
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => deleteContentItem(item.id)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 gap-4 mb-4">
+          {dayNames.map((day) => (
+            <div key={day} className="text-center text-sm font-medium text-orange-800 py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar Weeks */}
+        <div className="space-y-4">
+          {weeks.map((week, weekIndex) => (
+            <div key={weekIndex} className="grid grid-cols-7 gap-4">
+              {week.map((date, dayIndex) => {
+                const dayContent = getContentForDate(date);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+                const dayName = dayNames[date.getDay()];
+                
+                return (
+                  <div key={dayIndex} className="min-h-[180px]">
+                    <div className={`bg-white/20 backdrop-blur-sm rounded-lg border ${isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'} p-3 h-full ${!isCurrentMonth ? 'opacity-50' : ''}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`text-sm font-bold ${isToday ? 'text-orange-600' : isCurrentMonth ? 'text-orange-900' : 'text-orange-600'}`}>
+                          {date.getDate()}
                         </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => generateIdeasForDay(dayName)}
+                          disabled={generatingIdeas === dayName}
+                          className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-100"
+                          title="Generate Ideas"
+                        >
+                          {generatingIdeas === dayName ? (
+                            <LoadingSpinner size="sm" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                        </Button>
                       </div>
-                    ))}
+                      
+                      <div className="space-y-2">
+                        {dayContent.map((item) => (
+                          <div key={item.id} className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="text-xs">{contentTypeIcons[item.content_type]}</span>
+                                  <h4 className="font-medium text-gray-900 text-xs truncate">{item.topic}</h4>
+                                </div>
+                                
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Badge className={`text-xs px-1 py-0 ${statusColors[item.status]}`}>
+                                    {item.status.replace('_', ' ')}
+                                  </Badge>
+                                  <Badge className={`text-xs px-1 py-0 ${contentTypeColors[item.content_type]}`}>
+                                    {item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  {item.script_content && <span title="Script ready">📝</span>}
+                                  {item.inspiration_links && <span title="Inspiration saved">🔗</span>}
+                                  {item.notes && <span title="Has notes">📋</span>}
+                                </div>
+                              </div>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
+                                    Mark Approved
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'script_ready')}>
+                                    Mark Script Ready
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'in_production')}>
+                                    Mark In Production
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
+                                    Mark Published
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => deleteContentItem(item.id)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
     </div>
