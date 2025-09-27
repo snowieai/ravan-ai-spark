@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,13 +15,19 @@ const loginSchema = z.object({
   password: z.string().trim().min(6, { message: "Password must be at least 6 characters" }).max(100, { message: "Password must be less than 100 characters" })
 });
 
+const signupSchema = loginSchema.extend({
+  fullName: z.string().trim().min(1, { message: "Full name is required" }).max(100, { message: "Name must be less than 100 characters" })
+});
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
   const navigate = useNavigate();
   const { signIn, signUp, user } = useAuth();
 
@@ -35,42 +42,49 @@ const Login = () => {
     setIsLoading(true);
     setValidationErrors({});
 
-    // Validate input
     try {
-      loginSchema.parse({ email, password });
+      if (isSignUp) {
+        signupSchema.parse({ email, password, fullName });
+        const { error } = await signUp(email, password, fullName, isAdmin);
+        if (error) {
+          toast({
+            title: "Sign Up Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Sign Up Successful!",
+            description: "Please check your email to confirm your account.",
+          });
+          setIsSignUp(false);
+        }
+      } else {
+        loginSchema.parse({ email, password });
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({
+            title: "Login Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login Successful!",
+            description: "Welcome to Ravan AI",
+          });
+        }
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors: { email?: string; password?: string } = {};
+        const errors: { email?: string; password?: string; fullName?: string } = {};
         error.issues.forEach((err) => {
           if (err.path[0] === 'email') errors.email = err.message;
           if (err.path[0] === 'password') errors.password = err.message;
+          if (err.path[0] === 'fullName') errors.fullName = err.message;
         });
         setValidationErrors(errors);
-        setIsLoading(false);
-        return;
       }
-    }
-
-    const { error } = isSignUp 
-      ? await signUp(email, password)
-      : await signIn(email, password);
-
-    if (error) {
-      toast({
-        title: isSignUp ? "Sign Up Failed" : "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else if (isSignUp) {
-      toast({
-        title: "Sign Up Successful!",
-        description: "Please check your email to confirm your account.",
-      });
-    } else {
-      toast({
-        title: "Login Successful!",
-        description: "Welcome to Ravan AI",
-      });
     }
     
     setIsLoading(false);
@@ -105,6 +119,26 @@ const Login = () => {
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-gray-700 font-medium">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="border-orange-200 focus:border-orange-500"
+                  />
+                  {validationErrors.fullName && (
+                    <p className="text-sm text-red-600">{validationErrors.fullName}</p>
+                  )}
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">
                   Email
@@ -149,6 +183,20 @@ const Login = () => {
                   <p className="text-sm text-red-600">{validationErrors.password}</p>
                 )}
               </div>
+
+              {isSignUp && (
+                <div className="flex items-center space-x-2 p-4 bg-orange-50 rounded-lg">
+                  <Checkbox
+                    id="admin"
+                    checked={isAdmin}
+                    onCheckedChange={(checked) => setIsAdmin(checked as boolean)}
+                    className="border-orange-300 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                  />
+                  <label htmlFor="admin" className="text-sm text-gray-700 cursor-pointer font-medium">
+                    Are you an Admin? (Will you be approving scripts and content?)
+                  </label>
+                </div>
+              )}
               
               <Button
                 type="submit"
@@ -158,7 +206,7 @@ const Login = () => {
                 {isLoading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Logging in...
+                    {isSignUp ? 'Creating Account...' : 'Logging in...'}
                   </div>
                 ) : (
                   <>
