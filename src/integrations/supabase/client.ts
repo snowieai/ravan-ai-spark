@@ -33,10 +33,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 // Test connection function
 export const testConnection = async () => {
   try {
-    const { data, error } = await supabase
-      .from('content_calendar')
-      .select('id')
-      .limit(1);
+    // Use auth.getSession() as it's publicly accessible and doesn't require RLS
+    const { data, error } = await supabase.auth.getSession();
     
     if (error) {
       console.error('Supabase connection test failed:', error);

@@ -44,17 +44,6 @@ const Login = () => {
     setValidationErrors({});
 
     try {
-      // Pre-flight connectivity check
-      const connectionTest = await testConnection();
-      if (!connectionTest.success) {
-        toast({
-          title: "Connection Issue",
-          description: "Unable to connect to servers. Please check your internet connection or run diagnostics.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
 
       if (isSignUp) {
         signupSchema.parse({ email, password, fullName });
