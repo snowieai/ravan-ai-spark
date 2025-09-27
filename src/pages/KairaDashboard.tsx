@@ -103,13 +103,22 @@ const KairaDashboard = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex justify-center items-center gap-6 mb-20">
+          <div className="flex justify-center items-center gap-6 mb-20 flex-wrap">
             <Button
               onClick={() => navigate('/kaira-ideas')}
               className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
               <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
               Generate Ideas
+              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            
+            <Button
+              onClick={() => navigate('/kaira-calendar')}
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+            >
+              <Calendar className="w-7 h-7 mr-3 group-hover:animate-pulse" />
+              Content Calendar
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
             

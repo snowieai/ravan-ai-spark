@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,36 +22,39 @@ interface ContentItem {
   topic: string;
   scheduled_date: string;
   status: 'planned' | 'approved' | 'script_ready' | 'in_production' | 'published' | 'cancelled';
-  priority: number;
+  priority: 1 | 2 | 3;
   notes?: string;
   script_content?: string;
-  content_source?: 'manual' | 'generated';
-  category?: 'Real Estate News' | 'Entertainment' | 'Educational';
-  created_at?: string;
-  updated_at?: string;
-  user_id?: string;
-  topic_id?: string;
+  category?: string;
+  content_type: 'reel' | 'story' | 'carousel';
+  inspiration_links?: string;
 }
 
 const statusColors = {
-  planned: 'bg-slate-100 text-slate-800',
-  approved: 'bg-blue-100 text-blue-800',
-  script_ready: 'bg-yellow-100 text-yellow-800',
-  in_production: 'bg-purple-100 text-purple-800',
-  published: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800'
+  planned: "bg-slate-100 text-slate-800",
+  approved: "bg-blue-100 text-blue-800",
+  script_ready: "bg-yellow-100 text-yellow-800",
+  in_production: "bg-purple-100 text-purple-800",
+  published: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800"
 };
 
 const priorityColors = {
-  1: 'border-l-green-500',
-  2: 'border-l-yellow-500',
-  3: 'border-l-red-500'
+  1: "border-l-green-500",
+  2: "border-l-yellow-500", 
+  3: "border-l-red-500"
 };
 
-const categoryColors = {
-  'Real Estate News': 'bg-blue-100 text-blue-800',
-  'Entertainment': 'bg-pink-100 text-pink-800',
-  'Educational': 'bg-emerald-100 text-emerald-800'
+const contentTypeColors = {
+  "reel": "bg-red-100 text-red-800 border-red-200",
+  "story": "bg-blue-100 text-blue-800 border-blue-200",
+  "carousel": "bg-purple-100 text-purple-800 border-purple-200"
+};
+
+const contentTypeIcons = {
+  "reel": "🎬",
+  "story": "📸", 
+  "carousel": "🖼️"
 };
 
 const KairaCalendar = () => {
@@ -59,14 +62,20 @@ const KairaCalendar = () => {
   const { toast } = useToast();
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newTopic, setNewTopic] = useState('');
-  const [newNotes, setNewNotes] = useState('');
-  const [newPriority, setNewPriority] = useState<1 | 2 | 3>(1);
-  const [newCategory, setNewCategory] = useState<'Real Estate News' | 'Entertainment' | 'Educational'>('Entertainment');
   const [isConnected, setIsConnected] = useState(false);
   const [generatingIdeas, setGeneratingIdeas] = useState<string | null>(null);
+  
+  const [newContent, setNewContent] = useState({
+    topic: '',
+    scheduled_date: '',
+    status: 'planned' as ContentItem['status'],
+    priority: 1 as ContentItem['priority'],
+    notes: '',
+    script_content: '',
+    content_type: 'reel' as ContentItem['content_type'],
+    inspiration_links: ''
+  });
 
   useEffect(() => {
     fetchContentItems();
@@ -116,7 +125,7 @@ const KairaCalendar = () => {
   };
 
   const addContentItem = async () => {
-    if (!newTopic.trim()) {
+    if (!newContent.topic.trim()) {
       toast({
         title: "Validation Error",
         description: "Topic is required",
@@ -126,19 +135,20 @@ const KairaCalendar = () => {
     }
 
     const insertData = {
-      topic: newTopic,
-      scheduled_date: selectedDate.toISOString().split('T')[0],
-      priority: newPriority,
-      notes: newNotes || null,
-      status: 'planned' as const,
-      content_source: 'manual',
-      category: newCategory
+      topic: newContent.topic,
+      scheduled_date: newContent.scheduled_date,
+      priority: newContent.priority,
+      status: newContent.status,
+      notes: newContent.notes,
+      script_content: newContent.script_content,
+      content_type: newContent.content_type,
+      inspiration_links: newContent.inspiration_links
     };
 
     const { data, error } = await safeSupabaseQuery(async () => {
       const result = await supabase
         .from('content_calendar')
-        .insert(insertData)
+        .insert([insertData])
         .select();
       return result;
     });
@@ -159,10 +169,16 @@ const KairaCalendar = () => {
     });
 
     setIsDialogOpen(false);
-    setNewTopic('');
-    setNewNotes('');
-    setNewPriority(1);
-    setNewCategory('Entertainment');
+    setNewContent({
+      topic: '',
+      scheduled_date: '',
+      status: 'planned',
+      priority: 1,
+      notes: '',
+      script_content: '',
+      content_type: 'reel',
+      inspiration_links: ''
+    });
     
     fetchContentItems();
   };
@@ -229,22 +245,14 @@ const KairaCalendar = () => {
   };
 
   const generateIdeasForDay = async (dayName: string) => {
-    console.log('🚀 generateIdeasForDay called with:', dayName);
-    console.log('⏳ Currently generating for:', generatingIdeas);
-    
     setGeneratingIdeas(dayName);
     
     const webhookUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/cd662191-3c6e-4542-bb4e-e75e3b16009c';
     const payload = { day: dayName };
     
-    // Get the date for the selected day
     const dayIndex = dayNames.indexOf(dayName);
     const selectedDayDate = weekDates[dayIndex];
     const dateStr = selectedDayDate.toISOString().split('T')[0];
-    
-    console.log('📤 Sending request to:', webhookUrl);
-    console.log('📦 Payload:', payload);
-    console.log('📅 Target date:', dateStr);
     
     try {
       const controller = new AbortController();
@@ -260,28 +268,21 @@ const KairaCalendar = () => {
       });
       
       clearTimeout(timeoutId);
-      
-      console.log('📥 Response status:', response.status);
 
       if (response.ok) {
         const result = await response.text();
-        console.log('✅ Raw webhook response:', result);
         
-        // Parse the webhook response to extract ideas
         let parsedIdeas = [];
         try {
-          // Try to parse as JSON first
           const jsonResult = JSON.parse(result);
           if (Array.isArray(jsonResult)) {
             parsedIdeas = jsonResult;
           } else if (jsonResult.ideas && Array.isArray(jsonResult.ideas)) {
             parsedIdeas = jsonResult.ideas;
           } else {
-            // Fallback: treat as single idea
             parsedIdeas = [{ title: jsonResult.title || result, description: jsonResult.description || '' }];
           }
         } catch (jsonError) {
-          // If not JSON, try to parse as text with lines
           const lines = result.split('\n').filter(line => line.trim());
           parsedIdeas = lines.map((line, index) => ({
             title: line.trim(),
@@ -289,9 +290,6 @@ const KairaCalendar = () => {
           }));
         }
         
-        console.log('📝 Parsed ideas:', parsedIdeas);
-        
-        // Create content items for each generated idea
         let successCount = 0;
         for (const idea of parsedIdeas) {
           const title = idea.title || idea.topic || idea.name || 'Generated Idea';
@@ -302,8 +300,8 @@ const KairaCalendar = () => {
               priority: 1,
               notes: idea.description || idea.notes || `AI generated idea for ${dayName}`,
               status: 'planned' as const,
-              content_source: 'generated',
-              category: (idea.category as 'Real Estate News' | 'Entertainment' | 'Educational') || 'Entertainment'
+              content_type: 'reel' as const,
+              inspiration_links: ''
             };
 
             const { data, error } = await safeSupabaseQuery(async () => {
@@ -316,9 +314,6 @@ const KairaCalendar = () => {
 
             if (!error) {
               successCount++;
-              console.log('✅ Created content item:', title);
-            } else {
-              console.error('❌ Failed to create content item:', title, error);
             }
           }
         }
@@ -329,7 +324,6 @@ const KairaCalendar = () => {
             description: `Generated ${successCount} idea${successCount > 1 ? 's' : ''} for ${dayName}`,
           });
           
-          // Refresh the calendar to show new content
           fetchContentItems();
         } else {
           throw new Error('No valid ideas could be created from the response');
@@ -337,12 +331,9 @@ const KairaCalendar = () => {
         
       } else {
         const errorText = await response.text();
-        console.error('❌ HTTP Error:', response.status, response.statusText, errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
     } catch (error) {
-      console.error('❌ Network/Request Error for', dayName, ':', error);
-      
       let errorMessage = `Failed to generate ideas for ${dayName}`;
       
       if (error.name === 'AbortError') {
@@ -361,7 +352,6 @@ const KairaCalendar = () => {
         variant: "destructive",
       });
     } finally {
-      console.log('🏁 Finished processing for:', dayName);
       setGeneratingIdeas(null);
     }
   };
@@ -418,64 +408,132 @@ const KairaCalendar = () => {
                   Add Content
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add New Content</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium">Topic</label>
+                    <Label htmlFor="topic">Content Topic *</Label>
                     <Input
-                      value={newTopic}
-                      onChange={(e) => setNewTopic(e.target.value)}
-                      placeholder="Enter video topic..."
+                      id="topic"
+                      value={newContent.topic}
+                      onChange={(e) => setNewContent({...newContent, topic: e.target.value})}
+                      placeholder="Enter your content topic"
+                      required
                     />
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium">Scheduled Date</label>
+                    <Label htmlFor="date">Scheduled Date *</Label>
                     <Input
+                      id="date"
                       type="date"
-                      value={selectedDate.toISOString().split('T')[0]}
-                      onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                      value={newContent.scheduled_date}
+                      onChange={(e) => setNewContent({...newContent, scheduled_date: e.target.value})}
+                      required
                     />
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium">Priority</label>
-                    <Select value={newPriority.toString()} onValueChange={(value) => setNewPriority(parseInt(value) as 1 | 2 | 3)}>
+                    <Label htmlFor="content_type">Content Type *</Label>
+                    <Select
+                      value={newContent.content_type}
+                      onValueChange={(value: ContentItem['content_type']) => 
+                        setNewContent({...newContent, content_type: value})
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">Low</SelectItem>
-                        <SelectItem value="2">Medium</SelectItem>
-                        <SelectItem value="3">High</SelectItem>
+                        <SelectItem value="reel">🎬 Reel</SelectItem>
+                        <SelectItem value="story">📸 Story</SelectItem>
+                        <SelectItem value="carousel">🖼️ Carousel</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Category</label>
-                    <Select value={newCategory} onValueChange={(value) => setNewCategory(value as 'Real Estate News' | 'Entertainment' | 'Educational')}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Real Estate News">Real Estate News</SelectItem>
-                        <SelectItem value="Entertainment">Entertainment</SelectItem>
-                        <SelectItem value="Educational">Educational</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select
+                        value={newContent.status}
+                        onValueChange={(value: ContentItem['status']) => 
+                          setNewContent({...newContent, status: value})
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="planned">Planned</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="script_ready">Script Ready</SelectItem>
+                          <SelectItem value="in_production">In Production</SelectItem>
+                          <SelectItem value="published">Published</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select
+                        value={newContent.priority.toString()}
+                        onValueChange={(value) => 
+                          setNewContent({...newContent, priority: parseInt(value) as ContentItem['priority']})
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">High</SelectItem>
+                          <SelectItem value="2">Medium</SelectItem>
+                          <SelectItem value="3">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium">Notes (Optional)</label>
+                    <Label htmlFor="script">Script Content</Label>
                     <Textarea
-                      value={newNotes}
-                      onChange={(e) => setNewNotes(e.target.value)}
-                      placeholder="Add any notes..."
+                      id="script"
+                      value={newContent.script_content}
+                      onChange={(e) => setNewContent({...newContent, script_content: e.target.value})}
+                      placeholder="Write your script here..."
+                      rows={4}
                     />
                   </div>
+
+                  <div>
+                    <Label htmlFor="inspiration">Inspiration Links</Label>
+                    <Textarea
+                      id="inspiration"
+                      value={newContent.inspiration_links}
+                      onChange={(e) => setNewContent({...newContent, inspiration_links: e.target.value})}
+                      placeholder="Add inspiration links, references, or ideas..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={newContent.notes}
+                      onChange={(e) => setNewContent({...newContent, notes: e.target.value})}
+                      placeholder="Add any additional notes..."
+                      rows={2}
+                    />
+                  </div>
+
                   <Button 
                     onClick={addContentItem} 
                     className="w-full bg-orange-600 hover:bg-orange-700"
+                    disabled={!newContent.topic.trim() || !newContent.scheduled_date}
                   >
                     Add Content
                   </Button>
@@ -496,8 +554,8 @@ const KairaCalendar = () => {
             const isToday = date.toDateString() === new Date().toDateString();
             
             return (
-              <div key={index} className="min-h-[300px]">
-                <div className={`bg-white/20 backdrop-blur-sm rounded-lg border ${isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'} p-4`}>
+              <div key={index} className="min-h-[400px]">
+                <div className={`bg-white/20 backdrop-blur-sm rounded-lg border ${isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'} p-4 h-full`}>
                   <div className="text-center mb-4">
                     <div className="text-sm font-medium text-orange-800">{dayNames[index]}</div>
                     <div className={`text-lg font-bold ${isToday ? 'text-orange-600' : 'text-orange-900'}`}>
@@ -518,64 +576,68 @@ const KairaCalendar = () => {
                     </Button>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {dayContent.map((item) => (
-                      <Card key={item.id} className={`${priorityColors[item.priority]} border-l-4 bg-white/80 backdrop-blur-sm`}>
-                        <CardContent className="p-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {item.topic}
-                              </p>
-                              <div className="flex gap-1 mt-1 flex-wrap">
-                                <Badge className={`text-xs ${statusColors[item.status]}`}>
-                                  {item.status.replace('_', ' ')}
-                                </Badge>
-                                {item.category && (
-                                  <Badge className={`text-xs ${categoryColors[item.category]}`}>
-                                    {item.category}
-                                  </Badge>
-                                )}
-                                {item.content_source === 'generated' && (
-                                  <Badge className="text-xs bg-purple-100 text-purple-800">
-                                    AI Generated
-                                  </Badge>
-                                )}
-                              </div>
+                      <div key={item.id} className={`p-3 bg-white rounded-lg shadow-sm border-l-4 ${priorityColors[item.priority]} hover:shadow-md transition-shadow`}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">{contentTypeIcons[item.content_type]}</span>
+                              <h4 className="font-medium text-gray-900 text-sm">{item.topic}</h4>
+                              <Badge className={`text-xs ${statusColors[item.status]}`}>
+                                {item.status.replace('_', ' ')}
+                              </Badge>
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                  <MoreVertical className="h-3 w-3" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
-                                  Mark as Approved
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'script_ready')}>
-                                  Mark Script Ready
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
-                                  Mark as Published
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => deleteContentItem(item.id)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={`text-xs ${contentTypeColors[item.content_type]}`}>
+                                {item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}
+                              </Badge>
+                            </div>
+                            
+                            {item.notes && (
+                              <p className="text-xs text-gray-600 mb-2">{item.notes}</p>
+                            )}
+                            
+                            {item.script_content && (
+                              <p className="text-xs text-gray-500 mb-2">📝 Script ready</p>
+                            )}
+                            
+                            {item.inspiration_links && (
+                              <p className="text-xs text-gray-500">🔗 Inspiration saved</p>
+                            )}
                           </div>
-                          {item.notes && (
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                              {item.notes}
-                            </p>
-                          )}
-                        </CardContent>
-                      </Card>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
+                                Mark Approved
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'script_ready')}>
+                                Mark Script Ready
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'in_production')}>
+                                Mark In Production
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
+                                Mark Published
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => deleteContentItem(item.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

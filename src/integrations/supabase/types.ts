@@ -18,8 +18,10 @@ export type Database = {
         Row: {
           category: string | null
           content_source: string | null
+          content_type: string | null
           created_at: string | null
           id: string
+          inspiration_links: string | null
           notes: string | null
           priority: number | null
           scheduled_date: string
@@ -33,8 +35,10 @@ export type Database = {
         Insert: {
           category?: string | null
           content_source?: string | null
+          content_type?: string | null
           created_at?: string | null
           id?: string
+          inspiration_links?: string | null
           notes?: string | null
           priority?: number | null
           scheduled_date: string
@@ -48,8 +52,10 @@ export type Database = {
         Update: {
           category?: string | null
           content_source?: string | null
+          content_type?: string | null
           created_at?: string | null
           id?: string
+          inspiration_links?: string | null
           notes?: string | null
           priority?: number | null
           scheduled_date?: string
