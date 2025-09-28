@@ -68,35 +68,21 @@ const KairaCalendarThemes = () => {
     {
       day: 'Monday',
       theme: 'Real Estate Interactive',
-      description: 'Create polls, quizzes, "Did You Know?" facts, and interactive infographics. Encourage audience participation to make real estate knowledge fun and easy to digest.',
+      description: 'Create engaging polls, interactive quizzes, "Did You Know?" facts, and informative infographics. Encourage audience participation to make real estate knowledge fun and easy to digest.',
       icon: MessageSquare,
       color: 'from-red-500 to-red-600'
     },
     {
-      day: 'Tuesday', 
-      theme: 'Top Selling Areas in Dubai',
-      description: 'Highlight the most popular and trending areas',
-      icon: TrendingUp,
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
       day: 'Wednesday',
       theme: 'Real Estate News',
-      description: 'Share the latest real estate updates, market trends, property launches, government regulations, or investment insights specific to each region. Content should be accurate, timely, and positioned as a trusted industry resource.',
+      description: 'Share the latest real estate updates, market trends, property launches, government regulations, and investment insights specific to each region. Content should be accurate, timely, and positioned as a trusted industry resource.',
       icon: Newspaper,
       color: 'from-green-500 to-green-600'
     },
     {
-      day: 'Thursday',
-      theme: 'Buyer Guide & FAQs',
-      description: 'Educational content for potential buyers',
-      icon: HelpCircle,
-      color: 'from-purple-500 to-purple-600'
-    },
-    {
       day: 'Friday',
       theme: 'Trending (Country-wise)',
-      description: 'Identify trending topics (real estate, lifestyle, economy, tech, etc.) that connect with your audience. Create quick-turnaround posts (carousels, reels, or shorts) to capitalize on hot conversations.',
+      description: 'Identify trending topics in real estate, lifestyle, economy, and tech that connect with your audience. Create quick-turnaround posts (carousels, reels, or shorts) to capitalize on hot conversations.',
       icon: TrendingUp,
       color: 'from-indigo-500 to-indigo-600'
     },
@@ -106,13 +92,6 @@ const KairaCalendarThemes = () => {
       description: 'Research and share trending, humorous, or emotionally engaging stories relevant to each region. Focus on content that resonates culturally and is highly shareable.',
       icon: Zap,
       color: 'from-orange-500 to-orange-600'
-    },
-    {
-      day: 'Sunday',
-      theme: 'A Sunday in a Real Estate Agent\'s Life',
-      description: 'Weekend activities and lifestyle content',
-      icon: Sun,
-      color: 'from-yellow-500 to-yellow-600'
     }
   ];
 
@@ -731,51 +710,51 @@ const KairaCalendarThemes = () => {
 
         {!selectedTheme ? (
           /* Weekly Calendar Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {themeDays.map((themeDay) => {
               const IconComponent = themeDay.icon;
               const isToday = themeDay.day === currentDay;
               return (
                 <Card 
                   key={themeDay.day}
-                  className={`group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm ${
+                  className={`group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105 backdrop-blur-sm min-h-[400px] ${
                     isToday 
-                      ? 'bg-gradient-to-br from-orange-200 via-orange-100 to-amber-100 border-orange-300 shadow-lg ring-2 ring-orange-400/50' 
-                      : 'bg-white/90 border-orange-100'
-                  }`}
+                      ? 'bg-gradient-to-br from-orange-200 via-orange-100 to-amber-100 border-orange-300 shadow-xl ring-2 ring-orange-400/50' 
+                      : 'bg-white/95 border-gray-200 hover:border-orange-300'
+                  } rounded-2xl`}
                   onClick={() => {
                     console.log('📅 Day card clicked:', themeDay.day, themeDay.theme);
                     generateThemedIdeas(themeDay.theme, themeDay.day);
                   }}
                 >
-                  <CardHeader className="text-center">
-                    <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${themeDay.color} flex items-center justify-center mb-4 group-hover:animate-pulse`}>
-                      <IconComponent className="w-8 h-8 text-white" />
+                  <CardHeader className="text-center pb-6">
+                    <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-r ${themeDay.color} flex items-center justify-center mb-6 group-hover:animate-pulse shadow-lg`}>
+                      <IconComponent className="w-10 h-10 text-white" />
                     </div>
-                    <CardTitle className="text-xl font-bold text-gray-900">{themeDay.day}</CardTitle>
-                    <CardDescription className="text-center font-semibold text-gray-700">
+                    <CardTitle className="text-2xl font-bold text-gray-900 mb-2">{themeDay.day}</CardTitle>
+                    <CardDescription className="text-center font-semibold text-gray-700 text-lg">
                       {themeDay.theme}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 text-center leading-relaxed">
+                  <CardContent className="px-6 pb-6">
+                    <p className="text-base text-gray-600 text-center leading-relaxed mb-6 min-h-[6rem]">
                       {themeDay.description}
                     </p>
                     {(themeDay.day === 'Friday' || themeDay.day === 'Saturday') ? (
-                      <div className="w-full mt-4 p-3 bg-gray-100 rounded-lg text-center">
-                        <span className="text-sm text-gray-600 font-medium">Manual Research Required</span>
-                        <p className="text-xs text-gray-500 mt-1">This content requires manual research and curation</p>
+                      <div className="w-full p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl text-center border border-gray-200">
+                        <span className="text-base text-gray-700 font-semibold block mb-2">Manual Research Required</span>
+                        <p className="text-sm text-gray-500">This content requires manual research and curation</p>
                       </div>
                     ) : (
                       <Button 
-                        className="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0"
+                        className="w-full py-3 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
                           console.log('🔥 Generate Ideas button clicked for:', themeDay.day);
                           generateThemedIdeas(themeDay.theme, themeDay.day);
                         }}
                       >
-                        <Lightbulb className="w-4 h-4 mr-2" />
+                        <Lightbulb className="w-5 h-5 mr-2" />
                         Generate Ideas
                       </Button>
                     )}
