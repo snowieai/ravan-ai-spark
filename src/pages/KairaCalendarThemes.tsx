@@ -15,7 +15,10 @@ import {
   Coffee,
   Sun,
   Lightbulb,
-  RefreshCw
+  RefreshCw,
+  MessageSquare,
+  Newspaper,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -64,9 +67,9 @@ const KairaCalendarThemes = () => {
   const themeDays: ThemeDay[] = [
     {
       day: 'Monday',
-      theme: 'Major Real Estate Updates (Last Week)',
-      description: 'Weekly real estate market updates and industry news',
-      icon: Building,
+      theme: 'Real Estate Interactive',
+      description: 'Create polls, quizzes, "Did You Know?" facts, and interactive infographics. Encourage audience participation to make real estate knowledge fun and easy to digest.',
+      icon: MessageSquare,
       color: 'from-red-500 to-red-600'
     },
     {
@@ -78,9 +81,9 @@ const KairaCalendarThemes = () => {
     },
     {
       day: 'Wednesday',
-      theme: 'Finance & Market News',
-      description: 'Market analysis, financing options, and investment insights',
-      icon: DollarSign,
+      theme: 'Real Estate News',
+      description: 'Share the latest real estate updates, market trends, property launches, government regulations, or investment insights specific to each region. Content should be accurate, timely, and positioned as a trusted industry resource.',
+      icon: Newspaper,
       color: 'from-green-500 to-green-600'
     },
     {
@@ -92,16 +95,16 @@ const KairaCalendarThemes = () => {
     },
     {
       day: 'Friday',
-      theme: 'Global Market Comparison',
-      description: 'Compare Dubai market with international markets',
-      icon: Globe,
+      theme: 'Trending (Country-wise)',
+      description: 'Identify trending topics (real estate, lifestyle, economy, tech, etc.) that connect with your audience. Create quick-turnaround posts (carousels, reels, or shorts) to capitalize on hot conversations.',
+      icon: TrendingUp,
       color: 'from-indigo-500 to-indigo-600'
     },
     {
       day: 'Saturday',
-      theme: 'Normal Day in a Real Estate Agent\'s Life',
-      description: 'Behind-the-scenes look at agent life',
-      icon: Coffee,
+      theme: 'Viral Content',
+      description: 'Research and share trending, humorous, or emotionally engaging stories relevant to each region. Focus on content that resonates culturally and is highly shareable.',
+      icon: Zap,
       color: 'from-orange-500 to-orange-600'
     },
     {
@@ -758,17 +761,24 @@ const KairaCalendarThemes = () => {
                     <p className="text-sm text-gray-600 text-center leading-relaxed">
                       {themeDay.description}
                     </p>
-                    <Button 
-                      className="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('🔥 Generate Ideas button clicked for:', themeDay.day);
-                        generateThemedIdeas(themeDay.theme, themeDay.day);
-                      }}
-                    >
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      Generate Ideas
-                    </Button>
+                    {(themeDay.day === 'Friday' || themeDay.day === 'Saturday') ? (
+                      <div className="w-full mt-4 p-3 bg-gray-100 rounded-lg text-center">
+                        <span className="text-sm text-gray-600 font-medium">Manual Research Required</span>
+                        <p className="text-xs text-gray-500 mt-1">This content requires manual research and curation</p>
+                      </div>
+                    ) : (
+                      <Button 
+                        className="w-full mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('🔥 Generate Ideas button clicked for:', themeDay.day);
+                          generateThemedIdeas(themeDay.theme, themeDay.day);
+                        }}
+                      >
+                        <Lightbulb className="w-4 h-4 mr-2" />
+                        Generate Ideas
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               );
