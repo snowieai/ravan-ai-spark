@@ -386,20 +386,25 @@ const Script = () => {
                 </Card>
               ))}
             </div>
+          </div>
+        )}
 
-            {/* Save & Continue Button */}
-            {selectedScript && (
-              <div className="mt-8 text-center animate-fade-in">
-                <Button
-                  onClick={handleSaveAndContinue}
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 border-0"
-                >
-                  <Check className="w-6 h-6 mr-2" />
-                  Save & Continue
-                </Button>
-              </div>
-            )}
+        {/* Save & Continue Button */}
+        {selectedScript && scriptData && (
+          <div className="max-w-6xl mx-auto mt-12 px-4 sm:px-0 animate-fade-in">
+            <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-blue-100">
+              <p className="text-gray-700 text-lg mb-6">
+                Script Selected! Click below to save and proceed.
+              </p>
+              <Button
+                onClick={handleSaveAndContinue}
+                size="lg"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-16 py-7 text-xl rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 border-0 hover:scale-105"
+              >
+                <Check className="w-7 h-7 mr-3" />
+                Save & Continue
+              </Button>
+            </div>
           </div>
         )}
 
