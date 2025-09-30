@@ -200,13 +200,45 @@ const KairaCalendarThemes = () => {
       const jsonResponse = JSON.parse(responseData);
       console.log(`📊 Parsed JSON structure for ${normalizedDay}:`, Array.isArray(jsonResponse) ? 'array' : typeof jsonResponse, Array.isArray(jsonResponse) ? `length=${jsonResponse.length}` : Object.keys(jsonResponse));
       
+      // If webhook already returns a JSON array -> map directly and return
+      if (Array.isArray(jsonResponse)) {
+        const directIdeas = jsonResponse.map((item: any, index: number) => ({
+          id: item.id || `idea-${index}`,
+          title: item.title || `Idea ${index + 1}`,
+          description: item.summary || item.description || 'No description available',
+          summary: item.summary || item.description || 'No summary available',
+          detailedContent: item.summary || item.description || 'No detailed content available',
+          videoStyle: 'Professional',
+          duration: '60-90 seconds',
+          targetAudience: 'Real Estate Professionals & Clients',
+          type: item.type || 'INFORMATION',
+        }));
+        console.log(`✅ Direct array from webhook for ${normalizedDay}: ${directIdeas.length} ideas`);
+        return directIdeas;
+      }
+      
       if (jsonResponse.output) {
         const out = jsonResponse.output;
+        if (Array.isArray(out)) {
+          const outputIdeas = out.map((item: any, index: number) => ({
+            id: item.id || `idea-${index}`,
+            title: item.title || `Idea ${index + 1}`,
+            description: item.summary || item.description || 'No description available',
+            summary: item.summary || item.description || 'No summary available',
+            detailedContent: item.summary || item.description || 'No detailed content available',
+            videoStyle: 'Professional',
+            duration: '60-90 seconds',
+            targetAudience: 'Real Estate Professionals & Clients',
+            type: item.type || 'INFORMATION',
+          }));
+          console.log(`✅ Direct array in 'output' for ${normalizedDay}: ${outputIdeas.length} ideas`);
+          return outputIdeas;
+        }
         contentToParse = typeof out === 'string' ? out : JSON.stringify(out);
         const preview = typeof out === 'string' ? out.substring(0, 300) : JSON.stringify(out).substring(0, 300);
         console.log(`📊 Extracted output field for ${normalizedDay}:`, preview + '...');
       } else {
-        // IMPORTANT: If no 'output' field, use the parsed JSON directly
+        // IMPORTANT: If no 'output' field, use the parsed JSON directly (as string)
         contentToParse = JSON.stringify(jsonResponse);
         console.log(`📝 No 'output' field found, using full JSON response for ${normalizedDay} (as string)`);
       }
