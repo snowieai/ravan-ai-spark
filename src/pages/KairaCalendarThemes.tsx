@@ -317,6 +317,18 @@ const KairaCalendarThemes = () => {
       return ideasArr;
     }
 
+    // Check if it's an array with a SINGLE OBJECT containing wrapper keys (e.g., [{ "data": [...] }])
+    if (Array.isArray(parsed) && parsed.length === 1 && typeof parsed[0] === 'object' && parsed[0] !== null) {
+      const arrayWrapperKeys = ['data', 'ideas', 'records', 'results', 'items', 'payload', 'output'];
+      for (const key of arrayWrapperKeys) {
+        if (Array.isArray(parsed[0][key])) {
+          console.log(`✅ Found array-wrapped data structure with key "${key}": ${parsed[0][key].length} items`);
+          const ideasArr = mapNormalized(parsed[0][key]);
+          return ideasArr;
+        }
+      }
+    }
+
     // Check if it's a SINGLE OBJECT that looks like an idea
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       const hasIdField = 'id' in parsed || 'recordId' in parsed || 'rec' in parsed;
