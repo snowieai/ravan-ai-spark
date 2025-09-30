@@ -246,6 +246,38 @@ const KairaCalendarThemes = () => {
       console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
     }
     
+    // Extra-safe: try to extract a JSON array from the raw text directly
+    const tryExtractArray = (text: string): any[] | null => {
+      if (!text) return null;
+      const start = text.indexOf('[');
+      const end = text.lastIndexOf(']');
+      if (start === -1 || end === -1 || end <= start) return null;
+      const slice = text.slice(start, end + 1);
+      try {
+        const arr = JSON.parse(slice);
+        return Array.isArray(arr) ? arr : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const extracted = tryExtractArray(responseData) || tryExtractArray(contentToParse);
+    if (extracted && extracted.length) {
+      const mapped = extracted.map((item: any, index: number) => ({
+        id: item.id || `idea-${index}`,
+        title: item.title || `Idea ${index + 1}`,
+        description: item.summary || item.description || 'No description available',
+        summary: item.summary || item.description || 'No summary available',
+        detailedContent: item.summary || item.description || 'No detailed content available',
+        videoStyle: 'Professional',
+        duration: '60-90 seconds',
+        targetAudience: 'Real Estate Professionals & Clients',
+        type: item.type || 'INFORMATION',
+      }));
+      console.log(`✅ Extracted array from raw text for ${normalizedDay}: ${mapped.length} ideas`);
+      return mapped;
+    }
+    
     // Use robust parser that handles JSON arrays and text
     console.log(`🔄 Parsing response content with parseIdeas for ${normalizedDay}`);
     const ideas = parseIdeas(contentToParse, normalizedDay);
