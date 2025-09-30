@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Download, Home, LogOut, Loader2, ArrowLeft, Copy } from 'lucide-react';
+import { FileText, Home, LogOut, Loader2, ArrowLeft, Edit3, Check, Sparkles, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface ScriptData {
   scriptA: string;
@@ -16,6 +19,12 @@ const MayraScript = () => {
   const [scriptData, setScriptData] = useState<ScriptData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<string>('');
+  const [selectedScript, setSelectedScript] = useState<'A' | 'B' | null>(null);
+  const [editingScript, setEditingScript] = useState<'A' | 'B' | null>(null);
+  const [editInstruction, setEditInstruction] = useState('');
+  const [isManualEdit, setIsManualEdit] = useState(false);
+  const [manualEditContent, setManualEditContent] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -233,30 +242,107 @@ const MayraScript = () => {
     }
   };
 
-  const downloadScript = (script: string, version: string) => {
-    const blob = new Blob([script], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mayra-script-${version.toLowerCase()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
+  const handleUseThis = (version: 'A' | 'B') => {
+    setSelectedScript(version);
     toast({
-      title: "Downloaded!",
-      description: `Script ${version} has been downloaded.`,
+      title: "Script Selected!",
+      description: `Script ${version} selected. Click 'Save & Continue' when ready.`,
     });
   };
 
-  const copyToClipboard = (script: string, version: string) => {
-    navigator.clipboard.writeText(script).then(() => {
+  const handleEditThis = (version: 'A' | 'B') => {
+    setEditingScript(version);
+    const content = version === 'A' ? scriptData?.scriptA : scriptData?.scriptB;
+    setManualEditContent(content || '');
+    setEditInstruction('');
+    setIsManualEdit(false);
+  };
+
+  const handleApplyChanges = async () => {
+    if (!editingScript || !scriptData) return;
+
+    if (isManualEdit) {
+      const updatedData = { ...scriptData };
+      if (editingScript === 'A') {
+        updatedData.scriptA = manualEditContent;
+      } else {
+        updatedData.scriptB = manualEditContent;
+      }
+      setScriptData(updatedData);
+      setEditingScript(null);
       toast({
-        title: "Copied!",
-        description: `Script ${version} copied to clipboard.`,
+        title: "Manual Edit Applied!",
+        description: "Your changes have been saved.",
       });
+    } else {
+      if (!editInstruction.trim()) {
+        toast({
+          title: "Instruction Required",
+          description: "Please provide instructions for refining the script.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsRefining(true);
+      try {
+        const currentScript = editingScript === 'A' ? scriptData.scriptA : scriptData.scriptB;
+        const url = `https://n8n.srv905291.hstgr.cloud/webhook/4e4b18c1-3aa4-4dce-905b-c3892dc2c531?script=${encodeURIComponent(currentScript)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(selectedIdea)}`;
+        
+        const response = await fetch(url, { method: 'GET' });
+        const data = await response.json();
+        
+        let refinedScript = '';
+        if (data.output && typeof data.output === 'string') {
+          refinedScript = data.output;
+        } else if (data.script) {
+          refinedScript = data.script;
+        } else if (typeof data === 'string') {
+          refinedScript = data;
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+        const updatedData = { ...scriptData };
+        if (editingScript === 'A') {
+          updatedData.scriptA = refinedScript;
+        } else {
+          updatedData.scriptB = refinedScript;
+        }
+        setScriptData(updatedData);
+        setEditingScript(null);
+        setEditInstruction('');
+        
+        toast({
+          title: "Script Refined!",
+          description: "AI has updated your script based on your instructions.",
+        });
+      } catch (error) {
+        console.error('Error refining script:', error);
+        toast({
+          title: "Error",
+          description: "Failed to refine script. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsRefining(false);
+      }
+    }
+  };
+
+  const handleSaveAndContinue = () => {
+    if (!selectedScript || !scriptData) return;
+    
+    const finalScript = selectedScript === 'A' ? scriptData.scriptA : scriptData.scriptB;
+    localStorage.setItem('mayraFinalScript', JSON.stringify({ 
+      version: selectedScript,
+      content: finalScript 
+    }));
+    toast({
+      title: "Script Saved!",
+      description: `Script ${selectedScript} has been finalized and saved.`,
     });
+    navigate('/mayra-ideas');
   };
 
   const handleBackToIdeas = () => {
@@ -379,84 +465,212 @@ const MayraScript = () => {
 
           {/* Scripts Display */}
           {scriptData && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Script A */}
-              <Card className="bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-yellow-700 flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="w-5 h-5 mr-2" />
-                      Script A
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Script A */}
+                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                  selectedScript === 'A' ? 'ring-2 ring-yellow-500 border-yellow-300' : ''
+                }`}>
+                  <CardHeader>
+                    <CardTitle className="text-yellow-700 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Script A
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedScript === 'A' && (
+                          <Badge className="bg-yellow-500 text-white">Selected</Badge>
+                        )}
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                          Version A
+                        </Badge>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
+                        {scriptData.scriptA}
+                      </pre>
                     </div>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                      Version A
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
-                      {scriptData.scriptA}
-                    </pre>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => downloadScript(scriptData.scriptA, 'A')}
-                      className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button
-                      onClick={() => copyToClipboard(scriptData.scriptA, 'A')}
-                      variant="outline"
-                      className="border-yellow-200 text-yellow-600 hover:bg-yellow-50"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleUseThis('A')}
+                        className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Use This
+                      </Button>
+                      <Button
+                        onClick={() => handleEditThis('A')}
+                        variant="outline"
+                        className="flex-1 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit This
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Script B */}
-              <Card className="bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-yellow-700 flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FileText className="w-5 h-5 mr-2" />
-                      Script B
+                {/* Script B */}
+                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                  selectedScript === 'B' ? 'ring-2 ring-yellow-500 border-yellow-300' : ''
+                }`}>
+                  <CardHeader>
+                    <CardTitle className="text-yellow-700 flex items-center justify-between">
+                      <div className="flex items-center">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Script B
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedScript === 'B' && (
+                          <Badge className="bg-yellow-500 text-white">Selected</Badge>
+                        )}
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                          Version B
+                        </Badge>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
+                        {scriptData.scriptB}
+                      </pre>
                     </div>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                      Version B
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
-                      {scriptData.scriptB}
-                    </pre>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => downloadScript(scriptData.scriptB, 'B')}
-                      className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button
-                      onClick={() => copyToClipboard(scriptData.scriptB, 'B')}
-                      variant="outline"
-                      className="border-yellow-200 text-yellow-600 hover:bg-yellow-50"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleUseThis('B')}
+                        className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Use This
+                      </Button>
+                      <Button
+                        onClick={() => handleEditThis('B')}
+                        variant="outline"
+                        className="flex-1 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit This
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Save & Continue Button */}
+              {selectedScript && (
+                <div className="mt-8 text-center animate-fade-in">
+                  <Button
+                    onClick={handleSaveAndContinue}
+                    size="lg"
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 border-0"
+                  >
+                    <Check className="w-6 h-6 mr-2" />
+                    Save & Continue
+                  </Button>
+                </div>
+              )}
+            </>
           )}
+
+          {/* Edit Dialog */}
+          <Dialog open={editingScript !== null} onOpenChange={() => setEditingScript(null)}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-yellow-600">Edit Script {editingScript}</DialogTitle>
+                <DialogDescription>
+                  {isManualEdit ? 'Make direct changes to your script' : 'Provide instructions for AI to refine your script'}
+                </DialogDescription>
+              </DialogHeader>
+              
+              {editingScript && scriptData && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">Current Script</Label>
+                    <div className="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-200">
+                      <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                        {editingScript === 'A' ? scriptData.scriptA : scriptData.scriptB}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-4 py-2">
+                    <Button
+                      variant={!isManualEdit ? "default" : "outline"}
+                      onClick={() => setIsManualEdit(false)}
+                      className={!isManualEdit ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      AI Prompt
+                    </Button>
+                    <Button
+                      variant={isManualEdit ? "default" : "outline"}
+                      onClick={() => setIsManualEdit(true)}
+                      className={isManualEdit ? "bg-yellow-500 hover:bg-yellow-600" : ""}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Manual Edit
+                    </Button>
+                  </div>
+
+                  {isManualEdit ? (
+                    <div>
+                      <Label className="text-base font-semibold mb-2 block">Edit Script Directly</Label>
+                      <Textarea
+                        value={manualEditContent}
+                        onChange={(e) => setManualEditContent(e.target.value)}
+                        placeholder="Edit your script here..."
+                        className="min-h-[300px] text-base"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label className="text-base font-semibold mb-2 block">AI Instructions</Label>
+                      <Textarea
+                        value={editInstruction}
+                        onChange={(e) => setEditInstruction(e.target.value)}
+                        placeholder="E.g., Make this more concise, Add more humor, Focus on benefits..."
+                        className="min-h-[150px] text-base"
+                      />
+                      <p className="text-sm text-gray-500 mt-2">
+                        Tell AI how you want to improve the script
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingScript(null)}
+                      disabled={isRefining}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleApplyChanges}
+                      disabled={isRefining || (!isManualEdit && !editInstruction.trim())}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                    >
+                      {isRefining ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Refining...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Apply Changes
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Empty State */}
           {!selectedIdea && !scriptData && (

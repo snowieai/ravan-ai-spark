@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, LogOut, FileText, Download, Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
+import { ArrowLeft, LogOut, FileText, Sparkles, RefreshCw, Edit3, Check, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 interface Script {
   label: string;
@@ -21,6 +25,12 @@ const BaileyScript = () => {
   const [scriptData, setScriptData] = useState<ScriptResponse | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedScript, setSelectedScript] = useState<Script | null>(null);
+  const [editingScriptIndex, setEditingScriptIndex] = useState<number | null>(null);
+  const [editInstruction, setEditInstruction] = useState('');
+  const [isManualEdit, setIsManualEdit] = useState(false);
+  const [manualEditContent, setManualEditContent] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
 
   useEffect(() => {
     // Auth check now handled by ProtectedRoute, only check influencer selection
@@ -143,26 +153,101 @@ Drop a 🏠 if you're ready to take action!
     }
   };
 
-  const handleDownload = (scriptContent: string, scriptLabel: string) => {
-    const element = document.createElement('a');
-    const file = new Blob([scriptContent], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `bailey_${scriptLabel.replace(/\s+/g, '_').toLowerCase()}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    
+  const handleUseThis = (script: Script) => {
+    setSelectedScript(script);
     toast({
-      title: "Downloaded!",
-      description: "Script has been downloaded successfully.",
+      title: "Script Selected!",
+      description: "Click 'Save & Continue' when you're ready to proceed.",
     });
   };
 
-  const selectScript = () => {
+  const handleEditThis = (script: Script, index: number) => {
+    setEditingScriptIndex(index);
+    setManualEditContent(script.content);
+    setEditInstruction('');
+    setIsManualEdit(false);
+  };
+
+  const handleApplyChanges = async () => {
+    if (editingScriptIndex === null || !scriptData) return;
+
+    if (isManualEdit) {
+      const updatedScripts = [...scriptData.scripts];
+      updatedScripts[editingScriptIndex] = {
+        ...updatedScripts[editingScriptIndex],
+        content: manualEditContent
+      };
+      setScriptData({ ...scriptData, scripts: updatedScripts });
+      setEditingScriptIndex(null);
+      toast({
+        title: "Manual Edit Applied!",
+        description: "Your changes have been saved.",
+      });
+    } else {
+      if (!editInstruction.trim()) {
+        toast({
+          title: "Instruction Required",
+          description: "Please provide instructions for refining the script.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsRefining(true);
+      try {
+        const currentScript = scriptData.scripts[editingScriptIndex];
+        const url = `https://n8n.srv905291.hstgr.cloud/webhook/4e4b18c1-3aa4-4dce-905b-c3892dc2c531?script=${encodeURIComponent(currentScript.content)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(selectedIdea)}`;
+        
+        const response = await fetch(url, { method: 'GET' });
+        const data = await response.json();
+        
+        let refinedScript = '';
+        if (data.output && typeof data.output === 'string') {
+          refinedScript = data.output;
+        } else if (data.script) {
+          refinedScript = data.script;
+        } else if (typeof data === 'string') {
+          refinedScript = data;
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+        const updatedScripts = [...scriptData.scripts];
+        updatedScripts[editingScriptIndex] = {
+          ...updatedScripts[editingScriptIndex],
+          content: refinedScript,
+          label: `${updatedScripts[editingScriptIndex].label} (Edited)`
+        };
+        setScriptData({ ...scriptData, scripts: updatedScripts });
+        setEditingScriptIndex(null);
+        setEditInstruction('');
+        
+        toast({
+          title: "Script Refined!",
+          description: "AI has updated your script based on your instructions.",
+        });
+      } catch (error) {
+        console.error('Error refining script:', error);
+        toast({
+          title: "Error",
+          description: "Failed to refine script. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsRefining(false);
+      }
+    }
+  };
+
+  const handleSaveAndContinue = () => {
+    if (!selectedScript) return;
+    
+    localStorage.setItem('baileyFinalScript', JSON.stringify(selectedScript));
     toast({
-      title: "Coming Soon! 🎬",
-      description: "Video generation with Bailey will be available soon for you. Stay tuned!",
+      title: "Script Saved!",
+      description: "Your finalized script has been saved.",
     });
+    navigate('/bailey-ideas');
   };
 
   const handleRegenerate = () => {
@@ -301,12 +386,19 @@ Drop a 🏠 if you're ready to take action!
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
-                  className="bg-white/80 backdrop-blur-sm border-emerald-100 hover:shadow-xl transition-all duration-300 h-full"
+                  className={`bg-white/80 backdrop-blur-sm border-emerald-100 transition-all duration-300 h-full cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                    selectedScript?.label === script.label ? 'ring-2 ring-emerald-500 border-emerald-300' : ''
+                  }`}
                 >
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-gray-900 text-xl flex items-center">
-                      <FileText className="w-6 h-6 mr-2 text-emerald-500 flex-shrink-0" />
-                      <span className="line-clamp-2">{script.label}</span>
+                    <CardTitle className="text-gray-900 text-xl flex items-center justify-between">
+                      <div className="flex items-center flex-1 min-w-0">
+                        <FileText className="w-6 h-6 mr-2 text-emerald-500 flex-shrink-0" />
+                        <span className="line-clamp-2">{script.label}</span>
+                      </div>
+                      {selectedScript?.label === script.label && (
+                        <Badge className="bg-emerald-500 text-white ml-2 flex-shrink-0">Selected</Badge>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 pt-0 flex flex-col h-full">
@@ -317,25 +409,39 @@ Drop a 🏠 if you're ready to take action!
                     </div>
                     <div className="flex gap-2 mt-auto">
                       <Button
-                        onClick={() => handleDownload(script.content, script.label)}
-                        variant="outline"
-                        className="flex-1 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                        onClick={() => handleUseThis(script)}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
+                        <Check className="w-4 h-4 mr-2" />
+                        Use This
                       </Button>
                       <Button
-                        onClick={selectScript}
-                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                        onClick={() => handleEditThis(script, index)}
+                        variant="outline"
+                        className="flex-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50"
                       >
-                        Use Script
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit This
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
+
+            {/* Save & Continue Button */}
+            {selectedScript && (
+              <div className="mt-8 text-center animate-fade-in">
+                <Button
+                  onClick={handleSaveAndContinue}
+                  size="lg"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300"
+                >
+                  <Check className="w-6 h-6 mr-2" />
+                  Save & Continue
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center text-gray-500">
@@ -345,6 +451,102 @@ Drop a 🏠 if you're ready to take action!
             <p className="text-xl">No scripts generated yet.</p>
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={editingScriptIndex !== null} onOpenChange={() => setEditingScriptIndex(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-emerald-600">Edit Script</DialogTitle>
+              <DialogDescription>
+                {isManualEdit ? 'Make direct changes to your script' : 'Provide instructions for AI to refine your script'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {editingScriptIndex !== null && scriptData && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">Current Script</Label>
+                  <div className="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-200">
+                    <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                      {scriptData.scripts[editingScriptIndex].content}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-4 py-2">
+                  <Button
+                    variant={!isManualEdit ? "default" : "outline"}
+                    onClick={() => setIsManualEdit(false)}
+                    className={!isManualEdit ? "bg-emerald-500 hover:bg-emerald-600" : ""}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Prompt
+                  </Button>
+                  <Button
+                    variant={isManualEdit ? "default" : "outline"}
+                    onClick={() => setIsManualEdit(true)}
+                    className={isManualEdit ? "bg-emerald-500 hover:bg-emerald-600" : ""}
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Manual Edit
+                  </Button>
+                </div>
+
+                {isManualEdit ? (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">Edit Script Directly</Label>
+                    <Textarea
+                      value={manualEditContent}
+                      onChange={(e) => setManualEditContent(e.target.value)}
+                      placeholder="Edit your script here..."
+                      className="min-h-[300px] text-base"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">AI Instructions</Label>
+                    <Textarea
+                      value={editInstruction}
+                      onChange={(e) => setEditInstruction(e.target.value)}
+                      placeholder="E.g., Make this more engaging, Add market statistics, Focus on buyer benefits..."
+                      className="min-h-[150px] text-base"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Tell AI how you want to improve the script
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingScriptIndex(null)}
+                    disabled={isRefining}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleApplyChanges}
+                    disabled={isRefining || (!isManualEdit && !editInstruction.trim())}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  >
+                    {isRefining ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Refining...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Apply Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
