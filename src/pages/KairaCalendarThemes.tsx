@@ -260,22 +260,66 @@ const KairaCalendarThemes = () => {
 
   const parseIdeas = (responseText: string, requestedDay: string): GeneratedIdea[] => {
     console.log(`🔍 Parsing response for "${requestedDay}" - text length: ${responseText.length}`);
-    
-    // First, try to detect response format
+
     const responseFormat = detectResponseFormat(responseText);
     console.log(`📊 Detected response format: ${responseFormat}`);
-    
-    try {
-      // Helper to safely JSON.parse strings
-      const safeParse = (txt: string) => {
-        try { return JSON.parse(txt); } catch { return null; }
-      };
 
-      // First parse
+    // Helpers
+    const safeParse = (txt: string) => {
+      try { return JSON.parse(txt); } catch { return null; }
+    };
+
+    // Extract a balanced JSON segment starting at startIndex
+    const extractBalanced = (text: string, open: string, close: string, startIndex: number): string | null => {
+      let depth = 0;
+      let inString = false;
+      let prev = '';
+      for (let i = startIndex; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"' && prev !== '\\') inString = !inString;
+        if (!inString) {
+          if (ch === open) depth++;
+          if (ch === close) {
+            depth--;
+            if (depth === 0) return text.slice(startIndex, i + 1);
+          }
+        }
+        prev = ch;
+      }
+      return null;
+    };
+
+    const extractJsonArrayFromText = (text: string): any[] | null => {
+      const start = text.indexOf('[');
+      if (start === -1) return null;
+      const slice = extractBalanced(text, '[', ']', start);
+      if (!slice) return null;
+      const arr = safeParse(slice);
+      return Array.isArray(arr) ? arr : null;
+    };
+
+    const extractJsonObjectsFromText = (text: string): any[] => {
+      const results: any[] = [];
+      let i = 0;
+      while (i < text.length) {
+        const start = text.indexOf('{', i);
+        if (start === -1) break;
+        const slice = extractBalanced(text, '{', '}', start);
+        if (!slice) break;
+        const obj = safeParse(slice);
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          results.push(obj);
+        }
+        i = start + slice.length;
+      }
+      return results;
+    };
+
+    try {
+      // First attempt to parse as JSON or double-encoded JSON
       let parsed: any = safeParse(responseText);
       console.log('🧪 First JSON.parse result type:', typeof parsed, Array.isArray(parsed) ? 'array' : '');
 
-      // Handle double-encoded JSON (e.g., "[ {...} ]" as a string)
       if (typeof parsed === 'string') {
         const second = safeParse(parsed);
         if (second) {
@@ -284,7 +328,7 @@ const KairaCalendarThemes = () => {
         }
       }
 
-      // If object with an `output` key that itself is JSON, unwrap it
+      // Unwrap common { output: ... } shape
       if (parsed && typeof parsed === 'object' && 'output' in parsed) {
         const out: any = (parsed as any).output;
         if (Array.isArray(out)) parsed = out;
@@ -296,8 +340,20 @@ const KairaCalendarThemes = () => {
 
       const toGenerated = (list: any[]): GeneratedIdea[] => {
         return list.map((raw: any, index: number) => {
-          // If each item is a stringified object, parse it
-          const idea = typeof raw === 'string' ? (safeParse(raw) || { title: raw, summary: raw }) : raw;
+          let idea: any = raw;
+          if (typeof raw === 'string') {
+            let s = raw.trim();
+            if (s.endsWith(',')) s = s.slice(0, -1);
+            let parsedItem: any = safeParse(s);
+            if (!parsedItem && s.includes('{') && s.includes('}')) {
+              const start = s.indexOf('{');
+              const end = s.lastIndexOf('}');
+              if (start !== -1 && end !== -1 && end > start) {
+                parsedItem = safeParse(s.slice(start, end + 1));
+              }
+            }
+            idea = parsedItem || { title: s, summary: s };
+          }
           return {
             id: idea.id || `idea-${index}`,
             title: idea.title || `Idea ${index + 1}`,
@@ -321,22 +377,57 @@ const KairaCalendarThemes = () => {
         console.log(`📋 Parsed ${ideas.length} structured ideas from nested object`);
         return ideas;
       }
+
+      // Try to slice array from raw text
+      const arr = extractJsonArrayFromText(responseText);
+      if (arr && arr.length) {
+        const ideas = toGenerated(arr);
+        console.log(`📦 Extracted JSON array from text with ${ideas.length} items`);
+        return ideas;
+      }
+
+      // Try scanning for multiple objects
+      const objects = extractJsonObjectsFromText(responseText);
+      if (objects.length > 1) {
+        const ideas = toGenerated(objects);
+        console.log(`📦 Extracted ${ideas.length} JSON objects from text`);
+        return ideas;
+      }
     } catch (parseError) {
       console.warn(`⚠️ JSON parse failed:`, parseError);
-      console.log(`📝 Attempting advanced text parsing for unstructured content...`);
     }
-    
-    // Advanced text parsing for unstructured responses
+
+    console.log(`📝 Attempting advanced text parsing for unstructured content...`);
     const textParsedIdeas = parseUnstructuredText(responseText, requestedDay);
+
+    // Defensive re-check: if only one and it looks like JSON, try object scan as a last attempt
+    if (textParsedIdeas.length === 1 && /^{|\[/.test(textParsedIdeas[0].title || '') ) {
+      const objects = extractJsonObjectsFromText(responseText);
+      if (objects.length > 1) {
+        const ideas = objects.map((obj, idx) => ({
+          id: obj.id || `idea-${idx}`,
+          title: obj.title || `Idea ${idx + 1}`,
+          description: obj.summary || obj.description || 'No description available',
+          summary: obj.summary || obj.description || 'No summary available',
+          detailedContent: obj.summary || obj.detailedContent || obj.content || 'No detailed content available',
+          videoStyle: obj.videoStyle || 'Professional',
+          duration: obj.duration || '60 seconds',
+          targetAudience: obj.targetAudience || 'Real estate professionals',
+          type: obj.type || 'INFORMATION',
+        }));
+        console.log(`✅ Rescued ${ideas.length} ideas via object scan`);
+        return ideas;
+      }
+    }
+
     if (textParsedIdeas.length > 0) {
       console.log(`📝 Successfully parsed ${textParsedIdeas.length} ideas from unstructured text`);
       return textParsedIdeas;
     }
-    
+
     console.warn(`🚨 All parsing attempts failed, using fallback ideas`);
     return generateFallbackIdeas(requestedDay, requestedDay);
   };
-
   const detectResponseFormat = (responseText: string): string => {
     const text = responseText.trim();
     
