@@ -266,35 +266,58 @@ const KairaCalendarThemes = () => {
     console.log(`📊 Detected response format: ${responseFormat}`);
     
     try {
-      // Try JSON parsing first
-      const parsed = JSON.parse(responseText);
-      console.log(`✅ Successfully parsed JSON:`, parsed);
-      
+      // Helper to safely JSON.parse strings
+      const safeParse = (txt: string) => {
+        try { return JSON.parse(txt); } catch { return null; }
+      };
+
+      // First parse
+      let parsed: any = safeParse(responseText);
+      console.log('🧪 First JSON.parse result type:', typeof parsed, Array.isArray(parsed) ? 'array' : '');
+
+      // Handle double-encoded JSON (e.g., "[ {...} ]" as a string)
+      if (typeof parsed === 'string') {
+        const second = safeParse(parsed);
+        if (second) {
+          parsed = second;
+          console.log('🧪 Unwrapped double-encoded JSON successfully');
+        }
+      }
+
+      // If object with an `output` key that itself is JSON, unwrap it
+      if (parsed && typeof parsed === 'object' && 'output' in parsed) {
+        const out: any = (parsed as any).output;
+        if (Array.isArray(out)) parsed = out;
+        else if (typeof out === 'string') {
+          const inner = safeParse(out);
+          if (inner) parsed = inner;
+        }
+      }
+
+      const toGenerated = (list: any[]): GeneratedIdea[] => {
+        return list.map((raw: any, index: number) => {
+          // If each item is a stringified object, parse it
+          const idea = typeof raw === 'string' ? (safeParse(raw) || { title: raw, summary: raw }) : raw;
+          return {
+            id: idea.id || `idea-${index}`,
+            title: idea.title || `Idea ${index + 1}`,
+            description: idea.summary || idea.description || 'No description available',
+            summary: idea.summary || idea.description || 'No summary available',
+            detailedContent: idea.summary || idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
+            videoStyle: idea.videoStyle || idea.video_style || 'Professional',
+            duration: idea.duration || '60 seconds',
+            targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals',
+            type: idea.type || 'INFORMATION',
+          };
+        });
+      };
+
       if (Array.isArray(parsed)) {
-        const ideas = parsed.map((idea: any, index: number) => ({
-          id: idea.id || `idea-${index}`,
-          title: idea.title || `Idea ${index + 1}`,
-          description: idea.summary || idea.description || 'No description available',
-          summary: idea.summary || idea.description || 'No summary available',
-          detailedContent: idea.summary || idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
-          videoStyle: idea.videoStyle || idea.video_style || 'Professional',
-          duration: idea.duration || '60 seconds',
-          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals',
-          type: idea.type || 'INFORMATION'
-        }));
+        const ideas = toGenerated(parsed);
         console.log(`📋 Parsed ${ideas.length} structured ideas from array`);
         return ideas;
-      } else if (parsed.ideas && Array.isArray(parsed.ideas)) {
-        const ideas = parsed.ideas.map((idea: any, index: number) => ({
-          id: idea.id || `idea-${index}`,
-          title: idea.title || `Idea ${index + 1}`,
-          description: idea.description || idea.summary || 'No description available',
-          summary: idea.summary || idea.description || 'No summary available',
-          detailedContent: idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
-          videoStyle: idea.videoStyle || idea.video_style || 'Professional',
-          duration: idea.duration || '60 seconds',
-          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals'
-        }));
+      } else if (parsed && parsed.ideas && Array.isArray(parsed.ideas)) {
+        const ideas = toGenerated(parsed.ideas);
         console.log(`📋 Parsed ${ideas.length} structured ideas from nested object`);
         return ideas;
       }
