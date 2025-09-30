@@ -243,12 +243,29 @@ const KairaCalendarThemes = () => {
       throw new Error('Empty response from webhook');
     }
     
-    // Strict parsing: expect a JSON array or common wrapper shapes
+    // Strict parsing: handle code fences and potential double-encoded JSON
+    const cleanedText = responseData
+      .replace(/^```(?:json)?/i, '')
+      .replace(/```$/i, '')
+      .replace(/```/g, '')
+      .trim();
+
     let parsed: any = null;
     try {
-      parsed = JSON.parse(responseData);
+      parsed = JSON.parse(cleanedText);
     } catch {
       parsed = null;
+    }
+
+    // If we parsed a string, try unwrapping double-encoded JSON
+    if (typeof parsed === 'string') {
+      const inner = parsed.trim();
+      if (inner.startsWith('[') || inner.startsWith('{')) {
+        try {
+          parsed = JSON.parse(inner);
+          console.log('🧪 Unwrapped double-encoded JSON at top-level');
+        } catch {}
+      }
     }
 
     // Direct array from webhook
@@ -260,14 +277,14 @@ const KairaCalendarThemes = () => {
 
     // Common wrapper shapes
     if (parsed && typeof parsed === 'object') {
-      if (Array.isArray(parsed.output)) {
-        const ideasArr = mapNormalized(parsed.output);
+      if (Array.isArray((parsed as any).output)) {
+        const ideasArr = mapNormalized((parsed as any).output);
         console.log(`✅ Using output array: ${ideasArr.length} ideas`);
         return ideasArr;
       }
-      if (typeof parsed.output === 'string') {
+      if (typeof (parsed as any).output === 'string') {
         try {
-          const outParsed = JSON.parse(parsed.output);
+          const outParsed = JSON.parse((parsed as any).output);
           if (Array.isArray(outParsed)) {
             const ideasArr = mapNormalized(outParsed);
             console.log(`✅ Parsed string output array: ${ideasArr.length} ideas`);
@@ -285,16 +302,35 @@ const KairaCalendarThemes = () => {
     // Extract a JSON array from raw text
     const tryExtractArray = (text: string): any[] | null => {
       if (!text) return null;
-      const start = text.indexOf('[');
-      const end = text.lastIndexOf(']');
+      const t = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+      const start = t.indexOf('[');
+      const end = t.lastIndexOf(']');
       if (start === -1 || end === -1 || end <= start) return null;
-      const slice = text.slice(start, end + 1);
-      try {
-        const arr = JSON.parse(slice);
-        return Array.isArray(arr) ? arr : null;
-      } catch {
-        return null;
+
+      const candidates: string[] = [];
+      const slice = t.slice(start, end + 1);
+      candidates.push(slice);
+
+      // If looks escaped, try unescaping common sequences
+      const unescaped = slice
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t');
+      if (unescaped !== slice) candidates.push(unescaped);
+
+      for (const c of candidates) {
+        try {
+          const arr = JSON.parse(c);
+          if (Array.isArray(arr)) return arr;
+        } catch {}
+        // Try a relaxed parse by removing trailing commas
+        try {
+          const relaxed = c.replace(/,(\s*[\]}])/g, '$1');
+          const arr2 = JSON.parse(relaxed);
+          if (Array.isArray(arr2)) return arr2;
+        } catch {}
       }
+      return null;
     };
 
     const extracted = tryExtractArray(responseData);
@@ -843,7 +879,7 @@ const KairaCalendarThemes = () => {
     navigate('/kaira-script');
   };
 
-  // Group ideas by type (normalized)
+  // Group ideas by type (normalized for grouping only; do not mutate original idea.type)
   const groupIdeasByType = (ideas: GeneratedIdea[]) => {
     const normalize = (t?: string) => {
       const n = (t || 'INFORMATION').toString().trim().toUpperCase().replace(/[_-]/g, ' ');
@@ -853,8 +889,7 @@ const KairaCalendarThemes = () => {
     ideas.forEach(idea => {
       const key = normalize(idea.type);
       if (!grouped[key]) grouped[key] = [];
-      // ensure the idea carries normalized type for consistent rendering
-      grouped[key].push({ ...idea, type: key });
+      grouped[key].push(idea);
     });
     return grouped;
   };
@@ -1050,70 +1085,77 @@ const KairaCalendarThemes = () => {
               </div>
             ) : ideas.length > 0 ? (
               <div className="space-y-10">
-                {Object.entries(groupIdeasByType(ideas)).map(([type, typeIdeas]) => {
-                  const config = getTypeConfig(type);
-                  const TypeIcon = config.icon;
-                  
-                  return (
-                    <div key={type} className="space-y-4">
-                      {/* Category Header */}
-                      <div className={`flex items-center gap-3 p-4 ${config.bgColor} rounded-xl border ${config.borderColor}`}>
-                        <TypeIcon className={`w-6 h-6 ${config.textColor}`} />
-                        <h3 className={`text-xl font-bold ${config.textColor}`}>
-                          {type}
-                        </h3>
-                        <Badge variant="secondary" className="ml-auto">
-                          {typeIdeas.length} {typeIdeas.length === 1 ? 'Idea' : 'Ideas'}
-                        </Badge>
-                      </div>
+                {(() => {
+                  const grouped = groupIdeasByType(ideas);
+                  const orderedTypes = ['INFORMATION', 'DID YOU KNOW', 'QUIZ'] as const;
+                  return orderedTypes
+                    .filter((t) => grouped[t] && grouped[t].length)
+                    .map((type) => {
+                      const typeIdeas = grouped[type]!;
+                      const config = getTypeConfig(type);
+                      const TypeIcon = config.icon;
 
-                      {/* Ideas Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {typeIdeas.map((idea) => (
-                          <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
-                                  {type}
-                                </Badge>
-                              </div>
-                              <CardTitle className="text-gray-800 font-semibold text-lg leading-tight">
-                                {idea.title}
-                              </CardTitle>
-                            </CardHeader>
-                            
-                            <CardContent className="pt-0">
-                              <div className="space-y-3">
-                                <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-                                  {idea.summary}
-                                </p>
+                      return (
+                        <div key={type} className="space-y-4">
+                          {/* Category Header */}
+                          <div className={`flex items-center gap-3 p-4 ${config.bgColor} rounded-xl border ${config.borderColor}`}>
+                            <TypeIcon className={`w-6 h-6 ${config.textColor}`} />
+                            <h3 className={`text-xl font-bold ${config.textColor}`}>
+                              {type}
+                            </h3>
+                            <Badge variant="secondary" className="ml-auto">
+                              {typeIdeas.length} {typeIdeas.length === 1 ? 'Idea' : 'Ideas'}
+                            </Badge>
+                          </div>
+
+                          {/* Ideas Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {typeIdeas.map((idea) => (
+                              <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
+                                <CardHeader className="pb-3">
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
+                                      {type}
+                                    </Badge>
+                                  </div>
+                                  <CardTitle className="text-gray-800 font-semibold text-lg leading-tight">
+                                    {idea.title}
+                                  </CardTitle>
+                                </CardHeader>
                                 
-                                <div className="space-y-2 pt-2">
-                                  <Button
-                                    onClick={() => setExpandedIdea(idea)}
-                                    variant="outline"
-                                    size="sm"
-                                    className={`w-full ${config.textColor} ${config.borderColor} hover:${config.bgColor}`}
-                                  >
-                                    View Details
-                                  </Button>
-                                  
-                                  <Button 
-                                    onClick={() => selectIdea(idea)}
-                                    size="sm"
-                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium"
-                                  >
-                                    Select This Idea
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+                                <CardContent className="pt-0">
+                                  <div className="space-y-3">
+                                    <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                                      {idea.summary}
+                                    </p>
+                                    
+                                    <div className="space-y-2 pt-2">
+                                      <Button
+                                        onClick={() => setExpandedIdea(idea)}
+                                        variant="outline"
+                                        size="sm"
+                                        className={`w-full ${config.textColor} ${config.borderColor} hover:${config.bgColor}`}
+                                      >
+                                        View Details
+                                      </Button>
+                                      
+                                      <Button 
+                                        onClick={() => selectIdea(idea)}
+                                        size="sm"
+                                        className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium"
+                                      >
+                                        Select This Idea
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                })()}
               </div>
             ) : (
               <div className="text-center py-12">
