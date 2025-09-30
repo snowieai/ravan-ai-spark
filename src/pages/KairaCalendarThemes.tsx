@@ -304,8 +304,10 @@ const KairaCalendarThemes = () => {
       return ideasArr;
     }
 
-    console.error('❌ Unrecognized webhook format. Expected a JSON array.');
-    throw new Error('Unrecognized webhook format: expected a JSON array');
+    console.warn('⚠️ Could not directly detect array. Falling back to robust parser.');
+    const fallback = parseIdeas(responseData, normalizedDay);
+    console.log(`✅ Fallback parser produced ${fallback.length} ideas`);
+    return fallback;
   };
 
 
@@ -841,15 +843,18 @@ const KairaCalendarThemes = () => {
     navigate('/kaira-script');
   };
 
-  // Group ideas by type
+  // Group ideas by type (normalized)
   const groupIdeasByType = (ideas: GeneratedIdea[]) => {
+    const normalize = (t?: string) => {
+      const n = (t || 'INFORMATION').toString().trim().toUpperCase().replace(/[_-]/g, ' ');
+      return ['INFORMATION', 'DID YOU KNOW', 'QUIZ'].includes(n) ? n : 'INFORMATION';
+    };
     const grouped: { [key: string]: GeneratedIdea[] } = {};
     ideas.forEach(idea => {
-      const type = idea.type || 'INFORMATION';
-      if (!grouped[type]) {
-        grouped[type] = [];
-      }
-      grouped[type].push(idea);
+      const key = normalize(idea.type);
+      if (!grouped[key]) grouped[key] = [];
+      // ensure the idea carries normalized type for consistent rendering
+      grouped[key].push({ ...idea, type: key });
     });
     return grouped;
   };
