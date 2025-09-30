@@ -132,15 +132,48 @@ const KairaCalendarThemes = () => {
     return validDays.includes(day.toLowerCase());
   };
 
-  // Normalizes various shapes into GeneratedIdea[]
-  const mapNormalized = (items: any[]): GeneratedIdea[] => {
-    const coerce = (v: any, fallback: string) => {
-      if (v === null || v === undefined) return fallback;
-      if (typeof v === 'string') return v;
-      if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-      try { return JSON.stringify(v); } catch { return fallback; }
+  // Smart string extraction - NEVER use JSON.stringify on objects
+  const getString = (v: any, fallback: string): string => {
+    if (v === null || v === undefined) return fallback;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (typeof v === 'object') {
+      // Try to extract meaningful text from object properties
+      return v.text || v.value || v.title || v.name || fallback;
+    }
+    return fallback;
+  };
+
+  // Normalize and map type synonyms
+  const normalizeType = (raw: any): string => {
+    // Try multiple keys
+    const typeValue = raw?.type || raw?.category || raw?.ideaType || raw?.label || raw?.kind || 'INFORMATION';
+    const normalized = getString(typeValue, 'INFORMATION')
+      .trim()
+      .toUpperCase()
+      .replace(/[_-]/g, ' ');
+
+    // Map synonyms
+    const synonymMap: { [key: string]: string } = {
+      'DYK': 'DID YOU KNOW',
+      'DIDYOUKNOW': 'DID YOU KNOW',
+      'DID YOU KNOW': 'DID YOU KNOW',
+      'FACT': 'DID YOU KNOW',
+      'FACTS': 'DID YOU KNOW',
+      'TRIVIA': 'QUIZ',
+      'QUIZ QUESTION': 'QUIZ',
+      'QUIZ': 'QUIZ',
+      'INFORMATION': 'INFORMATION',
+      'INFO': 'INFORMATION',
     };
 
+    const mapped = synonymMap[normalized] || 'INFORMATION';
+    console.log(`🏷️ Type mapping: raw="${typeValue}" → normalized="${normalized}" → final="${mapped}"`);
+    return mapped;
+  };
+
+  // Normalizes various shapes into GeneratedIdea[]
+  const mapNormalized = (items: any[]): GeneratedIdea[] => {
     const result = items.map((raw: any, index: number) => {
       let obj: any = raw;
       if (typeof raw === 'string') {
@@ -150,18 +183,13 @@ const KairaCalendarThemes = () => {
         } catch {}
       }
 
-      const rawType = obj?.type;
-      const typeRaw = coerce(rawType, 'INFORMATION').trim().toUpperCase().replace(/[_-]/g, ' ');
-      const type = ['INFORMATION', 'DID YOU KNOW', 'QUIZ'].includes(typeRaw) ? typeRaw : 'INFORMATION';
-
-      console.log(`🏷️ Idea ${index}: raw type="${rawType}" → normalized="${typeRaw}" → final="${type}"`);
-
-      const summary = coerce(obj?.summary ?? obj?.description, 'No summary available');
-      const description = coerce(obj?.description ?? summary, summary);
+      const type = normalizeType(obj);
+      const summary = getString(obj?.summary ?? obj?.description, 'No summary available');
+      const description = getString(obj?.description ?? summary, summary);
 
       return {
-        id: coerce(obj?.id, `idea-${index}`),
-        title: coerce(obj?.title, `Idea ${index + 1}`),
+        id: getString(obj?.id, `idea-${index}`),
+        title: getString(obj?.title, `Idea ${index + 1}`),
         description,
         summary,
         detailedContent: summary,
@@ -172,12 +200,13 @@ const KairaCalendarThemes = () => {
       };
     });
 
-    // Log the type distribution
+    // Log the type distribution with detailed breakdown
     const typeCounts: { [key: string]: number } = {};
     result.forEach(idea => {
       typeCounts[idea.type] = (typeCounts[idea.type] || 0) + 1;
     });
-    console.log('📊 Type distribution:', typeCounts);
+    console.log('📊 Final Type Distribution:', typeCounts);
+    console.log(`✅ Total ideas: ${result.length} = INFORMATION: ${typeCounts['INFORMATION'] || 0}, DID YOU KNOW: ${typeCounts['DID YOU KNOW'] || 0}, QUIZ: ${typeCounts['QUIZ'] || 0}`);
 
     return result;
   };
@@ -333,16 +362,17 @@ const KairaCalendarThemes = () => {
       return null;
     };
 
-    const extracted = tryExtractArray(responseData);
+    // Try extracting array from cleanedText (not raw responseData)
+    const extracted = tryExtractArray(cleanedText);
     if (extracted && extracted.length) {
       const ideasArr = mapNormalized(extracted);
-      console.log(`✅ Extracted array from text: ${ideasArr.length} ideas`);
+      console.log(`✅ Extracted array from cleanedText: ${ideasArr.length} ideas`);
       return ideasArr;
     }
 
-    console.warn('⚠️ Could not directly detect array. Falling back to robust parser.');
+    console.warn('⚠️ NO JSON ARRAY FOUND - Falling back to text parser (THIS SHOULD RARELY HAPPEN)');
     const fallback = parseIdeas(responseData, normalizedDay);
-    console.log(`✅ Fallback parser produced ${fallback.length} ideas`);
+    console.log(`✅ Text parser produced ${fallback.length} ideas`);
     return fallback;
   };
 
@@ -879,18 +909,36 @@ const KairaCalendarThemes = () => {
     navigate('/kaira-script');
   };
 
-  // Group ideas by type (normalized for grouping only; do not mutate original idea.type)
+  // Group ideas by type using same normalization logic
   const groupIdeasByType = (ideas: GeneratedIdea[]) => {
     const normalize = (t?: string) => {
-      const n = (t || 'INFORMATION').toString().trim().toUpperCase().replace(/[_-]/g, ' ');
-      return ['INFORMATION', 'DID YOU KNOW', 'QUIZ'].includes(n) ? n : 'INFORMATION';
+      const raw = (t || 'INFORMATION').toString().trim().toUpperCase().replace(/[_-]/g, ' ');
+      
+      // Apply same synonym mapping as normalizeType
+      const synonymMap: { [key: string]: string } = {
+        'DYK': 'DID YOU KNOW',
+        'DIDYOUKNOW': 'DID YOU KNOW',
+        'DID YOU KNOW': 'DID YOU KNOW',
+        'FACT': 'DID YOU KNOW',
+        'FACTS': 'DID YOU KNOW',
+        'TRIVIA': 'QUIZ',
+        'QUIZ QUESTION': 'QUIZ',
+        'QUIZ': 'QUIZ',
+        'INFORMATION': 'INFORMATION',
+        'INFO': 'INFORMATION',
+      };
+      
+      return synonymMap[raw] || 'INFORMATION';
     };
+    
     const grouped: { [key: string]: GeneratedIdea[] } = {};
     ideas.forEach(idea => {
       const key = normalize(idea.type);
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(idea);
     });
+    
+    console.log('🎨 Grouped ideas by type:', Object.keys(grouped).map(k => `${k}: ${grouped[k].length}`).join(', '));
     return grouped;
   };
 
