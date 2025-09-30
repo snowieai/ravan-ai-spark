@@ -188,7 +188,7 @@ const KairaCalendarThemes = () => {
       const type = normalizeType(obj);
       const summary = getString(obj?.summary ?? obj?.description, 'No summary available');
       const description = getString(obj?.description ?? summary, summary);
-      const sourceUrl = getString(obj?.sourceUrl ?? obj?.source ?? obj?.link ?? obj?.url, '');
+      const sourceUrl = getString(obj?.source_url ?? obj?.sourceUrl ?? obj?.sourceURL ?? obj?.source_link ?? obj?.sourceLink ?? obj?.source ?? obj?.link ?? obj?.url, '');
 
       return {
         id: getString(obj?.id, `idea-${index}`),
@@ -968,6 +968,11 @@ const KairaCalendarThemes = () => {
 
   // Group ideas by type using same normalization logic
   const groupIdeasByType = (ideas: GeneratedIdea[]) => {
+    // For Wednesday Real Estate News, don't group by type
+    if (selectedTheme === 'Real Estate News') {
+      console.log(`[Wednesday] Skipping type grouping. Total ideas: ${ideas.length}, With source: ${ideas.filter(i => i.sourceUrl).length}`);
+      return { 'All Ideas': ideas };
+    }
     const normalize = (t?: string) => {
       const raw = (t || 'INFORMATION').toString().trim().toUpperCase().replace(/[_-]/g, ' ');
       
@@ -1200,18 +1205,22 @@ const KairaCalendarThemes = () => {
                       const config = getTypeConfig(type);
                       const TypeIcon = config.icon;
 
+                      const isWednesdayNews = selectedTheme === 'Real Estate News';
+                      
                       return (
                         <div key={type} className="space-y-4">
-                          {/* Category Header */}
-                          <div className={`flex items-center gap-3 p-4 ${config.bgColor} rounded-xl border ${config.borderColor}`}>
-                            <TypeIcon className={`w-6 h-6 ${config.textColor}`} />
-                            <h3 className={`text-xl font-bold ${config.textColor}`}>
-                              {type}
-                            </h3>
-                            <Badge variant="secondary" className="ml-auto">
-                              {typeIdeas.length} {typeIdeas.length === 1 ? 'Idea' : 'Ideas'}
-                            </Badge>
-                          </div>
+                          {/* Category Header - Hidden for Wednesday Real Estate News */}
+                          {!isWednesdayNews && (
+                            <div className={`flex items-center gap-3 p-4 ${config.bgColor} rounded-xl border ${config.borderColor}`}>
+                              <TypeIcon className={`w-6 h-6 ${config.textColor}`} />
+                              <h3 className={`text-xl font-bold ${config.textColor}`}>
+                                {type}
+                              </h3>
+                              <Badge variant="secondary" className="ml-auto">
+                                {typeIdeas.length} {typeIdeas.length === 1 ? 'Idea' : 'Ideas'}
+                              </Badge>
+                            </div>
+                          )}
 
                           {/* Ideas Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1219,16 +1228,20 @@ const KairaCalendarThemes = () => {
                               <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
                                 <CardHeader className="pb-3">
                                   <div className="flex items-start justify-between gap-2 mb-2">
-                                    {selectedTheme === 'Real Estate News' && idea.sourceUrl ? (
-                                      <a 
-                                        href={idea.sourceUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                                      >
-                                        <ExternalLink className="w-3.5 h-3.5" />
-                                        Source URL
-                                      </a>
+                                    {selectedTheme === 'Real Estate News' ? (
+                                      idea.sourceUrl ? (
+                                        <a 
+                                          href={idea.sourceUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                        >
+                                          <ExternalLink className="w-3.5 h-3.5" />
+                                          Source URL
+                                        </a>
+                                      ) : (
+                                        <span className="text-xs text-gray-400 italic">Source not provided</span>
+                                      )
                                     ) : (
                                       <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
                                         {type}
