@@ -1197,10 +1197,14 @@ const KairaCalendarThemes = () => {
               <div className="space-y-10">
                 {(() => {
                   const grouped = groupIdeasByType(ideas);
-                  const orderedTypes = ['INFORMATION', 'DID YOU KNOW', 'QUIZ'] as const;
-                  return orderedTypes
-                    .filter((t) => grouped[t] && grouped[t].length)
-                    .map((type) => {
+                  const isWednesdayNews = selectedTheme === 'Real Estate News';
+                  
+                  // For Wednesday, show all ideas without type filtering
+                  const typesToDisplay = isWednesdayNews 
+                    ? Object.keys(grouped)
+                    : (['INFORMATION', 'DID YOU KNOW', 'QUIZ'] as const).filter((t) => grouped[t] && grouped[t].length);
+                  
+                  return typesToDisplay.map((type) => {
                       const typeIdeas = grouped[type]!;
                       const config = getTypeConfig(type);
                       const TypeIcon = config.icon;
