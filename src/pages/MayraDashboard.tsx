@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Video, Home, LogOut } from 'lucide-react';
+import { Lightbulb, Video, Home, LogOut, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -130,6 +130,14 @@ const MayraDashboard = () => {
                   >
                     <Lightbulb className="w-5 h-5 mr-2" />
                     Generate Ideas
+                  </Button>
+
+                  <Button
+                    onClick={() => handleNavigation('/mayra-calendar')}
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+                  >
+                    <Calendar className="w-5 h-5 mr-2" />
+                    Content Calendar
                   </Button>
                   
                   <Button

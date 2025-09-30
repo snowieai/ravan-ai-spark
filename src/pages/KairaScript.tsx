@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Script {
   label: string;
@@ -31,6 +32,14 @@ const KairaScript = () => {
   const [isManualEdit, setIsManualEdit] = useState(false);
   const [manualEditContent, setManualEditContent] = useState('');
   const [isRefining, setIsRefining] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [calendarFormData, setCalendarFormData] = useState({
+    scheduled_date: '',
+    priority: 1,
+    content_type: 'reel' as 'reel' | 'story' | 'carousel',
+    notes: '',
+    inspiration_links: ''
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -174,26 +183,39 @@ const KairaScript = () => {
   const handleSaveAndContinue = async () => {
     if (!selectedScript) return;
 
+    if (!calendarFormData.scheduled_date.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Scheduled date is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('content_calendar')
         .insert({
           topic: topic,
           script_content: selectedScript.content,
-          scheduled_date: new Date().toISOString().split('T')[0],
-          status: 'script_ready',
-          priority: 2,
-          content_source: 'generated',
-          category: 'Entertainment'
+          scheduled_date: calendarFormData.scheduled_date,
+          status: 'pending_approval',
+          priority: calendarFormData.priority,
+          content_type: calendarFormData.content_type,
+          notes: calendarFormData.notes,
+          inspiration_links: calendarFormData.inspiration_links,
+          category: 'Real Estate',
+          content_source: 'generated'
         });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Script saved to content calendar",
+        description: "Script sent for approval",
       });
 
+      setShowSaveDialog(false);
       navigate('/kaira-calendar');
     } catch (error) {
       console.error('Error saving script:', error);
@@ -351,19 +373,115 @@ const KairaScript = () => {
           <div className="max-w-6xl mx-auto mt-12 px-4 sm:px-0 animate-fade-in">
             <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-orange-100">
               <p className="text-gray-700 text-lg mb-6">
-                Script Selected! Click below to save and proceed.
+                Script Selected! Click below to save to your content calendar.
               </p>
               <Button
-                onClick={handleSaveAndContinue}
+                onClick={() => setShowSaveDialog(true)}
                 size="lg"
                 className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-16 py-7 text-xl rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 border-0 hover:scale-105"
               >
                 <Check className="w-7 h-7 mr-3" />
-                Save & Continue
+                Save to Content Calendar
               </Button>
             </div>
           </div>
         )}
+
+        {/* Save to Calendar Dialog */}
+        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Save to Content Calendar</DialogTitle>
+              <DialogDescription>
+                Schedule this script and add additional details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Topic</Label>
+                <Input value={topic} disabled className="bg-gray-50" />
+              </div>
+              
+              <div>
+                <Label htmlFor="scheduled_date">Scheduled Date *</Label>
+                <Input
+                  id="scheduled_date"
+                  type="date"
+                  value={calendarFormData.scheduled_date}
+                  onChange={(e) => setCalendarFormData({...calendarFormData, scheduled_date: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="content_type">Content Type</Label>
+                <Select
+                  value={calendarFormData.content_type}
+                  onValueChange={(value: 'reel' | 'story' | 'carousel') => 
+                    setCalendarFormData({...calendarFormData, content_type: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reel">🎬 Reel</SelectItem>
+                    <SelectItem value="story">📸 Story</SelectItem>
+                    <SelectItem value="carousel">🖼️ Carousel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select
+                  value={calendarFormData.priority.toString()}
+                  onValueChange={(value) => 
+                    setCalendarFormData({...calendarFormData, priority: parseInt(value)})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">🔴 High Priority</SelectItem>
+                    <SelectItem value="2">🟡 Medium Priority</SelectItem>
+                    <SelectItem value="3">🟢 Low Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={calendarFormData.notes}
+                  onChange={(e) => setCalendarFormData({...calendarFormData, notes: e.target.value})}
+                  placeholder="Additional notes..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="inspiration_links">Inspiration Links</Label>
+                <Textarea
+                  id="inspiration_links"
+                  value={calendarFormData.inspiration_links}
+                  onChange={(e) => setCalendarFormData({...calendarFormData, inspiration_links: e.target.value})}
+                  placeholder="Add links for inspiration..."
+                  rows={2}
+                />
+              </div>
+
+              <Button 
+                onClick={handleSaveAndContinue}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white py-6 text-lg"
+              >
+                Send for Approval
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={editingScriptIndex !== null} onOpenChange={() => setEditingScriptIndex(null)}>
