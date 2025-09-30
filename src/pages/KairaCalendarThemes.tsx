@@ -210,12 +210,12 @@ const KairaCalendarThemes = () => {
       console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
     }
     
-    // Use universal parser for all formats
-    console.log(`🔄 Using universal parser for ${normalizedDay}`);
-    const ideas = parseUnstructuredText(contentToParse, normalizedDay);
+    // Use robust parser that handles JSON arrays and text
+    console.log(`🔄 Parsing response content with parseIdeas for ${normalizedDay}`);
+    const ideas = parseIdeas(contentToParse, normalizedDay);
     
     if (ideas.length === 0) {
-      console.log(`⚠️ Universal parser returned no ideas for ${normalizedDay}, using fallback`);
+      console.log(`⚠️ Parser returned no ideas for ${normalizedDay}, using fallback`);
       const themeData = themeDays.find(td => td.day.toLowerCase() === normalizedDay);
       return generateFallbackIdeas(normalizedDay, themeData?.theme || normalizedDay);
     }
