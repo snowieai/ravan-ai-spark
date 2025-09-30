@@ -317,27 +317,45 @@ const KairaCalendarThemes = () => {
       return ideasArr;
     }
 
-    // Common wrapper shapes
-    if (parsed && typeof parsed === 'object') {
-      if (Array.isArray((parsed as any).output)) {
-        const ideasArr = mapNormalized((parsed as any).output);
-        console.log(`✅ Using output array: ${ideasArr.length} ideas`);
+    // Check if it's a SINGLE OBJECT that looks like an idea
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const hasIdField = 'id' in parsed || 'recordId' in parsed || 'rec' in parsed;
+      const hasContentFields = 'title' in parsed || 'summary' in parsed || 'description' in parsed;
+      const hasTypeField = 'type' in parsed || 'category' in parsed;
+      
+      if (hasIdField && hasContentFields) {
+        console.log('✅✅✅ SUCCESS: Found single idea object, wrapping in array');
+        const ideasArr = mapNormalized([parsed]);
+        console.log(`✅ Mapped to ${ideasArr.length} ideas - RETURNING WITHOUT parseIdeas`);
         return ideasArr;
       }
-      if (typeof (parsed as any).output === 'string') {
-        try {
-          const outParsed = JSON.parse((parsed as any).output);
-          if (Array.isArray(outParsed)) {
-            const ideasArr = mapNormalized(outParsed);
-            console.log(`✅ Parsed string output array: ${ideasArr.length} ideas`);
-            return ideasArr;
-          }
-        } catch {}
-      }
-      if (Array.isArray((parsed as any).data)) {
-        const ideasArr = mapNormalized((parsed as any).data);
-        console.log(`✅ Using data array: ${ideasArr.length} ideas`);
-        return ideasArr;
+    }
+
+    // Check for various wrapper keys
+    const wrapperKeys = ['ideas', 'records', 'data', 'results', 'items', 'payload', 'output'];
+    for (const key of wrapperKeys) {
+      if (parsed?.[key]) {
+        const inner = parsed[key];
+        console.log(`🔍 Found wrapper key "${key}" with type:`, typeof inner);
+        
+        // Handle stringified array
+        if (typeof inner === 'string') {
+          try {
+            const innerParsed = JSON.parse(inner);
+            if (Array.isArray(innerParsed)) {
+              console.log(`✅ Unwrapped stringified array from key "${key}": ${innerParsed.length} items`);
+              const ideasArr = mapNormalized(innerParsed);
+              return ideasArr;
+            }
+          } catch {}
+        }
+        
+        // Handle direct array
+        if (Array.isArray(inner)) {
+          console.log(`✅ Found array in key "${key}": ${inner.length} items`);
+          const ideasArr = mapNormalized(inner);
+          return ideasArr;
+        }
       }
     }
 
