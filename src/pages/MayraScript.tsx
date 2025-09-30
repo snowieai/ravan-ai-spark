@@ -287,7 +287,7 @@ const MayraScript = () => {
       setIsRefining(true);
       try {
         const currentScript = editingScript === 'A' ? scriptData.scriptA : scriptData.scriptB;
-        const url = `https://n8n.srv905291.hstgr.cloud/webhook/4e4b18c1-3aa4-4dce-905b-c3892dc2c531?script=${encodeURIComponent(currentScript)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(selectedIdea)}`;
+        const url = `https://n8n.srv905291.hstgr.cloud/webhook/5aa1c5b5-da7e-4720-b862-c858abf81951?script=${encodeURIComponent(currentScript)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(selectedIdea)}`;
         
         const response = await fetch(url, { method: 'GET' });
         const data = await response.json();

@@ -128,7 +128,7 @@ const KairaScript = () => {
       setIsRefining(true);
       try {
         const currentScript = scriptData.scripts[editingScriptIndex];
-        const url = `https://n8n.srv905291.hstgr.cloud/webhook/4e4b18c1-3aa4-4dce-905b-c3892dc2c531?script=${encodeURIComponent(currentScript.content)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(topic)}`;
+        const url = `https://n8n.srv905291.hstgr.cloud/webhook/5aa1c5b5-da7e-4720-b862-c858abf81951?script=${encodeURIComponent(currentScript.content)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(topic)}`;
         
         const response = await fetch(url, { method: 'GET' });
         const data = await response.json();
