@@ -4,8 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, ArrowRight, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
+import { FileText, Loader2, Sparkles, ArrowLeft, Edit3, Check, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 
 interface Script {
   label: string;
@@ -21,6 +24,12 @@ const Script = () => {
   const [topic, setTopic] = useState('');
   const [scriptData, setScriptData] = useState<ScriptResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedScript, setSelectedScript] = useState<Script | null>(null);
+  const [editingScriptIndex, setEditingScriptIndex] = useState<number | null>(null);
+  const [editInstruction, setEditInstruction] = useState('');
+  const [isManualEdit, setIsManualEdit] = useState(false);
+  const [manualEditContent, setManualEditContent] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,11 +124,109 @@ const Script = () => {
     }
   };
 
-  const selectScript = () => {
+  const handleUseThis = (script: Script) => {
+    setSelectedScript(script);
     toast({
-      title: "Coming Soon! 🎬",
-      description: "Video generation will be available soon for you. Stay tuned!",
+      title: "Script Selected!",
+      description: "Click 'Save & Continue' when you're ready to proceed.",
     });
+  };
+
+  const handleEditThis = (script: Script, index: number) => {
+    setEditingScriptIndex(index);
+    setManualEditContent(script.content);
+    setEditInstruction('');
+    setIsManualEdit(false);
+  };
+
+  const handleApplyChanges = async () => {
+    if (editingScriptIndex === null || !scriptData) return;
+
+    if (isManualEdit) {
+      // Apply manual edits
+      const updatedScripts = [...scriptData.scripts];
+      updatedScripts[editingScriptIndex] = {
+        ...updatedScripts[editingScriptIndex],
+        content: manualEditContent
+      };
+      setScriptData({ ...scriptData, scripts: updatedScripts });
+      setEditingScriptIndex(null);
+      toast({
+        title: "Manual Edit Applied!",
+        description: "Your changes have been saved.",
+      });
+    } else {
+      // AI refinement
+      if (!editInstruction.trim()) {
+        toast({
+          title: "Instruction Required",
+          description: "Please provide instructions for refining the script.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsRefining(true);
+      try {
+        const currentScript = scriptData.scripts[editingScriptIndex];
+        const url = `https://n8n.srv905291.hstgr.cloud/webhook/5aa1c5b5-da7e-4720-b862-c858abf81951?script=${encodeURIComponent(currentScript.content)}&instruction=${encodeURIComponent(editInstruction)}&topic=${encodeURIComponent(topic)}`;
+        
+        const response = await fetch(url, { method: 'GET' });
+        const data = await response.json();
+        
+        let refinedScript = '';
+        if (data.output && typeof data.output === 'string') {
+          refinedScript = data.output;
+        } else if (data.script) {
+          refinedScript = data.script;
+        } else if (typeof data === 'string') {
+          refinedScript = data;
+        } else {
+          throw new Error('Invalid response format');
+        }
+
+        const updatedScripts = [...scriptData.scripts];
+        updatedScripts[editingScriptIndex] = {
+          ...updatedScripts[editingScriptIndex],
+          content: refinedScript,
+          label: `${updatedScripts[editingScriptIndex].label} (Edited)`
+        };
+        setScriptData({ ...scriptData, scripts: updatedScripts });
+        setEditingScriptIndex(null);
+        setEditInstruction('');
+        
+        toast({
+          title: "Script Refined!",
+          description: "AI has updated your script based on your instructions.",
+        });
+      } catch (error) {
+        console.error('Error refining script:', error);
+        toast({
+          title: "Error",
+          description: "Failed to refine script. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsRefining(false);
+      }
+    }
+  };
+
+  const handleSaveAndContinue = () => {
+    if (!selectedScript) return;
+
+    localStorage.setItem('finalizedScript', JSON.stringify({
+      topic: topic,
+      script: selectedScript
+    }));
+
+    toast({
+      title: "Script Saved!",
+      description: "Your script has been saved successfully.",
+    });
+
+    // Navigate or perform next action
+    navigate('/aisha-dashboard');
   };
 
   return (
@@ -237,12 +344,19 @@ const Script = () => {
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
-                  className="bg-white/80 backdrop-blur-sm border-blue-100 hover:shadow-xl transition-all duration-300 h-full"
+                  className={`bg-white/80 backdrop-blur-sm border-blue-100 transition-all duration-300 h-full cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                    selectedScript?.label === script.label ? 'ring-2 ring-blue-500 border-blue-300' : ''
+                  }`}
                 >
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center">
-                      <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-500 flex-shrink-0" />
-                      <span className="line-clamp-2">{script.label}</span>
+                    <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center justify-between">
+                      <div className="flex items-center flex-1 min-w-0">
+                        <FileText className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-500 flex-shrink-0" />
+                        <span className="line-clamp-2">{script.label}</span>
+                      </div>
+                      {selectedScript?.label === script.label && (
+                        <Badge className="bg-blue-500 text-white ml-2 flex-shrink-0">Selected</Badge>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-6 pt-0 flex flex-col h-full">
@@ -251,19 +365,143 @@ const Script = () => {
                         {script.content}
                       </p>
                     </div>
-                    <Button
-                      onClick={selectScript}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white border-0 mt-auto rounded-full py-3 px-4 text-sm sm:text-base font-medium"
-                    >
-                      Use this script to generate video
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                      <Button
+                        onClick={() => handleUseThis(script)}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Use This
+                      </Button>
+                      <Button
+                        onClick={() => handleEditThis(script, index)}
+                        variant="outline"
+                        className="flex-1 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit This
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
+
+            {/* Save & Continue Button */}
+            {selectedScript && (
+              <div className="mt-8 text-center animate-fade-in">
+                <Button
+                  onClick={handleSaveAndContinue}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-12 py-6 text-lg rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 border-0"
+                >
+                  <Check className="w-6 h-6 mr-2" />
+                  Save & Continue
+                </Button>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={editingScriptIndex !== null} onOpenChange={() => setEditingScriptIndex(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-blue-600">Edit Script</DialogTitle>
+              <DialogDescription>
+                {isManualEdit ? 'Make direct changes to your script' : 'Provide instructions for AI to refine your script'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {editingScriptIndex !== null && scriptData && (
+              <div className="space-y-4 mt-4">
+                {/* Current Script Display */}
+                <div>
+                  <Label className="text-base font-semibold mb-2 block">Current Script</Label>
+                  <div className="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-200">
+                    <p className="text-gray-700 whitespace-pre-wrap text-sm">
+                      {scriptData.scripts[editingScriptIndex].content}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Edit Mode Toggle */}
+                <div className="flex items-center justify-center gap-4 py-2">
+                  <Button
+                    variant={!isManualEdit ? "default" : "outline"}
+                    onClick={() => setIsManualEdit(false)}
+                    className={!isManualEdit ? "bg-blue-500 hover:bg-blue-600" : ""}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Prompt
+                  </Button>
+                  <Button
+                    variant={isManualEdit ? "default" : "outline"}
+                    onClick={() => setIsManualEdit(true)}
+                    className={isManualEdit ? "bg-blue-500 hover:bg-blue-600" : ""}
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Manual Edit
+                  </Button>
+                </div>
+
+                {/* Edit Area */}
+                {isManualEdit ? (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">Edit Script Directly</Label>
+                    <Textarea
+                      value={manualEditContent}
+                      onChange={(e) => setManualEditContent(e.target.value)}
+                      placeholder="Edit your script here..."
+                      className="min-h-[300px] text-base"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">AI Instructions</Label>
+                    <Textarea
+                      value={editInstruction}
+                      onChange={(e) => setEditInstruction(e.target.value)}
+                      placeholder="E.g., Make this funnier, Add more statistics, Make it more professional..."
+                      className="min-h-[150px] text-base"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Tell AI how you want to improve the script
+                    </p>
+                  </div>
+                )}
+
+                {/* Apply Button */}
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditingScriptIndex(null)}
+                    disabled={isRefining}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleApplyChanges}
+                    disabled={isRefining || (!isManualEdit && !editInstruction.trim())}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    {isRefining ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Refining...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Apply Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {!scriptData && !isLoading && (
           <div className="text-center text-gray-500">
