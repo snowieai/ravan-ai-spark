@@ -132,6 +132,43 @@ const KairaCalendarThemes = () => {
     return validDays.includes(day.toLowerCase());
   };
 
+  // Normalizes various shapes into GeneratedIdea[]
+  const mapNormalized = (items: any[]): GeneratedIdea[] => {
+    const coerce = (v: any, fallback: string) => {
+      if (v === null || v === undefined) return fallback;
+      if (typeof v === 'string') return v;
+      if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+      try { return JSON.stringify(v); } catch { return fallback; }
+    };
+
+    return items.map((raw: any, index: number) => {
+      let obj: any = raw;
+      if (typeof raw === 'string') {
+        try {
+          const maybe = JSON.parse(raw);
+          if (maybe && typeof maybe === 'object') obj = maybe;
+        } catch {}
+      }
+
+      const typeRaw = coerce(obj?.type, 'INFORMATION').trim().toUpperCase().replace(/[_-]/g, ' ');
+      const type = ['INFORMATION', 'DID YOU KNOW', 'QUIZ'].includes(typeRaw) ? typeRaw : 'INFORMATION';
+
+      const summary = coerce(obj?.summary ?? obj?.description, 'No summary available');
+      const description = coerce(obj?.description ?? summary, summary);
+
+      return {
+        id: coerce(obj?.id, `idea-${index}`),
+        title: coerce(obj?.title, `Idea ${index + 1}`),
+        description,
+        summary,
+        detailedContent: summary,
+        videoStyle: 'Professional',
+        duration: '60-90 seconds',
+        targetAudience: 'Real Estate Professionals & Clients',
+        type,
+      };
+    });
+  };
   // Send webhook notification and generate ideas - SINGLE REQUEST ONLY
   const sendDayWebhook = async (day: string) => {
     // Validate day parameter
@@ -194,59 +231,46 @@ const KairaCalendarThemes = () => {
       throw new Error('Empty response from webhook');
     }
     
-    // Enhanced JSON parsing with detailed logging
-    let contentToParse = responseData;
+    // Strict parsing: expect a JSON array or common wrapper shapes
+    let parsed: any = null;
     try {
-      const jsonResponse = JSON.parse(responseData);
-      console.log(`📊 Parsed JSON structure for ${normalizedDay}:`, Array.isArray(jsonResponse) ? 'array' : typeof jsonResponse, Array.isArray(jsonResponse) ? `length=${jsonResponse.length}` : Object.keys(jsonResponse));
-      
-      // If webhook already returns a JSON array -> map directly and return
-      if (Array.isArray(jsonResponse)) {
-        const directIdeas = jsonResponse.map((item: any, index: number) => ({
-          id: item.id || `idea-${index}`,
-          title: item.title || `Idea ${index + 1}`,
-          description: item.summary || item.description || 'No description available',
-          summary: item.summary || item.description || 'No summary available',
-          detailedContent: item.summary || item.description || 'No detailed content available',
-          videoStyle: 'Professional',
-          duration: '60-90 seconds',
-          targetAudience: 'Real Estate Professionals & Clients',
-          type: item.type || 'INFORMATION',
-        }));
-        console.log(`✅ Direct array from webhook for ${normalizedDay}: ${directIdeas.length} ideas`);
-        return directIdeas;
-      }
-      
-      if (jsonResponse.output) {
-        const out = jsonResponse.output;
-        if (Array.isArray(out)) {
-          const outputIdeas = out.map((item: any, index: number) => ({
-            id: item.id || `idea-${index}`,
-            title: item.title || `Idea ${index + 1}`,
-            description: item.summary || item.description || 'No description available',
-            summary: item.summary || item.description || 'No summary available',
-            detailedContent: item.summary || item.description || 'No detailed content available',
-            videoStyle: 'Professional',
-            duration: '60-90 seconds',
-            targetAudience: 'Real Estate Professionals & Clients',
-            type: item.type || 'INFORMATION',
-          }));
-          console.log(`✅ Direct array in 'output' for ${normalizedDay}: ${outputIdeas.length} ideas`);
-          return outputIdeas;
-        }
-        contentToParse = typeof out === 'string' ? out : JSON.stringify(out);
-        const preview = typeof out === 'string' ? out.substring(0, 300) : JSON.stringify(out).substring(0, 300);
-        console.log(`📊 Extracted output field for ${normalizedDay}:`, preview + '...');
-      } else {
-        // IMPORTANT: If no 'output' field, use the parsed JSON directly (as string)
-        contentToParse = JSON.stringify(jsonResponse);
-        console.log(`📝 No 'output' field found, using full JSON response for ${normalizedDay} (as string)`);
-      }
-    } catch (jsonError) {
-      console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
+      parsed = JSON.parse(responseData);
+    } catch {
+      parsed = null;
     }
-    
-    // Extra-safe: try to extract a JSON array from the raw text directly
+
+    // Direct array from webhook
+    if (Array.isArray(parsed)) {
+      const ideasArr = mapNormalized(parsed);
+      console.log(`✅ Webhook returned array: ${ideasArr.length} ideas`);
+      return ideasArr;
+    }
+
+    // Common wrapper shapes
+    if (parsed && typeof parsed === 'object') {
+      if (Array.isArray(parsed.output)) {
+        const ideasArr = mapNormalized(parsed.output);
+        console.log(`✅ Using output array: ${ideasArr.length} ideas`);
+        return ideasArr;
+      }
+      if (typeof parsed.output === 'string') {
+        try {
+          const outParsed = JSON.parse(parsed.output);
+          if (Array.isArray(outParsed)) {
+            const ideasArr = mapNormalized(outParsed);
+            console.log(`✅ Parsed string output array: ${ideasArr.length} ideas`);
+            return ideasArr;
+          }
+        } catch {}
+      }
+      if (Array.isArray((parsed as any).data)) {
+        const ideasArr = mapNormalized((parsed as any).data);
+        console.log(`✅ Using data array: ${ideasArr.length} ideas`);
+        return ideasArr;
+      }
+    }
+
+    // Extract a JSON array from raw text
     const tryExtractArray = (text: string): any[] | null => {
       if (!text) return null;
       const start = text.indexOf('[');
@@ -261,35 +285,15 @@ const KairaCalendarThemes = () => {
       }
     };
 
-    const extracted = tryExtractArray(responseData) || tryExtractArray(contentToParse);
+    const extracted = tryExtractArray(responseData);
     if (extracted && extracted.length) {
-      const mapped = extracted.map((item: any, index: number) => ({
-        id: item.id || `idea-${index}`,
-        title: item.title || `Idea ${index + 1}`,
-        description: item.summary || item.description || 'No description available',
-        summary: item.summary || item.description || 'No summary available',
-        detailedContent: item.summary || item.description || 'No detailed content available',
-        videoStyle: 'Professional',
-        duration: '60-90 seconds',
-        targetAudience: 'Real Estate Professionals & Clients',
-        type: item.type || 'INFORMATION',
-      }));
-      console.log(`✅ Extracted array from raw text for ${normalizedDay}: ${mapped.length} ideas`);
-      return mapped;
+      const ideasArr = mapNormalized(extracted);
+      console.log(`✅ Extracted array from text: ${ideasArr.length} ideas`);
+      return ideasArr;
     }
-    
-    // Use robust parser that handles JSON arrays and text
-    console.log(`🔄 Parsing response content with parseIdeas for ${normalizedDay}`);
-    const ideas = parseIdeas(contentToParse, normalizedDay);
-    
-    if (ideas.length === 0) {
-      console.log(`⚠️ Parser returned no ideas for ${normalizedDay}, using fallback`);
-      const themeData = themeDays.find(td => td.day.toLowerCase() === normalizedDay);
-      return generateFallbackIdeas(normalizedDay, themeData?.theme || normalizedDay);
-    }
-    
-    console.log(`✅ Successfully parsed ${ideas.length} structured ideas for ${normalizedDay}`);
-    return ideas;
+
+    console.error('❌ Unrecognized webhook format. Expected a JSON array.');
+    throw new Error('Unrecognized webhook format: expected a JSON array');
   };
 
 
