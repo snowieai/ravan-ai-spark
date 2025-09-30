@@ -282,25 +282,38 @@ const KairaCalendarThemes = () => {
     let parsed: any = null;
     try {
       parsed = JSON.parse(cleanedText);
+      console.log('🔍 Initial parse result type:', typeof parsed, 'isArray:', Array.isArray(parsed));
     } catch {
       parsed = null;
+      console.log('❌ Initial JSON.parse failed');
     }
 
-    // If we parsed a string, try unwrapping double-encoded JSON
-    if (typeof parsed === 'string') {
+    // AGGRESSIVE unwrapping: loop up to 3 times to handle multiple layers of string encoding
+    let unwrapAttempts = 0;
+    while (typeof parsed === 'string' && unwrapAttempts < 3) {
+      unwrapAttempts++;
       const inner = parsed.trim();
+      console.log(`🧪 Unwrap attempt ${unwrapAttempts}: string starts with`, inner.substring(0, 50));
+      
       if (inner.startsWith('[') || inner.startsWith('{')) {
         try {
           parsed = JSON.parse(inner);
-          console.log('🧪 Unwrapped double-encoded JSON at top-level');
-        } catch {}
+          console.log(`✅ Unwrapped layer ${unwrapAttempts}: now type`, typeof parsed, 'isArray:', Array.isArray(parsed));
+        } catch (e) {
+          console.log(`❌ Unwrap attempt ${unwrapAttempts} failed:`, e);
+          break;
+        }
+      } else {
+        console.log(`⚠️ String doesn't look like JSON, stopping unwrap`);
+        break;
       }
     }
 
-    // Direct array from webhook
+    // Direct array from webhook - THIS IS THE HAPPY PATH
     if (Array.isArray(parsed)) {
+      console.log(`✅✅✅ SUCCESS: Found clean JSON array with ${parsed.length} items`);
       const ideasArr = mapNormalized(parsed);
-      console.log(`✅ Webhook returned array: ${ideasArr.length} ideas`);
+      console.log(`✅ Mapped to ${ideasArr.length} ideas - RETURNING WITHOUT parseIdeas`);
       return ideasArr;
     }
 
@@ -370,9 +383,19 @@ const KairaCalendarThemes = () => {
       return ideasArr;
     }
 
-    console.warn('⚠️ NO JSON ARRAY FOUND - Falling back to text parser (THIS SHOULD RARELY HAPPEN)');
+    // ONLY fall back to parseIdeas if we truly have no valid JSON
+    if (parsed === null) {
+      console.warn('⚠️⚠️ NO VALID JSON AT ALL - Falling back to text parser');
+      const fallback = parseIdeas(responseData, normalizedDay);
+      console.log(`📝 Text parser produced ${fallback.length} ideas`);
+      return fallback;
+    }
+
+    // If we got here, we have valid JSON but it's not in expected format
+    console.error('❌ Valid JSON but unexpected structure:', typeof parsed, parsed);
+    console.warn('⚠️ Falling back to text parser as last resort');
     const fallback = parseIdeas(responseData, normalizedDay);
-    console.log(`✅ Text parser produced ${fallback.length} ideas`);
+    console.log(`📝 Text parser produced ${fallback.length} ideas`);
     return fallback;
   };
 
