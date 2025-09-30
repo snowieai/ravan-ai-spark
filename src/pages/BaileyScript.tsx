@@ -263,10 +263,34 @@ Drop a 🏠 if you're ready to take action!
     }
 
     try {
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Parse selectedIdea to extract title if it's JSON
+      let topicTitle = selectedIdea;
+      try {
+        const parsed = JSON.parse(selectedIdea);
+        if (parsed.title) {
+          topicTitle = parsed.title;
+        }
+      } catch {
+        // If not JSON, use as-is
+        topicTitle = selectedIdea;
+      }
+
       const { error } = await supabase
         .from('content_calendar')
         .insert({
-          topic: selectedIdea,
+          user_id: user.id,
+          topic: topicTitle,
           script_content: selectedScript.content,
           scheduled_date: calendarFormData.scheduled_date,
           status: 'pending_approval',
