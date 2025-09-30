@@ -19,7 +19,8 @@ import {
   MessageSquare,
   Newspaper,
   Zap,
-  Info
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -42,6 +43,7 @@ interface GeneratedIdea {
   duration: string;
   targetAudience: string;
   type?: string;
+  sourceUrl?: string;
 }
 
 const KairaCalendarThemes = () => {
@@ -186,6 +188,7 @@ const KairaCalendarThemes = () => {
       const type = normalizeType(obj);
       const summary = getString(obj?.summary ?? obj?.description, 'No summary available');
       const description = getString(obj?.description ?? summary, summary);
+      const sourceUrl = getString(obj?.sourceUrl ?? obj?.source ?? obj?.link ?? obj?.url, '');
 
       return {
         id: getString(obj?.id, `idea-${index}`),
@@ -197,6 +200,7 @@ const KairaCalendarThemes = () => {
         duration: '60-90 seconds',
         targetAudience: 'Real Estate Professionals & Clients',
         type,
+        sourceUrl,
       };
     });
 
@@ -1215,9 +1219,21 @@ const KairaCalendarThemes = () => {
                               <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
                                 <CardHeader className="pb-3">
                                   <div className="flex items-start justify-between gap-2 mb-2">
-                                    <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
-                                      {type}
-                                    </Badge>
+                                    {selectedTheme === 'Real Estate News' && idea.sourceUrl ? (
+                                      <a 
+                                        href={idea.sourceUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                      >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        Source URL
+                                      </a>
+                                    ) : (
+                                      <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
+                                        {type}
+                                      </Badge>
+                                    )}
                                   </div>
                                   <CardTitle className="text-gray-800 font-semibold text-lg leading-tight">
                                     {idea.title}
@@ -1290,6 +1306,21 @@ const KairaCalendarThemes = () => {
           
           {expandedIdea && (
             <div className="space-y-6 mt-4">
+              {expandedIdea.sourceUrl && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-semibold text-blue-900 mb-2">Source</h3>
+                  <a 
+                    href={expandedIdea.sourceUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="text-sm break-all">{expandedIdea.sourceUrl}</span>
+                  </a>
+                </div>
+              )}
+              
               <div>
                 <h3 className="text-lg font-semibold text-orange-600 mb-2">Summary</h3>
                 <p className="text-gray-700 leading-relaxed">{expandedIdea.summary}</p>
