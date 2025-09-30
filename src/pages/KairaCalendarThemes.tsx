@@ -198,13 +198,17 @@ const KairaCalendarThemes = () => {
     let contentToParse = responseData;
     try {
       const jsonResponse = JSON.parse(responseData);
-      console.log(`📊 Parsed JSON structure for ${normalizedDay}:`, Object.keys(jsonResponse));
+      console.log(`📊 Parsed JSON structure for ${normalizedDay}:`, Array.isArray(jsonResponse) ? 'array' : typeof jsonResponse, Array.isArray(jsonResponse) ? `length=${jsonResponse.length}` : Object.keys(jsonResponse));
       
       if (jsonResponse.output) {
-        contentToParse = jsonResponse.output;
-        console.log(`📊 Extracted output field for ${normalizedDay}:`, contentToParse.substring(0, 300) + '...');
+        const out = jsonResponse.output;
+        contentToParse = typeof out === 'string' ? out : JSON.stringify(out);
+        const preview = typeof out === 'string' ? out.substring(0, 300) : JSON.stringify(out).substring(0, 300);
+        console.log(`📊 Extracted output field for ${normalizedDay}:`, preview + '...');
       } else {
-        console.log(`📝 No 'output' field found, using full JSON response for ${normalizedDay}`);
+        // IMPORTANT: If no 'output' field, use the parsed JSON directly
+        contentToParse = JSON.stringify(jsonResponse);
+        console.log(`📝 No 'output' field found, using full JSON response for ${normalizedDay} (as string)`);
       }
     } catch (jsonError) {
       console.log(`📝 Response is not JSON for ${normalizedDay}, using as plain text`);
