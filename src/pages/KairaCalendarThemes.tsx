@@ -18,8 +18,10 @@ import {
   RefreshCw,
   MessageSquare,
   Newspaper,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 interface ThemeDay {
@@ -39,6 +41,7 @@ interface GeneratedIdea {
   videoStyle: string;
   duration: string;
   targetAudience: string;
+  type?: string;
 }
 
 const KairaCalendarThemes = () => {
@@ -271,12 +274,13 @@ const KairaCalendarThemes = () => {
         const ideas = parsed.map((idea: any, index: number) => ({
           id: idea.id || `idea-${index}`,
           title: idea.title || `Idea ${index + 1}`,
-          description: idea.description || idea.summary || 'No description available',
+          description: idea.summary || idea.description || 'No description available',
           summary: idea.summary || idea.description || 'No summary available',
-          detailedContent: idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
+          detailedContent: idea.summary || idea.detailedContent || idea.detailed_content || idea.content || 'No detailed content available',
           videoStyle: idea.videoStyle || idea.video_style || 'Professional',
           duration: idea.duration || '60 seconds',
-          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals'
+          targetAudience: idea.targetAudience || idea.target_audience || 'Real estate professionals',
+          type: idea.type || 'INFORMATION'
         }));
         console.log(`📋 Parsed ${ideas.length} structured ideas from array`);
         return ideas;
@@ -639,6 +643,33 @@ const KairaCalendarThemes = () => {
     navigate('/kaira-script');
   };
 
+  // Group ideas by type
+  const groupIdeasByType = (ideas: GeneratedIdea[]) => {
+    const grouped: { [key: string]: GeneratedIdea[] } = {};
+    ideas.forEach(idea => {
+      const type = idea.type || 'INFORMATION';
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(idea);
+    });
+    return grouped;
+  };
+
+  // Get icon and color for type
+  const getTypeConfig = (type: string) => {
+    switch (type) {
+      case 'INFORMATION':
+        return { icon: Info, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200' };
+      case 'DID YOU KNOW':
+        return { icon: Lightbulb, color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-700', borderColor: 'border-purple-200' };
+      case 'QUIZ':
+        return { icon: HelpCircle, color: 'orange', bgColor: 'bg-orange-50', textColor: 'text-orange-700', borderColor: 'border-orange-200' };
+      default:
+        return { icon: Info, color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 relative overflow-hidden">
       {/* Header */}
@@ -808,11 +839,6 @@ const KairaCalendarThemes = () => {
               </div>
             </div>
 
-            {/* Debug Info */}
-            <div className="text-xs text-muted-foreground text-center mb-4 bg-gray-100 p-2 rounded">
-              Debug: ideas.length = {ideas.length}, isLoading = {isLoading.toString()}, selectedTheme = {selectedTheme}
-            </div>
-
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
@@ -820,40 +846,75 @@ const KairaCalendarThemes = () => {
                 <p className="text-sm text-orange-600 mt-2">This may take up to 5 minutes, please be patient!</p>
               </div>
             ) : ideas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ideas.map((idea, index) => (
-                  <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="text-gray-800 font-medium text-lg leading-relaxed">
-                        {idea.title}
-                      </CardTitle>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      <div className="space-y-4">
-                        <Button
-                          onClick={() => setExpandedIdea(idea)}
-                          variant="outline"
-                          className="w-full text-blue-600 border-blue-200 hover:bg-blue-50"
-                        >
-                          View detailed explanation
-                        </Button>
-                        
-                        <Button 
-                          onClick={() => selectIdea(idea)}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium py-3"
-                        >
-                          Select This Idea
-                        </Button>
+              <div className="space-y-10">
+                {Object.entries(groupIdeasByType(ideas)).map(([type, typeIdeas]) => {
+                  const config = getTypeConfig(type);
+                  const TypeIcon = config.icon;
+                  
+                  return (
+                    <div key={type} className="space-y-4">
+                      {/* Category Header */}
+                      <div className={`flex items-center gap-3 p-4 ${config.bgColor} rounded-xl border ${config.borderColor}`}>
+                        <TypeIcon className={`w-6 h-6 ${config.textColor}`} />
+                        <h3 className={`text-xl font-bold ${config.textColor}`}>
+                          {type}
+                        </h3>
+                        <Badge variant="secondary" className="ml-auto">
+                          {typeIdeas.length} {typeIdeas.length === 1 ? 'Idea' : 'Ideas'}
+                        </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+
+                      {/* Ideas Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {typeIdeas.map((idea) => (
+                          <Card key={idea.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/95 backdrop-blur-sm border-gray-200 rounded-2xl">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <Badge variant="outline" className={`${config.textColor} ${config.borderColor}`}>
+                                  {type}
+                                </Badge>
+                              </div>
+                              <CardTitle className="text-gray-800 font-semibold text-lg leading-tight">
+                                {idea.title}
+                              </CardTitle>
+                            </CardHeader>
+                            
+                            <CardContent className="pt-0">
+                              <div className="space-y-3">
+                                <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+                                  {idea.summary}
+                                </p>
+                                
+                                <div className="space-y-2 pt-2">
+                                  <Button
+                                    onClick={() => setExpandedIdea(idea)}
+                                    variant="outline"
+                                    size="sm"
+                                    className={`w-full ${config.textColor} ${config.borderColor} hover:${config.bgColor}`}
+                                  >
+                                    View Details
+                                  </Button>
+                                  
+                                  <Button 
+                                    onClick={() => selectIdea(idea)}
+                                    size="sm"
+                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium"
+                                  >
+                                    Select This Idea
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12">
                 <p className="text-lg text-gray-600">No ideas available to display</p>
-                <p className="text-sm text-gray-500 mt-2">Debug: selectedTheme={selectedTheme}, isLoading={isLoading.toString()}, ideas.length={ideas.length}</p>
               </div>
             )}
           </div>
@@ -864,9 +925,18 @@ const KairaCalendarThemes = () => {
       <Dialog open={!!expandedIdea} onOpenChange={() => setExpandedIdea(null)}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-900">
-              {expandedIdea?.title}
-            </DialogTitle>
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">
+                  {expandedIdea?.title}
+                </DialogTitle>
+                {expandedIdea?.type && (
+                  <Badge variant="outline" className={getTypeConfig(expandedIdea.type).textColor + ' ' + getTypeConfig(expandedIdea.type).borderColor}>
+                    {expandedIdea.type}
+                  </Badge>
+                )}
+              </div>
+            </div>
             <DialogDescription className="text-lg text-gray-600">
               Detailed content breakdown and insights
             </DialogDescription>
