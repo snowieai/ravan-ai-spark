@@ -141,7 +141,7 @@ const KairaCalendarThemes = () => {
       try { return JSON.stringify(v); } catch { return fallback; }
     };
 
-    return items.map((raw: any, index: number) => {
+    const result = items.map((raw: any, index: number) => {
       let obj: any = raw;
       if (typeof raw === 'string') {
         try {
@@ -150,8 +150,11 @@ const KairaCalendarThemes = () => {
         } catch {}
       }
 
-      const typeRaw = coerce(obj?.type, 'INFORMATION').trim().toUpperCase().replace(/[_-]/g, ' ');
+      const rawType = obj?.type;
+      const typeRaw = coerce(rawType, 'INFORMATION').trim().toUpperCase().replace(/[_-]/g, ' ');
       const type = ['INFORMATION', 'DID YOU KNOW', 'QUIZ'].includes(typeRaw) ? typeRaw : 'INFORMATION';
+
+      console.log(`🏷️ Idea ${index}: raw type="${rawType}" → normalized="${typeRaw}" → final="${type}"`);
 
       const summary = coerce(obj?.summary ?? obj?.description, 'No summary available');
       const description = coerce(obj?.description ?? summary, summary);
@@ -168,6 +171,15 @@ const KairaCalendarThemes = () => {
         type,
       };
     });
+
+    // Log the type distribution
+    const typeCounts: { [key: string]: number } = {};
+    result.forEach(idea => {
+      typeCounts[idea.type] = (typeCounts[idea.type] || 0) + 1;
+    });
+    console.log('📊 Type distribution:', typeCounts);
+
+    return result;
   };
   // Send webhook notification and generate ideas - SINGLE REQUEST ONLY
   const sendDayWebhook = async (day: string) => {
