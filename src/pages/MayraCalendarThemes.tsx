@@ -145,7 +145,8 @@ const MayraCalendarThemes = () => {
     }
 
     const responseData = await response.text();
-    console.log(`📥 FULL webhook response:`, responseData);
+    console.log(`📥 FULL webhook response for Mayra:`, responseData);
+    console.log(`📥 Response length:`, responseData.length);
     
     const cleanedText = responseData
       .replace(/^```(?:json)?/i, '')
@@ -153,26 +154,41 @@ const MayraCalendarThemes = () => {
       .replace(/```/g, '')
       .trim();
 
+    console.log(`🧹 Cleaned text (first 500 chars):`, cleanedText.substring(0, 500));
+
     let parsed: any = null;
     try {
       parsed = JSON.parse(cleanedText);
-      console.log('🔍 Initial parse result type:', typeof parsed, 'isArray:', Array.isArray(parsed));
-    } catch {
+      console.log('🔍 Parse SUCCESS! Type:', typeof parsed, 'isArray:', Array.isArray(parsed));
+      if (Array.isArray(parsed)) {
+        console.log('📊 Array length:', parsed.length);
+        if (parsed.length > 0) {
+          console.log('📊 First item:', JSON.stringify(parsed[0]).substring(0, 200));
+        }
+      }
+    } catch (e) {
       parsed = null;
-      console.log('❌ Initial JSON.parse failed');
+      console.error('❌ JSON parse failed:', e);
+      console.log('❌ Failed text sample:', cleanedText.substring(0, 200));
     }
 
     // Extract ideas from the response structure: [{ data: [...] }]
     let ideasArray = [];
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].data) {
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data && Array.isArray(parsed[0].data)) {
       ideasArray = parsed[0].data;
-      console.log('✅ Extracted ideas from response.data:', ideasArray.length);
+      console.log('✅ Extracted ideas from parsed[0].data:', ideasArray.length);
     } else if (Array.isArray(parsed)) {
       ideasArray = parsed;
       console.log('✅ Using direct array:', ideasArray.length);
+    } else {
+      console.error('❌ Could not extract ideas array. Parsed structure:', parsed);
     }
 
-    return ideasArray.map((item: any, index: number) => ({
+    if (ideasArray.length === 0) {
+      console.error('⚠️ NO IDEAS FOUND! Full parsed object:', JSON.stringify(parsed));
+    }
+
+    const mappedIdeas = ideasArray.map((item: any, index: number) => ({
       id: item.id || `mayra-idea-${index}`,
       title: item.title || `Idea ${index + 1}`,
       description: item.summary || 'No description',
@@ -184,6 +200,9 @@ const MayraCalendarThemes = () => {
       type: item.type || 'INFORMATION',
       sourceUrl: item.sourceUrl || item.source_url || ''
     }));
+
+    console.log('🎯 Final mapped ideas count for Mayra:', mappedIdeas.length);
+    return mappedIdeas;
   };
 
   const generateThemedIdeas = async (theme: string, day: string) => {
