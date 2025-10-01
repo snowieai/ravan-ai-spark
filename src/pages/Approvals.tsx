@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,23 +24,37 @@ interface ContentItem {
 
 export default function Approvals() {
   const navigate = useNavigate();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut, loading: authLoading, refreshProfile } = useAuth();
   const [scripts, setScripts] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const deniedToastShown = useRef(false);
+
+  // Refresh profile on mount to ensure latest admin role is loaded
+  useEffect(() => {
+    refreshProfile?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       navigate("/login");
       return;
     }
+
     if (!isAdmin) {
-      toast.error("Access denied. Admin privileges required.");
+      if (!deniedToastShown.current) {
+        toast.error("Access denied. Admin privileges required.");
+        deniedToastShown.current = true;
+      }
       navigate("/influencers");
       return;
     }
+
     fetchScripts();
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, authLoading]);
 
   const fetchScripts = async () => {
     try {
@@ -85,7 +99,7 @@ export default function Approvals() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Script Approval Portal</h1>
-            <Badge variant="secondary">Admin</Badge>
+            {isAdmin && <Badge variant="secondary">Admin</Badge>}
           </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
@@ -95,6 +109,9 @@ export default function Approvals() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {authLoading && (
+          <div className="text-center py-12 text-muted-foreground">Checking permissions...</div>
+        )}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="p-6 text-center">
