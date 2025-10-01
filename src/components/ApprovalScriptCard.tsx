@@ -77,11 +77,15 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
     try {
       setVideoGenerating(true);
 
+      // Generate unique job ID
+      const jobId = `JOB${Date.now()}`;
+
       // Update database with video status and cost
       const { error: updateError } = await supabase
         .from("content_calendar")
         .update({
-          video_status: 'generating',
+          video_status: 'pending',
+          video_job_id: jobId,
           word_count: wordCount,
           video_cost_estimate: estimatedCost,
         })
@@ -89,18 +93,19 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
 
       if (updateError) throw updateError;
 
-      // Call video generation function
-      const { data, error } = await supabase.functions.invoke('trigger-video-generation', {
-        body: {
-          contentId: script.id,
-          script: script.script_content,
-          influencerName: script.influencer_name,
-        }
-      });
+      // Construct redirect URL to Video SaaS with pre-filled data
+      const callbackUrl = 'https://vkfmtrovrxgalhekzfsu.supabase.co/functions/v1/video-generation-callback';
+      const videoSaasUrl = new URL('https://video.ravan.ai/');
+      videoSaasUrl.searchParams.append('script', script.script_content);
+      videoSaasUrl.searchParams.append('character', script.influencer_name.charAt(0).toUpperCase() + script.influencer_name.slice(1));
+      videoSaasUrl.searchParams.append('content_id', script.id);
+      videoSaasUrl.searchParams.append('job_id', jobId);
+      videoSaasUrl.searchParams.append('callback_url', callbackUrl);
 
-      if (error) throw error;
+      // Open Video SaaS in new tab
+      window.open(videoSaasUrl.toString(), '_blank');
 
-      toast.success("Video generation started! You'll be notified when it's ready.");
+      toast.success("Redirecting to Video SaaS...");
       setConfirmDialogOpen(false);
       onUpdate();
     } catch (error) {
