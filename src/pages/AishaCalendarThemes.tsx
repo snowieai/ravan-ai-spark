@@ -163,23 +163,28 @@ const AishaCalendarThemes = () => {
       console.log('❌ Initial JSON.parse failed');
     }
 
-    // Parse ideas from response
-    if (Array.isArray(parsed)) {
-      return parsed.map((item: any, index: number) => ({
-        id: `aisha-idea-${index}`,
-        title: item.title || `Idea ${index + 1}`,
-        description: item.description || item.summary || 'No description',
-        summary: item.summary || item.description || 'No summary',
-        detailedContent: item.detailedContent || item.summary || 'No details',
-        videoStyle: 'Professional',
-        duration: '60-90 seconds',
-        targetAudience: 'Real Estate Professionals & Clients',
-        type: item.type || 'INFORMATION',
-        sourceUrl: item.sourceUrl || item.source_url || ''
-      }));
+    // Parse ideas from response structure: [{ data: [...] }]
+    let ideasArray = [];
+    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].data) {
+      ideasArray = parsed[0].data;
+      console.log('✅ Extracted ideas from response.data:', ideasArray.length);
+    } else if (Array.isArray(parsed)) {
+      ideasArray = parsed;
+      console.log('✅ Using direct array:', ideasArray.length);
     }
 
-    return [];
+    return ideasArray.map((item: any, index: number) => ({
+      id: item.id || `aisha-idea-${index}`,
+      title: item.title || `Idea ${index + 1}`,
+      description: item.summary || 'No description',
+      summary: item.summary || 'No summary',
+      detailedContent: item.summary || 'No details',
+      videoStyle: 'Professional',
+      duration: '60-90 seconds',
+      targetAudience: 'Real Estate Professionals & Clients',
+      type: item.type || 'INFORMATION',
+      sourceUrl: item.sourceUrl || item.source_url || ''
+    }));
   };
 
   const generateThemedIdeas = async (theme: string, day: string) => {
