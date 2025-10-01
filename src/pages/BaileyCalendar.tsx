@@ -98,6 +98,28 @@ const BaileyCalendar = () => {
 
   useEffect(() => {
     fetchContentItems();
+
+    // Real-time subscription for content updates
+    const channel = supabase
+      .channel('bailey-calendar-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'content_calendar',
+          filter: `influencer_name=eq.${INFLUENCER_NAME}`
+        },
+        (payload) => {
+          console.log('Content calendar change detected:', payload);
+          fetchContentItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getMonthCalendarDates = () => {
