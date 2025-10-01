@@ -246,14 +246,32 @@ const KairaScript = () => {
           notes: calendarFormData.notes,
           inspiration_links: calendarFormData.inspiration_links,
           category: getCategoryForDate(calendarFormData.scheduled_date),
-          content_source: 'generated'
-        });
+          content_source: 'generated',
+          influencer_name: 'kaira',
+          approval_status: 'pending',
+          submitted_for_approval_at: new Date().toISOString()
+        })
+        .select();
 
       if (error) throw error;
 
+      // Notify admins
+      try {
+        await supabase.functions.invoke('notify-admins-pending-script', {
+          body: {
+            scriptId: topicTitle,
+            influencer: 'kaira',
+            scheduledDate: calendarFormData.scheduled_date,
+            topic: topicTitle
+          }
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify admins:', notifyError);
+      }
+
       toast({
         title: "Success",
-        description: "Script sent for approval",
+        description: "Script sent for admin approval. Admins have been notified.",
       });
 
       setShowSaveDialog(false);

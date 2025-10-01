@@ -179,7 +179,10 @@ const KairaCalendar = () => {
       return;
     }
 
-    const insertData = {
+    // Determine if script needs approval
+    const needsApproval = newContent.content_type === 'reel' && newContent.script_content?.trim();
+
+    const insertData: any = {
       topic: newContent.topic,
       scheduled_date: newContent.scheduled_date,
       category: getCategoryForDate(newContent.scheduled_date),
@@ -191,6 +194,12 @@ const KairaCalendar = () => {
       content_type: newContent.content_type,
       inspiration_links: newContent.inspiration_links
     };
+
+    // Set approval status if script needs approval
+    if (needsApproval) {
+      insertData.approval_status = 'pending';
+      insertData.submitted_for_approval_at = new Date().toISOString();
+    }
 
     const { data, error } = await safeSupabaseQuery(async () => {
       const result = await supabase
@@ -210,9 +219,25 @@ const KairaCalendar = () => {
       return;
     }
 
+    // Notify admins if script needs approval
+    if (needsApproval && data?.[0]) {
+      try {
+        await supabase.functions.invoke('notify-admins-pending-script', {
+          body: {
+            scriptId: data[0].id,
+            influencer: INFLUENCER_NAME,
+            scheduledDate: newContent.scheduled_date,
+            topic: newContent.topic
+          }
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify admins:', notifyError);
+      }
+    }
+
     toast({
       title: "Success",
-      description: "Content added to calendar",
+      description: needsApproval ? "Script added and sent for admin approval" : "Content added to calendar",
     });
 
     setIsDialogOpen(false);

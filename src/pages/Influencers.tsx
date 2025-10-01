@@ -2,13 +2,14 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Users, ArrowRight, LogOut, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const Influencers = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
 
   const influencers = [
     {
@@ -104,7 +105,17 @@ const Influencers = () => {
                 className="h-12 w-auto"
               />
             </div>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end gap-2">
+              {isAdmin && (
+                <Button
+                  onClick={() => navigate('/approvals')}
+                  variant="outline"
+                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+                >
+                  📋 Approval Portal
+                  <Badge variant="secondary" className="bg-orange-100">Admin</Badge>
+                </Button>
+              )}
               <Button
                 onClick={handleLogout}
                 variant="outline"

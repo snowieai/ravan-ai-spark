@@ -1,1 +1,10 @@
 project_id = "vkfmtrovrxgalhekzfsu"
+
+[functions.notify-admins-pending-script]
+verify_jwt = false
+
+[functions.notify-team-script-approved]
+verify_jwt = false
+
+[functions.send-approval-reminders]
+verify_jwt = false

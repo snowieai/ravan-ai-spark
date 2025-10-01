@@ -16,6 +16,10 @@ export type Database = {
     Tables: {
       content_calendar: {
         Row: {
+          admin_remarks: string | null
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           category: string | null
           content_source: string | null
           content_type: string | null
@@ -23,17 +27,25 @@ export type Database = {
           id: string
           influencer_name: string
           inspiration_links: string | null
+          last_reminder_sent_at: string | null
           notes: string | null
           priority: number | null
+          reminder_count: number | null
+          resubmission_count: number | null
           scheduled_date: string
           script_content: string | null
           status: Database["public"]["Enums"]["content_status"] | null
+          submitted_for_approval_at: string | null
           topic: string
           topic_id: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          admin_remarks?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
           content_source?: string | null
           content_type?: string | null
@@ -41,17 +53,25 @@ export type Database = {
           id?: string
           influencer_name?: string
           inspiration_links?: string | null
+          last_reminder_sent_at?: string | null
           notes?: string | null
           priority?: number | null
+          reminder_count?: number | null
+          resubmission_count?: number | null
           scheduled_date: string
           script_content?: string | null
           status?: Database["public"]["Enums"]["content_status"] | null
+          submitted_for_approval_at?: string | null
           topic: string
           topic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          admin_remarks?: string | null
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           category?: string | null
           content_source?: string | null
           content_type?: string | null
@@ -59,11 +79,15 @@ export type Database = {
           id?: string
           influencer_name?: string
           inspiration_links?: string | null
+          last_reminder_sent_at?: string | null
           notes?: string | null
           priority?: number | null
+          reminder_count?: number | null
+          resubmission_count?: number | null
           scheduled_date?: string
           script_content?: string | null
           status?: Database["public"]["Enums"]["content_status"] | null
+          submitted_for_approval_at?: string | null
           topic?: string
           topic_id?: string | null
           updated_at?: string | null
