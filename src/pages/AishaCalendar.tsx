@@ -678,7 +678,10 @@ const AishaCalendar = () => {
                                 Mark as Published
                               </DropdownMenuItem>
                               <DropdownMenuItem 
-                                onClick={() => deleteContentItem(item.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteContentItem(item.id);
+                                }}
                                 className="text-red-600"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
