@@ -27,6 +27,7 @@ import BaileyIdeas from "./pages/BaileyIdeas";
 import MayraIdeas from "./pages/MayraIdeas";
 import Script from "./pages/Script";
 import KairaScript from "./pages/KairaScript";
+import AishaScript from "./pages/AishaScript";
 import BaileyScript from "./pages/BaileyScript";
 import MayraScript from "./pages/MayraScript";
 import Video from "./pages/Video";
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/mayra-ideas" element={<ProtectedRoute><MayraIdeas /></ProtectedRoute>} />
               <Route path="/script" element={<ProtectedRoute><Script /></ProtectedRoute>} />
               <Route path="/kaira-script" element={<ProtectedRoute><KairaScript /></ProtectedRoute>} />
+              <Route path="/aisha-script" element={<ProtectedRoute><AishaScript /></ProtectedRoute>} />
               <Route path="/bailey-script" element={<ProtectedRoute><BaileyScript /></ProtectedRoute>} />
               <Route path="/mayra-script" element={<ProtectedRoute><MayraScript /></ProtectedRoute>} />
               <Route path="/video" element={<ProtectedRoute><Video /></ProtectedRoute>} />
