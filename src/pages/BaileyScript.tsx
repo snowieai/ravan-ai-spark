@@ -567,7 +567,7 @@ Drop a 🏠 if you're ready to take action!
 
         {/* Save to Calendar Dialog */}
         <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md w-[92vw] sm:w-full max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Save to Content Calendar</DialogTitle>
               <DialogDescription>

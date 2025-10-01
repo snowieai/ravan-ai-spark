@@ -444,20 +444,20 @@ const AishaScript = () => {
                 <Check className="w-7 h-7 mr-3" />
                 Save to Content Calendar
               </Button>
-            </div>
+          </div>
           </div>
         )}
 
         {/* Save to Calendar Dialog */}
         <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md w-[92vw] sm:w-full max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Save to Content Calendar</DialogTitle>
               <DialogDescription>
                 Schedule this script and add additional details
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-6">
               <div>
                 <Label>Topic</Label>
                 <Input value={topic} disabled className="bg-gray-50" />
@@ -485,7 +485,7 @@ const AishaScript = () => {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50">
                     <SelectItem value="reel">🎬 Reel</SelectItem>
                     <SelectItem value="story">📸 Story</SelectItem>
                     <SelectItem value="carousel">🖼️ Carousel</SelectItem>
@@ -504,7 +504,7 @@ const AishaScript = () => {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50">
                     <SelectItem value="1">🔴 High Priority</SelectItem>
                     <SelectItem value="2">🟡 Medium Priority</SelectItem>
                     <SelectItem value="3">🟢 Low Priority</SelectItem>
@@ -534,12 +534,14 @@ const AishaScript = () => {
                 />
               </div>
 
-              <Button 
-                onClick={handleSaveAndContinue}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 text-lg"
-              >
-                Send for Approval
-              </Button>
+              <div className="sticky bottom-0 pt-2 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+                <Button 
+                  onClick={handleSaveAndContinue}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 text-lg"
+                >
+                  Send for Approval
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
