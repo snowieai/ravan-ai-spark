@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Influencers = () => {
   const navigate = useNavigate();
-  const { signOut, isAdmin } = useAuth();
+  const { signOut, isAdmin, loading } = useAuth();
 
   const influencers = [
     {
@@ -106,7 +106,12 @@ const Influencers = () => {
               />
             </div>
             <div className="flex-1 flex justify-end gap-2">
-              {isAdmin ? (
+              {loading ? (
+                <div className="flex items-center gap-2 px-4">
+                  <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm text-gray-600">Loading...</span>
+                </div>
+              ) : isAdmin ? (
                 <Button
                   onClick={() => navigate('/approvals')}
                   variant="outline"
