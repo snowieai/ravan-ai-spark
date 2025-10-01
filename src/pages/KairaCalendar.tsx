@@ -76,6 +76,8 @@ const KairaCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
+  const [quickAddDate, setQuickAddDate] = useState('');
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -177,6 +179,7 @@ const KairaCalendar = () => {
     const insertData = {
       topic: newContent.topic,
       scheduled_date: newContent.scheduled_date,
+      category: getCategoryForDate(newContent.scheduled_date),
       priority: newContent.priority,
       status: newContent.status,
       notes: newContent.notes,
@@ -209,6 +212,7 @@ const KairaCalendar = () => {
     });
 
     setIsDialogOpen(false);
+    setQuickAddDialogOpen(false);
     setNewContent({
       topic: '',
       scheduled_date: '',
@@ -282,6 +286,24 @@ const KairaCalendar = () => {
   const getContentForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return contentItems.filter(item => item.scheduled_date === dateStr);
+  };
+
+  const getCategoryForDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+    
+    switch (dayOfWeek) {
+      case 1: // Monday
+        return 'Real Estate Interactive';
+      case 3: // Wednesday
+        return 'Real Estate News';
+      case 5: // Friday
+        return 'Trending (Country-wise)';
+      case 6: // Saturday
+        return 'Viral Content';
+      default: // Sunday, Tuesday, Thursday - off days
+        return 'Real Estate News';
+    }
   };
 
   const generateIdeasForDay = async (dayName: string) => {
@@ -638,16 +660,19 @@ const KairaCalendar = () => {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => generateIdeasForDay(dayName)}
-                          disabled={generatingIdeas === dayName}
+                          onClick={() => {
+                            const dateStr = date.toISOString().split('T')[0];
+                            setQuickAddDate(dateStr);
+                            setNewContent({
+                              ...newContent,
+                              scheduled_date: dateStr
+                            });
+                            setQuickAddDialogOpen(true);
+                          }}
                           className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-100"
-                          title="Generate Ideas"
+                          title="Add Content"
                         >
-                          {generatingIdeas === dayName ? (
-                            <LoadingSpinner size="sm" />
-                          ) : (
-                            <Plus className="h-3 w-3" />
-                          )}
+                          <Plus className="h-3 w-3" />
                         </Button>
                       </div>
                       
@@ -770,6 +795,113 @@ const KairaCalendar = () => {
                   <div className="mt-1 p-4 bg-blue-50 rounded-lg border border-blue-200"><p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.notes}</p></div>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Content Dialog */}
+      <Dialog open={quickAddDialogOpen} onOpenChange={setQuickAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>📅 Add Content for {quickAddDate && new Date(quickAddDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</DialogTitle>
+          </DialogHeader>
+          {quickAddDate && (
+            <div className="space-y-4">
+              <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-orange-900">
+                    Day: {new Date(quickAddDate).toLocaleDateString('en-US', { weekday: 'long' })}
+                  </span>
+                  <Badge className={categoryColors[getCategoryForDate(quickAddDate)] || 'bg-gray-100'}>
+                    {getCategoryForDate(quickAddDate)}
+                  </Badge>
+                </div>
+                {[0, 2, 4].includes(new Date(quickAddDate).getDay()) && (
+                  <p className="text-xs text-orange-700 mt-2">
+                    ⚠️ Note: This is typically an off day. Content added here is for special posts (carousels, stories, etc.)
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="quick-topic">Content Topic *</Label>
+                <Input
+                  id="quick-topic"
+                  value={newContent.topic}
+                  onChange={(e) => setNewContent({...newContent, topic: e.target.value})}
+                  placeholder="Enter your content topic"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="quick-content_type">Content Type *</Label>
+                <Select
+                  value={newContent.content_type}
+                  onValueChange={(value: ContentItem['content_type']) => 
+                    setNewContent({...newContent, content_type: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reel">🎬 Reel</SelectItem>
+                    <SelectItem value="story">📸 Story</SelectItem>
+                    <SelectItem value="carousel">🖼️ Carousel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="quick-priority">Priority</Label>
+                <Select
+                  value={newContent.priority.toString()}
+                  onValueChange={(value) => 
+                    setNewContent({...newContent, priority: parseInt(value) as ContentItem['priority']})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">🔴 High Priority</SelectItem>
+                    <SelectItem value="2">🟡 Medium Priority</SelectItem>
+                    <SelectItem value="3">🟢 Low Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="quick-notes">Notes</Label>
+                <Textarea
+                  id="quick-notes"
+                  value={newContent.notes}
+                  onChange={(e) => setNewContent({...newContent, notes: e.target.value})}
+                  placeholder="Additional notes..."
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="quick-inspiration">Inspiration Links</Label>
+                <Textarea
+                  id="quick-inspiration"
+                  value={newContent.inspiration_links}
+                  onChange={(e) => setNewContent({...newContent, inspiration_links: e.target.value})}
+                  placeholder="Add links for inspiration..."
+                  rows={2}
+                />
+              </div>
+
+              <Button 
+                onClick={addContentItem}
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                disabled={!newContent.topic.trim()}
+              >
+                Add to Calendar
+              </Button>
             </div>
           )}
         </DialogContent>
