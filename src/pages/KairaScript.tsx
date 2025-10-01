@@ -397,27 +397,29 @@ const KairaScript = () => {
                       )}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 sm:p-6 pt-0 flex flex-col h-full">
-                    <div className="bg-gray-50/80 rounded-lg p-3 sm:p-4 mb-4 flex-grow overflow-y-auto max-h-60 sm:max-h-80">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+                  <CardContent className="p-6 pt-0 flex flex-col h-full">
+                    <div className="bg-gray-50/80 rounded-lg p-5 mb-6 flex-grow overflow-y-auto" style={{ maxHeight: '400px', minHeight: '200px' }}>
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-base">
                         {script.content}
                       </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                    <div className="flex flex-col gap-3 mt-auto">
                       <Button
                         onClick={() => handleUseThis(script)}
-                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                        size="lg"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 rounded-full py-4 text-base font-semibold shadow-md hover:shadow-lg transition-all"
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Use This
+                        <Check className="w-5 h-5 mr-2" />
+                        Use This Script
                       </Button>
                       <Button
                         onClick={() => handleEditThis(script, index)}
                         variant="outline"
-                        className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50 rounded-full py-3 px-4 text-sm sm:text-base font-medium"
+                        size="lg"
+                        className="w-full border-2 border-orange-500 text-orange-600 hover:bg-orange-50 rounded-full py-4 text-base font-semibold transition-all"
                       >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit This
+                        <Edit3 className="w-5 h-5 mr-2" />
+                        Edit This Script
                       </Button>
                     </div>
                   </CardContent>

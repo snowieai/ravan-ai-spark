@@ -591,27 +591,29 @@ const MayraScript = () => {
                       </div>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
+                  <CardContent className="p-6">
+                    <div className="bg-gray-50 p-5 rounded-lg mb-6 overflow-y-auto" style={{ maxHeight: '400px', minHeight: '200px' }}>
+                      <pre className="whitespace-pre-wrap text-base text-gray-800 font-mono leading-relaxed">
                         {scriptData.scriptA}
                       </pre>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-3">
                       <Button
                         onClick={() => handleUseThis('A')}
-                        className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                        size="lg"
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0 rounded-full py-4 text-base font-semibold shadow-md hover:shadow-lg transition-all"
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Use This
+                        <Check className="w-5 h-5 mr-2" />
+                        Use This Script
                       </Button>
                       <Button
                         onClick={() => handleEditThis('A')}
                         variant="outline"
-                        className="flex-1 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                        size="lg"
+                        className="w-full border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50 rounded-full py-4 text-base font-semibold transition-all"
                       >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit This
+                        <Edit3 className="w-5 h-5 mr-2" />
+                        Edit This Script
                       </Button>
                     </div>
                   </CardContent>
@@ -637,27 +639,29 @@ const MayraScript = () => {
                       </div>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
+                  <CardContent className="p-6">
+                    <div className="bg-gray-50 p-5 rounded-lg mb-6 overflow-y-auto" style={{ maxHeight: '400px', minHeight: '200px' }}>
+                      <pre className="whitespace-pre-wrap text-base text-gray-800 font-mono leading-relaxed">
                         {scriptData.scriptB}
                       </pre>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-3">
                       <Button
                         onClick={() => handleUseThis('B')}
-                        className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white border-0"
+                        size="lg"
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white border-0 rounded-full py-4 text-base font-semibold shadow-md hover:shadow-lg transition-all"
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Use This
+                        <Check className="w-5 h-5 mr-2" />
+                        Use This Script
                       </Button>
                       <Button
                         onClick={() => handleEditThis('B')}
                         variant="outline"
-                        className="flex-1 border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                        size="lg"
+                        className="w-full border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-50 rounded-full py-4 text-base font-semibold transition-all"
                       >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        Edit This
+                        <Edit3 className="w-5 h-5 mr-2" />
+                        Edit This Script
                       </Button>
                     </div>
                   </CardContent>
