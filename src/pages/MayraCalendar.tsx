@@ -80,6 +80,8 @@ const MayraCalendar = () => {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
   const [quickAddDate, setQuickAddDate] = useState('');
+  const [draggedItem, setDraggedItem] = useState<ContentItem | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -307,6 +309,67 @@ const MayraCalendar = () => {
     fetchContentItems();
   };
 
+  const updateContentDate = async (itemId: string, newDate: string) => {
+    const { error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
+        .from('content_calendar')
+        .update({ scheduled_date: newDate })
+        .eq('id', itemId)
+        .select();
+      return result;
+    });
+
+    if (error) {
+      console.error('Update date error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Content moved to new date",
+    });
+
+    fetchContentItems();
+  };
+
+  const handleDragStart = (e: React.DragEvent, item: ContentItem) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, dateStr: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverDate(dateStr);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDate(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, date: Date) => {
+    e.preventDefault();
+    setDragOverDate(null);
+    
+    if (!draggedItem) return;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const newDateStr = `${year}-${month}-${day}`;
+
+    if (draggedItem.scheduled_date !== newDateStr) {
+      await updateContentDate(draggedItem.id, newDateStr);
+    }
+
+    setDraggedItem(null);
+  };
+
   const getContentForDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -531,13 +594,23 @@ const MayraCalendar = () => {
                   const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
                   const dayContent = getContentForDate(date);
                   const isToday = date.toDateString() === new Date().toDateString();
+                  const year = date.getFullYear();
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const day = String(date.getDate()).padStart(2, '0');
+                  const dateStr = `${year}-${month}-${day}`;
+                  const isDragOver = dragOverDate === dateStr;
                   
                   return (
                     <div
                       key={dayIndex}
                       className={`min-h-[120px] p-2 ${
                         isCurrentMonth ? 'bg-white' : 'bg-yellow-50/30'
-                      } ${isToday ? 'ring-2 ring-yellow-500 ring-inset' : ''} hover:bg-yellow-50/50 transition-colors`}
+                      } ${isToday ? 'ring-2 ring-yellow-500 ring-inset' : ''} ${
+                        isDragOver ? 'ring-2 ring-yellow-400 bg-yellow-100/50' : ''
+                      } hover:bg-yellow-50/50 transition-colors`}
+                      onDragOver={(e) => handleDragOver(e, dateStr)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, date)}
                     >
                       <div className={`text-sm font-semibold mb-1 ${
                         isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
@@ -571,7 +644,11 @@ const MayraCalendar = () => {
                         {dayContent.map(item => (
                           <div key={item.id}>
                             <div 
-                              className={`text-xs p-1.5 rounded cursor-pointer border-l-2 ${priorityColors[item.priority]} ${statusColors[item.status]} hover:opacity-80 transition-opacity`}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, item)}
+                              className={`text-xs p-1.5 rounded cursor-move border-l-2 ${priorityColors[item.priority]} ${statusColors[item.status]} hover:opacity-80 transition-opacity ${
+                                draggedItem?.id === item.id ? 'opacity-50' : ''
+                              }`}
                               onClick={() => {
                                 setSelectedItem(item);
                                 setShowDetailDialog(true);

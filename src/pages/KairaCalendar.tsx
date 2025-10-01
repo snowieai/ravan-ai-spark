@@ -80,6 +80,8 @@ const KairaCalendar = () => {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
   const [quickAddDate, setQuickAddDate] = useState('');
+  const [draggedItem, setDraggedItem] = useState<ContentItem | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -311,6 +313,67 @@ const KairaCalendar = () => {
     });
 
     fetchContentItems();
+  };
+
+  const updateContentDate = async (itemId: string, newDate: string) => {
+    const { error } = await safeSupabaseQuery(async () => {
+      const result = await supabase
+        .from('content_calendar')
+        .update({ scheduled_date: newDate })
+        .eq('id', itemId)
+        .select();
+      return result;
+    });
+
+    if (error) {
+      console.error('Update date error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Content moved to new date",
+    });
+
+    fetchContentItems();
+  };
+
+  const handleDragStart = (e: React.DragEvent, item: ContentItem) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, dateStr: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverDate(dateStr);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDate(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, date: Date) => {
+    e.preventDefault();
+    setDragOverDate(null);
+    
+    if (!draggedItem) return;
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const newDateStr = `${year}-${month}-${day}`;
+
+    if (draggedItem.scheduled_date !== newDateStr) {
+      await updateContentDate(draggedItem.id, newDateStr);
+    }
+
+    setDraggedItem(null);
   };
 
   const getContentForDate = (date: Date) => {
@@ -683,10 +746,24 @@ const KairaCalendar = () => {
                 const isToday = date.toDateString() === new Date().toDateString();
                 const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
                 const dayName = dayNames[date.getDay()];
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+                const isDragOver = dragOverDate === dateStr;
                 
                 return (
                   <div key={dayIndex} className="min-h-[180px]">
-                    <div className={`bg-white/20 backdrop-blur-sm rounded-lg border ${isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'} p-3 h-full ${!isCurrentMonth ? 'opacity-50' : ''}`}>
+                    <div 
+                      className={`bg-white/20 backdrop-blur-sm rounded-lg border ${
+                        isToday ? 'border-orange-400 ring-2 ring-orange-400' : 'border-white/30'
+                      } ${isDragOver ? 'ring-2 ring-orange-400 bg-orange-100/50' : ''} p-3 h-full ${
+                        !isCurrentMonth ? 'opacity-50' : ''
+                      }`}
+                      onDragOver={(e) => handleDragOver(e, dateStr)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, date)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <div className={`text-sm font-bold ${isToday ? 'text-orange-600' : isCurrentMonth ? 'text-orange-900' : 'text-orange-600'}`}>
                           {date.getDate()}
@@ -717,7 +794,11 @@ const KairaCalendar = () => {
                         {dayContent.map((item) => (
                           <div 
                             key={item.id} 
-                            className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow cursor-pointer`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, item)}
+                            className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow cursor-move ${
+                              draggedItem?.id === item.id ? 'opacity-50' : ''
+                            }`}
                             onClick={() => {
                               setSelectedItem(item);
                               setShowDetailDialog(true);
