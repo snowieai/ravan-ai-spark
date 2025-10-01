@@ -239,7 +239,7 @@ const BaileyCalendarThemes = () => {
   };
 
   const selectIdea = (idea: GeneratedIdea) => {
-    localStorage.setItem('selectedIdeaBailey', JSON.stringify(idea));
+    localStorage.setItem('selectedIdea', idea.title);
     navigate('/bailey-script');
   };
 
