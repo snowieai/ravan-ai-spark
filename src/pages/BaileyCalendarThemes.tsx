@@ -172,9 +172,12 @@ const BaileyCalendarThemes = () => {
       console.log('❌ Failed text sample:', cleanedText.substring(0, 200));
     }
 
-    // Extract ideas from the response structure: [{ data: [...] }]
-    let ideasArray = [];
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data && Array.isArray(parsed[0].data)) {
+    // Extract ideas from the response structure: { data: [...] } or [{ data: [...] }] or [...]
+    let ideasArray = [] as any[];
+    if (parsed && Array.isArray((parsed as any).data)) {
+      ideasArray = (parsed as any).data;
+      console.log('✅ Extracted ideas from parsed.data:', ideasArray.length);
+    } else if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data && Array.isArray(parsed[0].data)) {
       ideasArray = parsed[0].data;
       console.log('✅ Extracted ideas from parsed[0].data:', ideasArray.length);
     } else if (Array.isArray(parsed)) {
