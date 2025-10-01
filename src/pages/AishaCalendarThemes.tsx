@@ -476,7 +476,7 @@ const AishaCalendarThemes = () => {
                                   </Button>
                                 </CardContent>
                               </Card>
-                            )))}
+                            ))}
                           </div>
                         </div>
                       );
