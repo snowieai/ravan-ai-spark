@@ -76,12 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
       if (session?.user) {
         const userProfile = await fetchUserProfile(session.user.id);
         setProfile(userProfile);
+        setLoading(false);
+      } else {
+        setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
