@@ -65,6 +65,8 @@ const contentTypeIcons = {
   "carousel": "🖼️"
 };
 
+const INFLUENCER_NAME = 'mayra';
+
 const MayraCalendar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -141,6 +143,7 @@ const MayraCalendar = () => {
       const result = await supabase
         .from('content_calendar')
         .select('*')
+        .eq('influencer_name', INFLUENCER_NAME)
         .order('scheduled_date', { ascending: true });
       return result;
     });
@@ -174,6 +177,7 @@ const MayraCalendar = () => {
       topic: newContent.topic,
       scheduled_date: newContent.scheduled_date,
       category: getCategoryForDate(newContent.scheduled_date),
+      influencer_name: INFLUENCER_NAME,
       priority: newContent.priority,
       status: newContent.status,
       notes: newContent.notes,

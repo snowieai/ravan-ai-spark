@@ -65,6 +65,8 @@ const contentTypeIcons = {
   "carousel": "🖼️"
 };
 
+const INFLUENCER_NAME = 'kaira';
+
 const KairaCalendar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -147,6 +149,7 @@ const KairaCalendar = () => {
       const result = await supabase
         .from('content_calendar')
         .select('*')
+        .eq('influencer_name', INFLUENCER_NAME)
         .order('scheduled_date', { ascending: true });
       return result;
     });
@@ -180,6 +183,7 @@ const KairaCalendar = () => {
       topic: newContent.topic,
       scheduled_date: newContent.scheduled_date,
       category: getCategoryForDate(newContent.scheduled_date),
+      influencer_name: INFLUENCER_NAME,
       priority: newContent.priority,
       status: newContent.status,
       notes: newContent.notes,
@@ -362,6 +366,7 @@ const KairaCalendar = () => {
             const insertData = {
               topic: title.trim(),
               scheduled_date: dateStr,
+              influencer_name: INFLUENCER_NAME,
               priority: 1,
               notes: idea.description || idea.notes || `AI generated idea for ${dayName}`,
               status: 'planned' as const,

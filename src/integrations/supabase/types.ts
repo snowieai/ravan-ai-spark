@@ -21,6 +21,7 @@ export type Database = {
           content_type: string | null
           created_at: string | null
           id: string
+          influencer_name: string
           inspiration_links: string | null
           notes: string | null
           priority: number | null
@@ -38,6 +39,7 @@ export type Database = {
           content_type?: string | null
           created_at?: string | null
           id?: string
+          influencer_name?: string
           inspiration_links?: string | null
           notes?: string | null
           priority?: number | null
@@ -55,6 +57,7 @@ export type Database = {
           content_type?: string | null
           created_at?: string | null
           id?: string
+          influencer_name?: string
           inspiration_links?: string | null
           notes?: string | null
           priority?: number | null
