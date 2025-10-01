@@ -123,41 +123,29 @@ const MayraDashboard = () => {
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <Button
                     onClick={() => handleNavigation('/mayra-ideas')}
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
                   >
-                    <Lightbulb className="w-5 h-5 mr-2" />
+                    <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
                     Generate Ideas
                   </Button>
 
                   <Button
                     onClick={() => handleNavigation('/mayra-calendar')}
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
                   >
-                    <Calendar className="w-5 h-5 mr-2" />
+                    <Calendar className="w-7 h-7 mr-3" />
                     Content Calendar
                   </Button>
 
                   <Button
                     onClick={() => handleNavigation('/mayra-calendar-themes')}
-                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
                   >
-                    <CalendarDays className="w-5 h-5 mr-2" />
+                    <CalendarDays className="w-7 h-7 mr-3" />
                     Content Calendar Theme
-                  </Button>
-                  
-                  <Button
-                    onClick={() => toast({
-                      title: "Coming Soon",
-                      description: "AI Video creation will be available soon.",
-                    })}
-                    variant="outline"
-                    className="border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 min-w-[250px]"
-                  >
-                    <Video className="w-5 h-5 mr-2" />
-                    Create AI Video with Mayra
                   </Button>
                 </div>
               </div>
