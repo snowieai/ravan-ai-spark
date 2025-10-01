@@ -74,6 +74,8 @@ const KairaCalendar = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [generatingIdeas, setGeneratingIdeas] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -651,7 +653,14 @@ const KairaCalendar = () => {
                       
                       <div className="space-y-2">
                         {dayContent.map((item) => (
-                          <div key={item.id} className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow`}>
+                          <div 
+                            key={item.id} 
+                            className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow cursor-pointer`}
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setShowDetailDialog(true);
+                            }}
+                          >
                             <div className="flex items-start justify-between">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1 mb-1">
@@ -677,7 +686,12 @@ const KairaCalendar = () => {
                               
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-5 w-5 p-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     <MoreVertical className="h-3 w-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -715,6 +729,51 @@ const KairaCalendar = () => {
           ))}
         </div>
       </div>
+
+      {/* Content Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white z-50">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-orange-900">Content Details</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm font-semibold text-gray-700">Topic</Label>
+                <p className="mt-1 text-base text-gray-900">{selectedItem.topic}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Status</Label>
+                  <div className="mt-1"><Badge className={statusColors[selectedItem.status]}>{selectedItem.status.replace('_', ' ')}</Badge></div>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Content Type</Label>
+                  <div className="mt-1"><Badge className={contentTypeColors[selectedItem.content_type]}>{contentTypeIcons[selectedItem.content_type]} {selectedItem.content_type.charAt(0).toUpperCase() + selectedItem.content_type.slice(1)}</Badge></div>
+                </div>
+              </div>
+              {selectedItem.category && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Category</Label>
+                  <div className="mt-1"><Badge className={categoryColors[selectedItem.category as keyof typeof categoryColors]}>{selectedItem.category}</Badge></div>
+                </div>
+              )}
+              {selectedItem.script_content && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Script Content</Label>
+                  <div className="mt-1 p-4 bg-gray-50 rounded-lg border border-gray-200"><p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.script_content}</p></div>
+                </div>
+              )}
+              {selectedItem.notes && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Notes</Label>
+                  <div className="mt-1 p-4 bg-blue-50 rounded-lg border border-blue-200"><p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.notes}</p></div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

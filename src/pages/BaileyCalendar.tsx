@@ -74,6 +74,8 @@ const BaileyCalendar = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [generatingIdeas, setGeneratingIdeas] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -488,17 +490,29 @@ const BaileyCalendar = () => {
                         {date.getDate()}
                       </div>
                       
-                      <div className="space-y-1">
+                       <div className="space-y-1">
                         {dayContent.map(item => (
-                          <DropdownMenu key={item.id}>
-                            <DropdownMenuTrigger asChild>
-                              <div className={`text-xs p-1.5 rounded cursor-pointer border-l-2 ${priorityColors[item.priority]} ${statusColors[item.status]} hover:opacity-80 transition-opacity`}>
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="truncate flex-1">{item.topic}</span>
-                                  <MoreVertical className="h-3 w-3 flex-shrink-0" />
-                                </div>
-                              </div>
-                            </DropdownMenuTrigger>
+                          <div key={item.id}>
+                            <div 
+                              className={`text-xs p-1.5 rounded cursor-pointer border-l-2 ${priorityColors[item.priority]} ${statusColors[item.status]} hover:opacity-80 transition-opacity`}
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setShowDetailDialog(true);
+                              }}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="truncate flex-1">{item.topic}</span>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-4 w-4 p-0"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <MoreVertical className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
                             <DropdownMenuContent>
                               <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
                                 Mark as Approved
@@ -517,7 +531,10 @@ const BaileyCalendar = () => {
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
-                          </DropdownMenu>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -558,6 +575,103 @@ const BaileyCalendar = () => {
           </div>
         </div>
       </div>
+
+      {/* Content Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white z-50">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-emerald-900">Content Details</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm font-semibold text-gray-700">Topic</Label>
+                <p className="mt-1 text-base text-gray-900">{selectedItem.topic}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Status</Label>
+                  <div className="mt-1">
+                    <Badge className={statusColors[selectedItem.status]}>
+                      {selectedItem.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Content Type</Label>
+                  <div className="mt-1">
+                    <Badge className={contentTypeColors[selectedItem.content_type]}>
+                      {contentTypeIcons[selectedItem.content_type]} {selectedItem.content_type.charAt(0).toUpperCase() + selectedItem.content_type.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Scheduled Date</Label>
+                  <p className="mt-1 text-base text-gray-900">
+                    {new Date(selectedItem.scheduled_date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Priority</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${priorityColors[selectedItem.priority].replace('border-l-', 'bg-')}`}></div>
+                    <span className="text-base text-gray-900">Priority {selectedItem.priority}</span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedItem.category && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Category</Label>
+                  <div className="mt-1">
+                    <Badge className={categoryColors[selectedItem.category as keyof typeof categoryColors]}>
+                      {selectedItem.category}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              {selectedItem.script_content && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Script Content</Label>
+                  <div className="mt-1 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.script_content}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedItem.notes && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Notes</Label>
+                  <div className="mt-1 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedItem.inspiration_links && (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Inspiration Links</Label>
+                  <div className="mt-1 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-sm text-gray-900 break-all">{selectedItem.inspiration_links}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
