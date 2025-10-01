@@ -180,6 +180,23 @@ const KairaScript = () => {
     }
   };
 
+  const getCategoryForDate = (date: string): string => {
+    const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    switch (dayOfWeek) {
+      case 1: // Monday
+        return 'Real Estate Interactive';
+      case 3: // Wednesday
+        return 'Real Estate News';
+      case 5: // Friday
+        return 'Trending (Country-wise)';
+      case 6: // Saturday
+        return 'Viral Content';
+      default: // Sunday (0), Tuesday (2), Thursday (4) - off days
+        return 'Real Estate News'; // Default fallback
+    }
+  };
+
   const handleSaveAndContinue = async () => {
     if (!selectedScript) return;
 
@@ -228,7 +245,7 @@ const KairaScript = () => {
           content_type: calendarFormData.content_type,
           notes: calendarFormData.notes,
           inspiration_links: calendarFormData.inspiration_links,
-          category: 'Real Estate',
+          category: getCategoryForDate(calendarFormData.scheduled_date),
           content_source: 'generated'
         });
 

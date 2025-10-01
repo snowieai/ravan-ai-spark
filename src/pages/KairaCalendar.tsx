@@ -21,7 +21,7 @@ interface ContentItem {
   id: string;
   topic: string;
   scheduled_date: string;
-  status: 'planned' | 'approved' | 'script_ready' | 'in_production' | 'published' | 'cancelled';
+  status: 'planned' | 'approved' | 'pending_approval' | 'script_ready' | 'in_production' | 'published' | 'cancelled';
   priority: 1 | 2 | 3;
   notes?: string;
   script_content?: string;
@@ -33,10 +33,18 @@ interface ContentItem {
 const statusColors = {
   planned: "bg-slate-100 text-slate-800",
   approved: "bg-blue-100 text-blue-800",
+  pending_approval: "bg-amber-100 text-amber-800",
   script_ready: "bg-yellow-100 text-yellow-800",
   in_production: "bg-purple-100 text-purple-800",
   published: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800"
+};
+
+const categoryColors = {
+  'Real Estate News': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Real Estate Interactive': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Trending (Country-wise)': 'bg-orange-100 text-orange-800 border-orange-200',
+  'Viral Content': 'bg-pink-100 text-pink-800 border-pink-200',
 };
 
 const priorityColors = {

@@ -40,6 +40,13 @@ const statusColors = {
   cancelled: "bg-red-100 text-red-800"
 };
 
+const categoryColors = {
+  'Real Estate News': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Real Estate Interactive': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Trending (Country-wise)': 'bg-orange-100 text-orange-800 border-orange-200',
+  'Viral Content': 'bg-pink-100 text-pink-800 border-pink-200',
+};
+
 const priorityColors = {
   1: "border-l-green-500",
   2: "border-l-yellow-500", 
