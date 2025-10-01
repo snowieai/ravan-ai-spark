@@ -44,17 +44,8 @@ export default function Approvals() {
       return;
     }
 
-    if (!isAdmin) {
-      if (!deniedToastShown.current) {
-        toast.error("Access denied. Admin privileges required.");
-        deniedToastShown.current = true;
-      }
-      navigate("/influencers");
-      return;
-    }
-
     fetchScripts();
-  }, [user, isAdmin, authLoading]);
+  }, [user, authLoading]);
 
   const fetchScripts = async () => {
     try {
@@ -99,7 +90,6 @@ export default function Approvals() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold">Script Approval Portal</h1>
-            {isAdmin && <Badge variant="secondary">Admin</Badge>}
           </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />

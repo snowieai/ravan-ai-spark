@@ -110,20 +110,13 @@ const Influencers = () => {
               />
             </div>
             <div className="flex-1 flex justify-end gap-2">
-              {loading ? (
-                <div className="flex items-center gap-2 px-4">
-                  <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : isAdmin ? (
-                <Button
-                  onClick={() => navigate('/approvals')}
-                  variant="outline"
-                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 font-semibold"
-                >
-                  📋 Approval Portal
-                  <Badge variant="secondary" className="bg-orange-100">Admin</Badge>
-                </Button>
-              ) : null}
+              <Button
+                onClick={() => navigate('/approvals')}
+                variant="outline"
+                className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 font-semibold"
+              >
+                📋 Approval Portal
+              </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"
