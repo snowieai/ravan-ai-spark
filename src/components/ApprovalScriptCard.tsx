@@ -97,7 +97,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
       const callbackUrl = 'https://vkfmtrovrxgalhekzfsu.supabase.co/functions/v1/video-generation-callback';
       const videoSaasUrl = new URL('https://video.ravan.ai/');
       videoSaasUrl.searchParams.append('script', script.script_content);
-      videoSaasUrl.searchParams.append('character', script.influencer_name.charAt(0).toUpperCase() + script.influencer_name.slice(1));
+      videoSaasUrl.searchParams.append('character', script.influencer_name.charAt(0).toUpperCase() + script.influencer_name.slice(1).toLowerCase());
       videoSaasUrl.searchParams.append('content_id', script.id);
       videoSaasUrl.searchParams.append('job_id', jobId);
       videoSaasUrl.searchParams.append('callback_url', callbackUrl);
