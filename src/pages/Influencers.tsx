@@ -106,15 +106,19 @@ const Influencers = () => {
               />
             </div>
             <div className="flex-1 flex justify-end gap-2">
-              {isAdmin && (
+              {isAdmin ? (
                 <Button
                   onClick={() => navigate('/approvals')}
                   variant="outline"
-                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
+                  className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50 font-semibold"
                 >
                   📋 Approval Portal
                   <Badge variant="secondary" className="bg-orange-100">Admin</Badge>
                 </Button>
+              ) : (
+                <Badge variant="outline" className="border-gray-300 text-gray-600">
+                  Regular User
+                </Badge>
               )}
               <Button
                 onClick={handleLogout}
