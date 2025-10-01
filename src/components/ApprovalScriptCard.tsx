@@ -62,6 +62,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
         .from("content_calendar")
         .update({
           approval_status: "approved",
+          status: "approved",
           approved_by: user.id,
           approved_at: new Date().toISOString(),
           admin_remarks: remarks || null,

@@ -191,7 +191,12 @@ const KairaCalendar = () => {
       return;
     }
 
-    setContentItems((data || []) as ContentItem[]);
+    setContentItems(((data || []) as any[]).map((item: any) => ({
+      ...item,
+      status: item.approval_status === 'approved'
+        ? 'approved'
+        : (item.approval_status === 'pending' ? 'pending_approval' : item.status)
+    })) as ContentItem[]);
     setLoading(false);
   };
 
