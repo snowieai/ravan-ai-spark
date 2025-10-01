@@ -124,10 +124,11 @@ const BaileyCalendarThemes = () => {
     }));
   };
 
-  const sendDayWebhook = async () => {
-    console.log(`🚀 Making SINGLE webhook GET request for Bailey`);
+  const sendDayWebhook = async (day: string) => {
+    const normalizedDay = day.toLowerCase();
+    console.log(`🚀 Making SINGLE webhook GET request for Bailey with day: ${normalizedDay}`);
     
-    const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/bdaabedb-e098-4998-98d4-ff985325d716`;
+    const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/bdaabedb-e098-4998-98d4-ff985325d716?day=${encodeURIComponent(normalizedDay)}`;
     console.log(`📤 FULL URL BEING CALLED: ${webhookUrl}`);
     
     const response = await fetch(webhookUrl, {
@@ -186,8 +187,8 @@ const BaileyCalendarThemes = () => {
     setSelectedTheme(theme);
     
     try {
-      console.log('📞 Making webhook call for Bailey');
-      const webhookIdeas = await sendDayWebhook();
+      console.log('📞 Making webhook call for Bailey with day:', day);
+      const webhookIdeas = await sendDayWebhook(day);
       console.log('✅ Webhook response received:', webhookIdeas.length, 'ideas');
       
       setIdeas(webhookIdeas);

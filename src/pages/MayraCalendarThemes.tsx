@@ -124,10 +124,11 @@ const MayraCalendarThemes = () => {
     }));
   };
 
-  const sendDayWebhook = async () => {
-    console.log(`🚀 Making SINGLE webhook GET request for Mayra`);
+  const sendDayWebhook = async (day: string) => {
+    const normalizedDay = day.toLowerCase();
+    console.log(`🚀 Making SINGLE webhook GET request for Mayra with day: ${normalizedDay}`);
     
-    const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/b8d420f1-6689-442b-a916-de9101632d69`;
+    const webhookUrl = `https://n8n.srv905291.hstgr.cloud/webhook/b8d420f1-6689-442b-a916-de9101632d69?day=${encodeURIComponent(normalizedDay)}`;
     console.log(`📤 FULL URL BEING CALLED: ${webhookUrl}`);
     
     const response = await fetch(webhookUrl, {
@@ -186,8 +187,8 @@ const MayraCalendarThemes = () => {
     setSelectedTheme(theme);
     
     try {
-      console.log('📞 Making webhook call for Mayra');
-      const webhookIdeas = await sendDayWebhook();
+      console.log('📞 Making webhook call for Mayra with day:', day);
+      const webhookIdeas = await sendDayWebhook(day);
       console.log('✅ Webhook response received:', webhookIdeas.length, 'ideas');
       
       setIdeas(webhookIdeas);
