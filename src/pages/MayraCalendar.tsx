@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,11 @@ interface ContentItem {
   category?: string;
   content_type: 'reel' | 'story' | 'carousel';
   inspiration_links?: string;
+  video_status?: string | null;
+  video_url?: string | null;
+  video_job_id?: string | null;
+  video_cost_estimate?: number | null;
+  word_count?: number | null;
 }
 
 const statusColors = {

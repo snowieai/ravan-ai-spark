@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.send-approval-reminders]
 verify_jwt = false
+
+[functions.trigger-video-generation]
+verify_jwt = false
+
+[functions.video-generation-callback]
+verify_jwt = false

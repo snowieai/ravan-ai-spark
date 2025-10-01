@@ -40,6 +40,11 @@ export type Database = {
           topic_id: string | null
           updated_at: string | null
           user_id: string | null
+          video_cost_estimate: number | null
+          video_job_id: string | null
+          video_status: string | null
+          video_url: string | null
+          word_count: number | null
         }
         Insert: {
           admin_remarks?: string | null
@@ -66,6 +71,11 @@ export type Database = {
           topic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+          video_cost_estimate?: number | null
+          video_job_id?: string | null
+          video_status?: string | null
+          video_url?: string | null
+          word_count?: number | null
         }
         Update: {
           admin_remarks?: string | null
@@ -92,6 +102,11 @@ export type Database = {
           topic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+          video_cost_estimate?: number | null
+          video_job_id?: string | null
+          video_status?: string | null
+          video_url?: string | null
+          word_count?: number | null
         }
         Relationships: [
           {

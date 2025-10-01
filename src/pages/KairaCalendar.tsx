@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Calendar, Plus, MoreVertical, Trash2, Edit, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,11 @@ interface ContentItem {
   category?: string;
   content_type: 'reel' | 'story' | 'carousel';
   inspiration_links?: string;
+  video_status?: string | null;
+  video_url?: string | null;
+  video_job_id?: string | null;
+  video_cost_estimate?: number | null;
+  word_count?: number | null;
 }
 
 const statusColors = {
@@ -70,6 +75,7 @@ const INFLUENCER_NAME = 'kaira';
 
 const KairaCalendar = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -853,7 +859,8 @@ const KairaCalendar = () => {
                       <div className="space-y-2">
                         {dayContent.map((item) => (
                           <div 
-                            key={item.id} 
+                            key={item.id}
+                            id={`content-${item.id}`}
                             draggable
                             onDragStart={(e) => handleDragStart(e, item)}
                             className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow cursor-move ${
@@ -871,13 +878,28 @@ const KairaCalendar = () => {
                                   <h4 className="font-medium text-gray-900 text-xs truncate">{item.topic}</h4>
                                 </div>
                                 
-                                <div className="flex items-center gap-1 mb-1">
+                                <div className="flex items-center gap-1 mb-1 flex-wrap">
                                   <Badge className={`text-xs px-1 py-0 ${statusColors[item.status]}`}>
                                     {item.status.replace('_', ' ')}
                                   </Badge>
                                   <Badge className={`text-xs px-1 py-0 ${contentTypeColors[item.content_type]}`}>
                                     {item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}
                                   </Badge>
+                                  {item.video_status === 'completed' && (
+                                    <Badge className="text-xs px-1 py-0 bg-green-100 text-green-800">
+                                      ✅ Video Ready
+                                    </Badge>
+                                  )}
+                                  {item.video_status === 'generating' && (
+                                    <Badge className="text-xs px-1 py-0 bg-blue-100 text-blue-800 animate-pulse">
+                                      🎬 Generating...
+                                    </Badge>
+                                  )}
+                                  {item.video_status === 'failed' && (
+                                    <Badge className="text-xs px-1 py-0 bg-red-100 text-red-800">
+                                      ❌ Failed
+                                    </Badge>
+                                  )}
                                 </div>
                                 
                                 <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -974,6 +996,35 @@ const KairaCalendar = () => {
                 <div>
                   <Label className="text-sm font-semibold text-gray-700">Notes</Label>
                   <div className="mt-1 p-4 bg-blue-50 rounded-lg border border-blue-200"><p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedItem.notes}</p></div>
+                </div>
+              )}
+              {selectedItem.video_status && (
+                <div className="border-t pt-4">
+                  <Label className="text-sm font-semibold text-gray-700">Video Generation</Label>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {selectedItem.video_status === 'completed' && (
+                        <Badge className="bg-green-100 text-green-800">✅ Video Ready</Badge>
+                      )}
+                      {selectedItem.video_status === 'generating' && (
+                        <Badge className="bg-blue-100 text-blue-800 animate-pulse">🎬 Generating...</Badge>
+                      )}
+                      {selectedItem.video_status === 'failed' && (
+                        <Badge className="bg-red-100 text-red-800">❌ Generation Failed</Badge>
+                      )}
+                    </div>
+                    {selectedItem.video_status === 'completed' && selectedItem.video_url && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(selectedItem.video_url, '_blank')}
+                        className="w-full"
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        View Generated Video
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
