@@ -19,6 +19,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, isAdmin: boolean) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
+  refreshProfile: () => Promise<void>;
   loading: boolean;
   isAdmin: boolean;
 }
@@ -172,6 +173,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    
+    let userProfile = await fetchUserProfile(user.id);
+    
+    // Self-heal: create profile if missing
+    if (!userProfile) {
+      userProfile = await createProfileIfMissing(user);
+    }
+    
+    setProfile(userProfile);
+  };
+
   const isAdmin = profile?.role === 'admin';
 
   const value = {
@@ -181,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
+    refreshProfile,
     loading,
     isAdmin,
   };
