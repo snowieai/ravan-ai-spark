@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SparklesCore } from '@/components/ui/sparkles';
@@ -82,6 +83,7 @@ const AishaCalendar = () => {
   const [quickAddDate, setQuickAddDate] = useState('');
   const [draggedItem, setDraggedItem] = useState<ContentItem | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const [askForApproval, setAskForApproval] = useState(false);
   
   const [newContent, setNewContent] = useState({
     topic: '',
@@ -186,8 +188,9 @@ const AishaCalendar = () => {
       return;
     }
 
-    // Determine if script needs approval - either has script_content OR status is pending_approval
-    const needsApproval = (newContent.content_type === 'reel' && newContent.script_content?.trim()) || 
+    // Determine if script needs approval - toggle, script content, or status
+    const needsApproval = askForApproval ||
+                          (newContent.content_type === 'reel' && newContent.script_content?.trim()) || 
                           newContent.status === 'pending_approval';
 
     const insertData: any = {
@@ -954,7 +957,23 @@ const AishaCalendar = () => {
                 />
               </div>
 
-              <Button 
+              <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <div className="flex-1">
+                  <Label htmlFor="ask-approval" className="text-sm font-semibold text-gray-900">
+                    Ask for Admin Approval
+                  </Label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Enable this to send content for admin review before publishing
+                  </p>
+                </div>
+                <Switch
+                  id="ask-approval"
+                  checked={askForApproval}
+                  onCheckedChange={setAskForApproval}
+                />
+              </div>
+
+              <Button
                 onClick={addContentItem}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={!newContent.topic.trim()}
