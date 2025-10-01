@@ -179,8 +179,9 @@ const KairaCalendar = () => {
       return;
     }
 
-    // Determine if script needs approval
-    const needsApproval = newContent.content_type === 'reel' && newContent.script_content?.trim();
+    // Determine if script needs approval - either has script_content OR status is pending_approval
+    const needsApproval = (newContent.content_type === 'reel' && newContent.script_content?.trim()) || 
+                          newContent.status === 'pending_approval';
 
     const insertData: any = {
       topic: newContent.topic,

@@ -53,7 +53,7 @@ export default function Approvals() {
       const { data, error } = await supabase
         .from("content_calendar")
         .select("*")
-        .neq("approval_status", "not_required")
+        .or("approval_status.neq.not_required,status.eq.pending_approval")
         .order("submitted_for_approval_at", { ascending: false });
 
       if (error) throw error;
