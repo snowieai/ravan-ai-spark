@@ -492,7 +492,7 @@ Drop a 🏠 if you're ready to take action!
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
-                  className={`bg-white/80 backdrop-blur-sm border-emerald-100 transition-all duration-300 h-full cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                  className={`bg-white/80 backdrop-blur-sm border-emerald-100 transition-all duration-300 h-full cursor-default hover:shadow-2xl ${
                     selectedScript?.label === script.label ? 'ring-2 ring-emerald-500 border-emerald-300' : ''
                   }`}
                 >

@@ -572,7 +572,7 @@ const MayraScript = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Script A */}
-                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-default hover:shadow-2xl ${
                   selectedScript === 'A' ? 'ring-2 ring-yellow-500 border-yellow-300' : ''
                 }`}>
                   <CardHeader>
@@ -620,7 +620,7 @@ const MayraScript = () => {
                 </Card>
 
                 {/* Script B */}
-                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-default hover:shadow-2xl ${
                   selectedScript === 'B' ? 'ring-2 ring-yellow-500 border-yellow-300' : ''
                 }`}>
                   <CardHeader>

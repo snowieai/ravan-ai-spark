@@ -378,11 +378,11 @@ const KairaScript = () => {
               {scriptData.title}
             </h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
               {scriptData.scripts?.map((script, index) => (
                 <Card 
                   key={index}
-                  className={`bg-white/80 backdrop-blur-sm border-orange-100 transition-all duration-300 h-full cursor-pointer hover:scale-105 hover:shadow-2xl ${
+                  className={`bg-white/80 backdrop-blur-sm border-orange-100 transition-all duration-300 h-full cursor-default hover:shadow-2xl ${
                     selectedScript?.label === script.label ? 'ring-2 ring-orange-500 border-orange-300' : ''
                   }`}
                 >
