@@ -288,7 +288,7 @@ const KairaCalendar = () => {
   };
 
   const deleteContentItem = async (id: string) => {
-    const { error } = await safeSupabaseQuery(async () => {
+    const { data, error } = await safeSupabaseQuery(async () => {
       const result = await supabase
         .from('content_calendar')
         .delete()
@@ -307,6 +307,15 @@ const KairaCalendar = () => {
       return;
     }
 
+    if (!data || data.length === 0) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete this item",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Success",
       description: "Content deleted",
@@ -316,7 +325,7 @@ const KairaCalendar = () => {
   };
 
   const updateContentDate = async (itemId: string, newDate: string) => {
-    const { error } = await safeSupabaseQuery(async () => {
+    const { data, error } = await safeSupabaseQuery(async () => {
       const result = await supabase
         .from('content_calendar')
         .update({ scheduled_date: newDate })
@@ -330,6 +339,15 @@ const KairaCalendar = () => {
       toast({
         title: "Error",
         description: "Failed to update date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to move this item",
         variant: "destructive",
       });
       return;
