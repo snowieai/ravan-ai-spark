@@ -17,6 +17,9 @@ import Ideas from "./pages/Ideas";
 import KairaIdeas from "./pages/KairaIdeas";
 import KairaCalendar from "./pages/KairaCalendar";
 import KairaCalendarThemes from "./pages/KairaCalendarThemes";
+import AishaCalendarThemes from "./pages/AishaCalendarThemes";
+import MayraCalendarThemes from "./pages/MayraCalendarThemes";
+import BaileyCalendarThemes from "./pages/BaileyCalendarThemes";
 import BaileyCalendar from "./pages/BaileyCalendar";
 import MayraCalendar from "./pages/MayraCalendar";
 import AishaCalendar from "./pages/AishaCalendar";
@@ -54,6 +57,9 @@ const App = () => (
               <Route path="/kaira-ideas" element={<ProtectedRoute><KairaIdeas /></ProtectedRoute>} />
               <Route path="/kaira-calendar" element={<ProtectedRoute><KairaCalendar /></ProtectedRoute>} />
               <Route path="/kaira-calendar-themes" element={<ProtectedRoute><KairaCalendarThemes /></ProtectedRoute>} />
+              <Route path="/aisha-calendar-themes" element={<ProtectedRoute><AishaCalendarThemes /></ProtectedRoute>} />
+              <Route path="/mayra-calendar-themes" element={<ProtectedRoute><MayraCalendarThemes /></ProtectedRoute>} />
+              <Route path="/bailey-calendar-themes" element={<ProtectedRoute><BaileyCalendarThemes /></ProtectedRoute>} />
               <Route path="/bailey-calendar" element={<ProtectedRoute><BaileyCalendar /></ProtectedRoute>} />
               <Route path="/mayra-calendar" element={<ProtectedRoute><MayraCalendar /></ProtectedRoute>} />
               <Route path="/aisha-calendar" element={<ProtectedRoute><AishaCalendar /></ProtectedRoute>} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Video, Home, LogOut, Calendar } from 'lucide-react';
+import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -123,7 +123,7 @@ const BaileyDashboard = () => {
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
                   <Button
                     onClick={() => handleNavigation('/bailey-ideas')}
                     className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
@@ -138,6 +138,14 @@ const BaileyDashboard = () => {
                   >
                     <Calendar className="w-5 h-5 mr-2" />
                     Content Calendar
+                  </Button>
+
+                  <Button
+                    onClick={() => handleNavigation('/bailey-calendar-themes')}
+                    className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-4 rounded-full text-lg font-semibold border-0 shadow-lg hover:shadow-xl transition-all duration-300 min-w-[200px]"
+                  >
+                    <CalendarDays className="w-5 h-5 mr-2" />
+                    Content Calendar Theme
                   </Button>
                   
                   <Button
