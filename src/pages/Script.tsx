@@ -275,7 +275,7 @@ const Script = () => {
         topicTitle = topic;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('content_calendar')
         .insert({
           user_id: user.id,
@@ -288,14 +288,32 @@ const Script = () => {
           notes: calendarFormData.notes,
           inspiration_links: calendarFormData.inspiration_links,
           category: getCategoryForDate(calendarFormData.scheduled_date),
-          content_source: 'generated'
-        });
+          content_source: 'generated',
+          influencer_name: 'kaira',
+          approval_status: 'pending',
+          submitted_for_approval_at: new Date().toISOString()
+        })
+        .select();
 
       if (error) throw error;
 
+      // Notify admins about pending script
+      try {
+        await supabase.functions.invoke('notify-admins-pending-script', {
+          body: {
+            scriptId: data?.[0]?.id,
+            influencer: 'kaira',
+            scheduledDate: calendarFormData.scheduled_date,
+            topic: topicTitle
+          }
+        });
+      } catch (notifyError) {
+        console.error('Failed to notify admins:', notifyError);
+      }
+
       toast({
         title: "Success",
-        description: "Script sent for approval",
+        description: "Script sent for admin approval",
       });
 
       setShowSaveDialog(false);

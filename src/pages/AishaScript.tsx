@@ -233,7 +233,7 @@ const AishaScript = () => {
         topicTitle = topic;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('content_calendar')
         .insert({
           user_id: user.id,
@@ -255,11 +255,11 @@ const AishaScript = () => {
 
       if (error) throw error;
 
-      // Notify admins
+      // Notify admins about pending script
       try {
         await supabase.functions.invoke('notify-admins-pending-script', {
           body: {
-            scriptId: topicTitle,
+            scriptId: data?.[0]?.id,
             influencer: 'aisha',
             scheduledDate: calendarFormData.scheduled_date,
             topic: topicTitle

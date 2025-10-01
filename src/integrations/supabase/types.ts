@@ -51,7 +51,7 @@ export type Database = {
           content_type?: string | null
           created_at?: string | null
           id?: string
-          influencer_name?: string
+          influencer_name: string
           inspiration_links?: string | null
           last_reminder_sent_at?: string | null
           notes?: string | null
