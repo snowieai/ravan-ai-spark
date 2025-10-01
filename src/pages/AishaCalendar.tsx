@@ -175,11 +175,23 @@ const AishaCalendar = () => {
       return;
     }
 
+    // Get authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to add content",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Determine if script needs approval - either has script_content OR status is pending_approval
     const needsApproval = (newContent.content_type === 'reel' && newContent.script_content?.trim()) || 
                           newContent.status === 'pending_approval';
 
     const insertData: any = {
+      user_id: user.id,
       topic: newContent.topic,
       scheduled_date: newContent.scheduled_date,
       category: getCategoryForDate(newContent.scheduled_date),
