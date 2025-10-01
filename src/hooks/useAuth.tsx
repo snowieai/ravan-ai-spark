@@ -51,6 +51,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const createProfileIfMissing = async (user: User): Promise<UserProfile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || '',
+          role: user.user_metadata?.role || 'user'
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+        return null;
+      }
+      
+      return data as UserProfile;
+    } catch (error) {
+      console.error('Error creating profile:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -61,7 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           // Fetch user profile
           setTimeout(async () => {
-            const userProfile = await fetchUserProfile(session.user.id);
+            let userProfile = await fetchUserProfile(session.user.id);
+            
+            // Self-heal: create profile if missing
+            if (!userProfile) {
+              userProfile = await createProfileIfMissing(session.user);
+            }
+            
             setProfile(userProfile);
             setLoading(false);
           }, 0);
@@ -77,7 +108,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        const userProfile = await fetchUserProfile(session.user.id);
+        let userProfile = await fetchUserProfile(session.user.id);
+        
+        // Self-heal: create profile if missing
+        if (!userProfile) {
+          userProfile = await createProfileIfMissing(session.user);
+        }
+        
         setProfile(userProfile);
         setLoading(false);
       } else {
