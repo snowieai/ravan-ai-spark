@@ -20,18 +20,29 @@ serve(async (req) => {
       );
     }
 
-    const n8nUrl = "https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e";
+    // Build webhook URL with query parameters
+    const webhookUrl = "https://vkfmtrovrxgalhekzfsu.supabase.co/functions/v1/webhook-handler";
+    const n8nUrl = new URL("https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e");
+    
+    // Add all parameters to query string
+    n8nUrl.searchParams.append("jobId", jobId);
+    n8nUrl.searchParams.append("webhookUrl", webhookUrl);
+    n8nUrl.searchParams.append("character", character);
+    n8nUrl.searchParams.append("script", script);
 
     // Timeout after 30s
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    console.log("Triggering N8N webhook", { jobId, character, scriptPreview: `${String(script).slice(0, 60)}...` });
+    console.log("Triggering N8N webhook with GET", { 
+      jobId, 
+      character, 
+      webhookUrl,
+      scriptPreview: `${String(script).slice(0, 60)}...` 
+    });
 
-    const resp = await fetch(n8nUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobId, character, script }),
+    const resp = await fetch(n8nUrl.toString(), {
+      method: "GET",
       signal: controller.signal,
     });
 

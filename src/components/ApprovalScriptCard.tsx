@@ -74,15 +74,51 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
     };
   };
 
+  const generateJobId = async (): Promise<string> => {
+    // Query the database for the highest job_id
+    const { data, error } = await supabase
+      .from("content_calendar")
+      .select("video_job_id")
+      .not("video_job_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(100); // Get last 100 to find highest number
+
+    if (error) {
+      console.error("Error fetching job IDs:", error);
+      return "JOB001"; // Default to first ID if error
+    }
+
+    // Extract numeric parts from JOB### format
+    let maxJobNumber = 0;
+    if (data && data.length > 0) {
+      data.forEach((item) => {
+        const match = item.video_job_id?.match(/^JOB(\d+)$/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxJobNumber) {
+            maxJobNumber = num;
+          }
+        }
+      });
+    }
+
+    // Increment and wrap around after 999
+    const nextJobNumber = maxJobNumber >= 999 ? 1 : maxJobNumber + 1;
+    
+    // Format with leading zeros (JOB001, JOB002, etc.)
+    return `JOB${String(nextJobNumber).padStart(3, '0')}`;
+  };
+
   const handleGenerateVideo = async () => {
     if (!user) return;
     
-    const jobId = `JOB${Date.now()}`;
-    const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
-                                script.influencer_name.slice(1).toLowerCase();
-    
     try {
       setVideoGenerating(true);
+      
+      // Generate sequential job ID
+      const jobId = await generateJobId();
+      const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
+                                  script.influencer_name.slice(1).toLowerCase();
       
       console.log('Starting video generation:', { 
         jobId, 
@@ -133,11 +169,12 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
       onUpdate();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("❌ Video generation failed:", { error: errorMessage, jobId, character: normalizedCharacter });
+      console.error("❌ Video generation failed:", { error: errorMessage });
       
       toast.error(`Failed to start video generation: ${errorMessage}`);
       
       // Update status to failed with error message
+      const jobId = await generateJobId();
       await supabase
         .from("content_calendar")
         .update({ 
@@ -353,9 +390,26 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
               )}
               
               {script.video_status === 'failed' && script.video_error_message && (
-                <div className="w-full p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
-                  <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Video Generation Failed</p>
-                  <p className="text-xs text-red-500 dark:text-red-500">{script.video_error_message}</p>
+                <div className="w-full space-y-2">
+                  <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
+                    <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Video Generation Failed</p>
+                    <p className="text-xs text-red-500 dark:text-red-500">{script.video_error_message}</p>
+                  </div>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      const calc = calculateCost(script.script_content);
+                      setWordCount(calc.wordCount);
+                      setEstimatedDuration(calc.duration);
+                      setEstimatedCost(calc.cost);
+                      setCostDialogOpen(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Retry Video Generation
+                  </Button>
                 </div>
               )}
               
