@@ -20,6 +20,8 @@ interface ContentItem {
   approval_status: string;
   admin_remarks: string | null;
   submitted_for_approval_at: string;
+  video_status?: string | null;
+  video_job_id?: string | null;
 }
 
 export default function Approvals() {
