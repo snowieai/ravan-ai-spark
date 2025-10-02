@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ArrowLeft, Video, Image, Music, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { proxiedUrl } from "@/lib/media";
 
 interface VideoGeneration {
   id: string;
@@ -157,15 +158,18 @@ const VideoResults = () => {
                 {generation.lipsync_videos.map((url, index) => (
                   <div key={index} className="space-y-2">
                     <video 
-                      src={url} 
+                      src={proxiedUrl(url)} 
                       controls 
-                      className="w-full rounded-lg border border-border"
+                      preload="metadata"
+                      playsInline
+                      crossOrigin="anonymous"
+                      className="w-full rounded-lg border border-border aspect-[9/16]"
                     />
                     <Button 
                       size="sm" 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => downloadAsset(url, `lipsync-video-${index + 1}.mp4`)}
+                      onClick={() => downloadAsset(proxiedUrl(url), `lipsync-video-${index + 1}.mp4`)}
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
@@ -191,15 +195,18 @@ const VideoResults = () => {
                 {generation.broll_videos.map((url, index) => (
                   <div key={index} className="space-y-2">
                     <video 
-                      src={url} 
+                      src={proxiedUrl(url)} 
                       controls 
+                      preload="metadata"
+                      playsInline
+                      crossOrigin="anonymous"
                       className="w-full rounded-lg border border-border"
                     />
                     <Button 
                       size="sm" 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => downloadAsset(url, `broll-video-${index + 1}.mp4`)}
+                      onClick={() => downloadAsset(proxiedUrl(url), `broll-video-${index + 1}.mp4`)}
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
@@ -225,15 +232,16 @@ const VideoResults = () => {
                 {generation.lipsync_images.map((url, index) => (
                   <div key={index} className="space-y-2">
                     <img 
-                      src={url} 
+                      src={proxiedUrl(url)} 
                       alt={`Lipsync ${index + 1}`}
+                      crossOrigin="anonymous"
                       className="w-full rounded-lg border border-border aspect-square object-cover"
                     />
                     <Button 
                       size="sm" 
                       variant="outline" 
                       className="w-full"
-                      onClick={() => downloadAsset(url, `lipsync-image-${index + 1}.png`)}
+                      onClick={() => downloadAsset(proxiedUrl(url), `lipsync-image-${index + 1}.png`)}
                     >
                       <Download className="mr-2 h-4 w-4" />
                       Download
@@ -245,39 +253,6 @@ const VideoResults = () => {
           </Card>
         )}
 
-        {/* B-Roll Images */}
-        {generation.broll_images && generation.broll_images.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Image className="h-5 w-5" />
-                B-Roll Images ({generation.broll_images.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {generation.broll_images.map((url, index) => (
-                  <div key={index} className="space-y-2">
-                    <img 
-                      src={url} 
-                      alt={`B-Roll ${index + 1}`}
-                      className="w-full rounded-lg border border-border aspect-square object-cover"
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => downloadAsset(url, `broll-image-${index + 1}.jpg`)}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Full Audio */}
         {generation.full_audio && (
@@ -291,13 +266,15 @@ const VideoResults = () => {
             <CardContent>
               <div className="space-y-4">
                 <audio 
-                  src={generation.full_audio} 
+                  src={proxiedUrl(generation.full_audio)} 
                   controls 
+                  preload="metadata"
+                  crossOrigin="anonymous"
                   className="w-full"
                 />
                 <Button 
                   variant="outline"
-                  onClick={() => downloadAsset(generation.full_audio!, 'full-audio.mp3')}
+                  onClick={() => downloadAsset(proxiedUrl(generation.full_audio!), 'full-audio.mp3')}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Audio

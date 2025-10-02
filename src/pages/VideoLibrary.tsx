@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Film, Search, Download, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { proxiedUrl } from "@/lib/media";
 
 interface VideoGeneration {
   id: string;
@@ -300,8 +301,9 @@ export default function VideoLibrary() {
                   {video.lipsync_images && video.lipsync_images.length > 0 ? (
                     <div className="mb-3 rounded-lg overflow-hidden bg-muted aspect-[9/16]">
                       <img
-                        src={video.lipsync_images[0]}
+                        src={proxiedUrl(video.lipsync_images[0])}
                         alt="Video thumbnail"
+                        crossOrigin="anonymous"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -346,7 +348,7 @@ export default function VideoLibrary() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => downloadAsset(video.lipsync_videos[0], `${video.content_calendar.influencer_name}-video.mp4`)}
+                        onClick={() => downloadAsset(proxiedUrl(video.lipsync_videos[0]), `${video.content_calendar.influencer_name}-video.mp4`)}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
