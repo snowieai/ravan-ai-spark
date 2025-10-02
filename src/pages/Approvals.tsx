@@ -31,6 +31,7 @@ export default function Approvals() {
   const [scripts, setScripts] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isApprovedOpen, setIsApprovedOpen] = useState(false);
+  const [isRejectedOpen, setIsRejectedOpen] = useState(false);
   const deniedToastShown = useRef(false);
 
   // Refresh profile on mount to ensure latest admin role is loaded
@@ -197,6 +198,50 @@ export default function Approvals() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {approvedScripts.map((script) => (
+                      <ApprovalScriptCard
+                        key={script.id}
+                        script={script}
+                        onUpdate={fetchScripts}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Rejected Scripts - Collapsible */}
+            <Collapsible open={isRejectedOpen} onOpenChange={setIsRejectedOpen}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-foreground">Rejected Scripts</h2>
+                  <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">
+                    {stats.rejected}
+                  </Badge>
+                </div>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {isRejectedOpen ? (
+                      <>
+                        <ChevronUp className="h-4 w-4 mr-2" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        Show
+                      </>
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                {rejectedScripts.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground">No rejected scripts</p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {rejectedScripts.map((script) => (
                       <ApprovalScriptCard
                         key={script.id}
                         script={script}
