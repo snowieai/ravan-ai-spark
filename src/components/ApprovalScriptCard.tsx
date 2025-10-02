@@ -107,61 +107,24 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
         throw new Error(`Failed to update database: ${updateError.message}`);
       }
 
-      // Fetch with timeout wrapper
-      const fetchWithTimeout = (url: string, options: RequestInit, timeout = 30000) => {
-        return Promise.race([
-          fetch(url, options),
-          new Promise<Response>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout after 30 seconds')), timeout)
-          )
-        ]);
-      };
-
-      // Call N8N webhook - try POST first, fallback to GET if CORS/method issues
-      const n8nUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e';
-      const payload = {
-        jobId,
-        character: normalizedCharacter,
-        script: script.script_content
-      };
-
-      console.log('Calling N8N webhook (POST):', { url: n8nUrl, payload: { ...payload, script: `${script.script_content.substring(0, 50)}...` } });
-      
-      let response;
-      try {
-        response = await fetchWithTimeout(n8nUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      // Call Edge Function to trigger N8N (avoids CORS and guarantees server-side call)
+      const { data: triggerData, error: triggerError } = await supabase.functions.invoke(
+        'trigger-video-generation',
+        {
+          body: {
+            jobId,
+            character: normalizedCharacter,
+            script: script.script_content,
           },
-          body: JSON.stringify(payload),
-          mode: 'no-cors' // Allow cross-origin request without CORS
-        }, 30000);
-        
-        console.log('✓ N8N webhook POST successful');
-      } catch (postError) {
-        console.warn('POST request failed, trying GET method:', postError);
-        
-        // Fallback to GET request
-        const urlWithParams = new URL(n8nUrl);
-        urlWithParams.searchParams.append('jobId', jobId);
-        urlWithParams.searchParams.append('character', normalizedCharacter);
-        urlWithParams.searchParams.append('script', script.script_content);
-        
-        console.log('Calling N8N webhook (GET fallback):', urlWithParams.toString().substring(0, 200) + '...');
-        
-        try {
-          response = await fetchWithTimeout(urlWithParams.toString(), {
-            method: 'GET',
-            mode: 'no-cors'
-          }, 30000);
-          
-          console.log('✓ N8N webhook GET successful');
-        } catch (getError) {
-          console.error('Both POST and GET failed:', { postError, getError });
-          throw new Error(`N8N webhook unreachable. Please check your internet connection and N8N server status.`);
         }
+      );
+
+      if (triggerError) {
+        console.error('Edge function error:', triggerError);
+        throw new Error(triggerError.message || 'Failed to trigger video generation');
       }
+
+      console.log('Edge function responded:', triggerData);
 
       console.log('✓ Video generation started successfully');
       
