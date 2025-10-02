@@ -31,6 +31,7 @@ import AishaScript from "./pages/AishaScript";
 import BaileyScript from "./pages/BaileyScript";
 import MayraScript from "./pages/MayraScript";
 import Video from "./pages/Video";
+import VideoResults from "./pages/VideoResults";
 import Diagnostics from "./pages/Diagnostics";
 import Approvals from "./pages/Approvals";
 import NotFound from "./pages/NotFound";
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/bailey-script" element={<ProtectedRoute><BaileyScript /></ProtectedRoute>} />
               <Route path="/mayra-script" element={<ProtectedRoute><MayraScript /></ProtectedRoute>} />
               <Route path="/video" element={<ProtectedRoute><Video /></ProtectedRoute>} />
+              <Route path="/video-results" element={<ProtectedRoute><VideoResults /></ProtectedRoute>} />
           <Route path="/diagnostics" element={<ProtectedRoute><Diagnostics /></ProtectedRoute>} />
           <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

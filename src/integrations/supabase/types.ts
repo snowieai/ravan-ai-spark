@@ -523,6 +523,56 @@ export type Database = {
           },
         ]
       }
+      video_generations: {
+        Row: {
+          broll_images: string[] | null
+          broll_videos: string[] | null
+          content_id: string | null
+          created_at: string | null
+          full_audio: string | null
+          id: string
+          job_id: string
+          lipsync_images: string[] | null
+          lipsync_videos: string[] | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          broll_images?: string[] | null
+          broll_videos?: string[] | null
+          content_id?: string | null
+          created_at?: string | null
+          full_audio?: string | null
+          id?: string
+          job_id: string
+          lipsync_images?: string[] | null
+          lipsync_videos?: string[] | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          broll_images?: string[] | null
+          broll_videos?: string[] | null
+          content_id?: string | null
+          created_at?: string | null
+          full_audio?: string | null
+          id?: string
+          job_id?: string
+          lipsync_images?: string[] | null
+          lipsync_videos?: string[] | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_generations_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "content_calendar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_entries: {
         Row: {
           activity: string

@@ -20,6 +20,8 @@ interface ApprovalScriptCardProps {
     script_content: string;
     approval_status: string;
     admin_remarks: string | null;
+    video_status?: string | null;
+    video_job_id?: string | null;
   };
   onUpdate: () => void;
 }
@@ -79,12 +81,18 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
 
       // Generate unique job ID
       const jobId = `JOB${Date.now()}`;
-
-      // Update database with video status and cost
+      
+      // Normalize character name to match expected values
+      const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
+                                  script.influencer_name.slice(1).toLowerCase();
+      
+      console.log('Starting video generation:', { jobId, character: normalizedCharacter });
+      
+      // Update database with generating status
       const { error: updateError } = await supabase
         .from("content_calendar")
         .update({
-          video_status: 'pending',
+          video_status: 'generating',
           video_job_id: jobId,
           word_count: wordCount,
           video_cost_estimate: estimatedCost,
@@ -93,24 +101,34 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
 
       if (updateError) throw updateError;
 
-      // Construct redirect URL to Video SaaS with pre-filled data
-      const callbackUrl = 'https://vkfmtrovrxgalhekzfsu.supabase.co/functions/v1/video-generation-callback';
-      const videoSaasUrl = new URL('https://video.ravan.ai/');
-      videoSaasUrl.searchParams.append('script', script.script_content);
-      videoSaasUrl.searchParams.append('character', script.influencer_name.charAt(0).toUpperCase() + script.influencer_name.slice(1).toLowerCase());
-      videoSaasUrl.searchParams.append('content_id', script.id);
-      videoSaasUrl.searchParams.append('job_id', jobId);
-      videoSaasUrl.searchParams.append('callback_url', callbackUrl);
+      // Call N8N webhook (GET request)
+      const n8nUrl = new URL('https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e');
+      n8nUrl.searchParams.append('jobId', jobId);
+      n8nUrl.searchParams.append('character', normalizedCharacter);
+      n8nUrl.searchParams.append('script', script.script_content);
 
-      // Open Video SaaS in new tab
-      window.open(videoSaasUrl.toString(), '_blank');
+      console.log('Calling N8N webhook:', n8nUrl.toString());
+      
+      const response = await fetch(n8nUrl.toString(), { method: 'GET' });
+      
+      if (!response.ok) {
+        throw new Error(`N8N webhook failed: ${response.statusText}`);
+      }
 
-      toast.success("Redirecting to Video SaaS...");
+      console.log('N8N webhook triggered successfully');
+      
+      toast.success("Video generation started! Check back in a few minutes.");
       setConfirmDialogOpen(false);
       onUpdate();
     } catch (error) {
       console.error("Error generating video:", error);
-      toast.error("Failed to start video generation");
+      toast.error("Failed to start video generation. Please try again.");
+      
+      // Reset status on error
+      await supabase
+        .from("content_calendar")
+        .update({ video_status: null, video_job_id: null })
+        .eq("id", script.id);
     } finally {
       setVideoGenerating(false);
     }
@@ -274,21 +292,48 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                 <Calendar className="h-4 w-4 mr-2" />
                 View in Calendar
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  const calc = calculateCost(script.script_content);
-                  setWordCount(calc.wordCount);
-                  setEstimatedDuration(calc.duration);
-                  setEstimatedCost(calc.cost);
-                  setCostDialogOpen(true);
-                }}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                <Video className="h-4 w-4 mr-2" />
-                Generate Video with AI
-              </Button>
+              
+              {script.video_status === 'generating' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="w-full"
+                >
+                  <Video className="h-4 w-4 mr-2 animate-pulse" />
+                  Generating Video...
+                </Button>
+              )}
+              
+              {script.video_status === 'completed' && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => navigate(`/video-results?content_id=${script.id}`)}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  View Generated Videos
+                </Button>
+              )}
+              
+              {(!script.video_status || script.video_status === 'failed') && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    const calc = calculateCost(script.script_content);
+                    setWordCount(calc.wordCount);
+                    setEstimatedDuration(calc.duration);
+                    setEstimatedCost(calc.cost);
+                    setCostDialogOpen(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Generate Video with AI
+                </Button>
+              )}
             </>
           )}
 
