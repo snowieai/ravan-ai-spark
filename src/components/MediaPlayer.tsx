@@ -65,11 +65,6 @@ export const MediaPlayer = ({
     }
   };
 
-  const handleVideoClick = () => {
-    if (kind === "video") {
-      handleFullscreen();
-    }
-  };
 
   if (error) {
     return (
@@ -101,16 +96,18 @@ export const MediaPlayer = ({
           controls={controls}
           preload={preload}
           playsInline={playsInline}
-          onClick={handleVideoClick}
-          className={`${className} cursor-pointer`}
+          className={className}
         />
         <Button
           size="icon"
           variant="secondary"
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-          onClick={handleFullscreen}
+          className="absolute top-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 backdrop-blur-sm shadow-lg rounded-md bg-black/60 hover:bg-black/80 border-none"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFullscreen();
+          }}
         >
-          <Maximize2 className="h-4 w-4" />
+          <Maximize2 className="h-5 w-5 text-white" />
         </Button>
       </div>
     );
