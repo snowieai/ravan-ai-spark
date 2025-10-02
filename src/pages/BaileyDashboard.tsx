@@ -103,9 +103,9 @@ const BaileyDashboard = () => {
                 </h1>
                 
                 {/* Bailey's Image */}
-                <div className="w-80 h-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="w-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl aspect-[3/4]">
                   <img 
-                    src="/lovable-uploads/fa8232a2-9e33-4b08-8cfe-c6fad1827c6b.png" 
+                    src="/lovable-uploads/bailey-headshot.jpg"
                     alt="Bailey Profile"
                     className="w-full h-full object-cover"
                   />
