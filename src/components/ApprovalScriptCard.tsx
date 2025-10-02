@@ -317,7 +317,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                 </Button>
               )}
               
-              {(!script.video_status || script.video_status === 'failed') && (
+              {(script.video_status !== 'generating' && script.video_status !== 'completed') && (
                 <Button
                   variant="default"
                   size="sm"
