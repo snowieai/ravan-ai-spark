@@ -313,15 +313,31 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
               </Button>
               
               {script.video_status === 'generating' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="w-full"
-                >
-                  <Video className="h-4 w-4 mr-2 animate-pulse" />
-                  Generating Video...
-                </Button>
+                <div className="space-y-2 w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="w-full"
+                  >
+                    <Video className="h-4 w-4 mr-2 animate-pulse" />
+                    Generating Video...
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      const calc = calculateCost(script.script_content);
+                      setWordCount(calc.wordCount);
+                      setEstimatedDuration(calc.duration);
+                      setEstimatedCost(calc.cost);
+                      setCostDialogOpen(true);
+                    }}
+                  >
+                    Retry Generate (force)
+                  </Button>
+                </div>
               )}
               
               {script.video_status === 'completed' && (
