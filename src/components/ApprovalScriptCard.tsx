@@ -85,7 +85,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
 
     if (error) {
       console.error("Error fetching job IDs:", error);
-      return "JOB001"; // Default to first ID if error
+      return "JOB101"; // Default to first ID if error
     }
 
     // Extract numeric parts from JOB### format
@@ -102,10 +102,10 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
       });
     }
 
-    // Increment and wrap around after 999
-    const nextJobNumber = maxJobNumber >= 999 ? 1 : maxJobNumber + 1;
+    // Start from 101 if no jobs exist, otherwise increment and wrap around after 999 back to 101
+    const nextJobNumber = maxJobNumber === 0 ? 101 : (maxJobNumber >= 999 ? 101 : maxJobNumber + 1);
     
-    // Format with leading zeros (JOB001, JOB002, etc.)
+    // Format with leading zeros (JOB101, JOB102, etc.)
     return `JOB${String(nextJobNumber).padStart(3, '0')}`;
   };
 
