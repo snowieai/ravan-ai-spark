@@ -22,7 +22,7 @@ interface ContentItem {
   id: string;
   topic: string;
   scheduled_date: string;
-  status: 'planned' | 'approved' | 'pending_approval' | 'script_ready' | 'in_production' | 'published' | 'cancelled';
+  status: 'planned' | 'approved' | 'pending_approval' | 'script_ready' | 'in_production' | 'published' | 'cancelled' | 'rejected';
   priority: 1 | 2 | 3;
   notes?: string;
   script_content?: string;
@@ -43,7 +43,8 @@ const statusColors = {
   script_ready: "bg-yellow-100 text-yellow-800",
   in_production: "bg-purple-100 text-purple-800",
   published: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800"
+  cancelled: "bg-red-100 text-red-800",
+  rejected: "bg-red-500 text-white"
 };
 
 const categoryColors = {
@@ -201,7 +202,11 @@ const KairaCalendar = () => {
       ...item,
       status: item.approval_status === 'approved'
         ? 'approved'
-        : (item.approval_status === 'pending' ? 'pending_approval' : item.status)
+        : (item.approval_status === 'pending' 
+          ? 'pending_approval' 
+          : (item.approval_status === 'rejected' 
+            ? 'rejected' 
+            : item.status))
     })) as ContentItem[]);
     setLoading(false);
   };
@@ -307,7 +312,7 @@ const KairaCalendar = () => {
     fetchContentItems();
   };
 
-  const updateContentStatus = async (id: string, newStatus: ContentItem['status']) => {
+  const updateContentStatus = async (id: string, newStatus: Exclude<ContentItem['status'], 'rejected'>) => {
     const { error } = await safeSupabaseQuery(async () => {
       const result = await supabase
         .from('content_calendar')
