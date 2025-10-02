@@ -136,6 +136,7 @@ export const MediaPlayer = ({
           preload={preload}
           playsInline={playsInline}
           className={className}
+          style={{ objectFit: isFullscreen ? 'contain' : undefined, objectPosition: 'center', width: isFullscreen ? '100%' : undefined, height: isFullscreen ? '100%' : undefined }}
         />
         <Button
           size="icon"
