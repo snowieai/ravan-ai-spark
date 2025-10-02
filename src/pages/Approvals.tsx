@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, Film } from "lucide-react";
 import { toast } from "sonner";
 import { ApprovalScriptCard } from "@/components/ApprovalScriptCard";
 
@@ -95,6 +95,10 @@ export default function Approvals() {
             <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/video-library")}>
+              <Film className="h-4 w-4 mr-2" />
+              Video Library
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />

@@ -134,9 +134,9 @@ const VideoResults = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => navigate("/approvals")}>
+            <Button variant="outline" onClick={() => navigate("/video-library")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Back to Library
             </Button>
             <h1 className="text-3xl font-bold text-foreground">Video Generation Results</h1>
           </div>

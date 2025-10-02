@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays } from 'lucide-react';
+import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays, Film } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -146,6 +146,14 @@ const MayraDashboard = () => {
                   >
                     <CalendarDays className="w-7 h-7 mr-3" />
                     Content Calendar Theme
+                  </Button>
+
+                  <Button
+                    onClick={() => handleNavigation('/video-library')}
+                    className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                  >
+                    <Film className="w-7 h-7 mr-3" />
+                    Video Library
                   </Button>
                 </div>
               </div>

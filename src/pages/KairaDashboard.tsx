@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, ArrowRight, ArrowLeft, User, Calendar } from 'lucide-react';
+import { Lightbulb, ArrowRight, ArrowLeft, User, Calendar, Film } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 
 const KairaDashboard = () => {
@@ -128,6 +128,15 @@ const KairaDashboard = () => {
             >
               <Calendar className="w-7 h-7 mr-3 group-hover:animate-pulse" />
               Content Calendar Theme
+              <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            
+            <Button
+              onClick={() => navigate('/video-library')}
+              className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+            >
+              <Film className="w-7 h-7 mr-3 group-hover:animate-pulse" />
+              Video Library
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>

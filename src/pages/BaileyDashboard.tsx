@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays } from 'lucide-react';
+import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays, Film } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -146,6 +146,14 @@ const BaileyDashboard = () => {
                   >
                     <CalendarDays className="w-7 h-7 mr-3" />
                     Content Calendar Theme
+                  </Button>
+
+                  <Button
+                    onClick={() => handleNavigation('/video-library')}
+                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                  >
+                    <Film className="w-7 h-7 mr-3" />
+                    Video Library
                   </Button>
                 </div>
               </div>
