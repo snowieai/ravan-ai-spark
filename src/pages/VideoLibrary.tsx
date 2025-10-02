@@ -55,7 +55,8 @@ export default function VideoLibrary() {
 
   const fetchVideos = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch video_generations with content_calendar data
+      const { data: videoGens, error: videoError } = await supabase
         .from("video_generations")
         .select(`
           *,
@@ -68,8 +69,42 @@ export default function VideoLibrary() {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setVideos(data || []);
+      if (videoError) throw videoError;
+
+      // Also fetch content_calendar items with video_status but no video_generations record
+      // This handles legacy videos generated before the new system
+      const { data: legacyVideos, error: legacyError } = await supabase
+        .from("content_calendar")
+        .select("*")
+        .not("video_status", "is", null)
+        .not("video_job_id", "is", null);
+
+      if (legacyError) throw legacyError;
+
+      // Combine both, but exclude legacy videos that already have video_generations records
+      const existingJobIds = new Set((videoGens || []).map(v => v.job_id));
+      const legacyItems = (legacyVideos || [])
+        .filter(lv => !existingJobIds.has(lv.video_job_id))
+        .map(lv => ({
+          id: lv.id,
+          content_id: lv.id,
+          job_id: lv.video_job_id,
+          status: lv.video_status === 'generating' ? 'processing' : lv.video_status,
+          created_at: lv.created_at,
+          lipsync_images: [],
+          lipsync_videos: [],
+          broll_images: [],
+          broll_videos: [],
+          full_audio: null,
+          content_calendar: {
+            topic: lv.topic,
+            influencer_name: lv.influencer_name,
+            script_content: lv.script_content || '',
+            scheduled_date: lv.scheduled_date,
+          }
+        }));
+
+      setVideos([...(videoGens || []), ...legacyItems]);
     } catch (error) {
       console.error("Error fetching videos:", error);
       toast.error("Failed to load video library");
