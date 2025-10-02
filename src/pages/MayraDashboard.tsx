@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays, Film } from 'lucide-react';
+import { Lightbulb, Video, Home, LogOut, Calendar, CalendarDays, Film, ArrowRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -123,37 +123,41 @@ const MayraDashboard = () => {
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <div className="flex justify-center items-center gap-6 mb-12 flex-wrap">
                   <Button
                     onClick={() => handleNavigation('/mayra-ideas')}
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
                   >
                     <Lightbulb className="w-7 h-7 mr-3 group-hover:animate-pulse" />
                     Generate Ideas
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
 
                   <Button
                     onClick={() => handleNavigation('/mayra-calendar')}
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
                   >
-                    <Calendar className="w-7 h-7 mr-3" />
+                    <Calendar className="w-7 h-7 mr-3 group-hover:animate-pulse" />
                     Content Calendar
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
 
                   <Button
                     onClick={() => handleNavigation('/mayra-calendar-themes')}
-                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
                   >
-                    <CalendarDays className="w-7 h-7 mr-3" />
+                    <CalendarDays className="w-7 h-7 mr-3 group-hover:animate-pulse" />
                     Content Calendar Theme
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
 
                   <Button
                     onClick={() => handleNavigation('/video-library')}
-                    className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0 min-w-[200px]"
+                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
                   >
-                    <Film className="w-7 h-7 mr-3" />
+                    <Film className="w-7 h-7 mr-3 group-hover:animate-pulse" />
                     Video Library
+                    <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </div>

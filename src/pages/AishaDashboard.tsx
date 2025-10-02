@@ -116,7 +116,7 @@ const AishaDashboard = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-20">
+          <div className="flex justify-center items-center gap-6 mb-20 flex-wrap">
             <Button
               onClick={handleIdeasRedirect}
               className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
@@ -128,9 +128,9 @@ const AishaDashboard = () => {
 
             <Button
               onClick={() => navigate('/aisha-calendar')}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
-              <Calendar className="w-7 h-7 mr-3" />
+              <Calendar className="w-7 h-7 mr-3 group-hover:animate-pulse" />
               Content Calendar
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -139,7 +139,7 @@ const AishaDashboard = () => {
               onClick={() => navigate('/aisha-calendar-themes')}
               className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-10 py-6 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center group border-0"
             >
-              <CalendarDays className="w-7 h-7 mr-3" />
+              <CalendarDays className="w-7 h-7 mr-3 group-hover:animate-pulse" />
               Content Calendar Theme
               <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
             </Button>
