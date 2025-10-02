@@ -22,6 +22,7 @@ interface ApprovalScriptCardProps {
     admin_remarks: string | null;
     video_status?: string | null;
     video_job_id?: string | null;
+    video_error_message?: string | null;
   };
   onUpdate: () => void;
 }
@@ -76,17 +77,18 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
   const handleGenerateVideo = async () => {
     if (!user) return;
     
+    const jobId = `JOB${Date.now()}`;
+    const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
+                                script.influencer_name.slice(1).toLowerCase();
+    
     try {
       setVideoGenerating(true);
-
-      // Generate unique job ID
-      const jobId = `JOB${Date.now()}`;
       
-      // Normalize character name to match expected values
-      const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
-                                  script.influencer_name.slice(1).toLowerCase();
-      
-      console.log('Starting video generation:', { jobId, character: normalizedCharacter });
+      console.log('Starting video generation:', { 
+        jobId, 
+        character: normalizedCharacter,
+        scriptLength: script.script_content.length 
+      });
       
       // Update database with generating status
       const { error: updateError } = await supabase
@@ -96,39 +98,79 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
           video_job_id: jobId,
           word_count: wordCount,
           video_cost_estimate: estimatedCost,
+          video_error_message: null, // Clear any previous error
         })
         .eq("id", script.id);
 
-      if (updateError) throw updateError;
-
-      // Call N8N webhook (GET request)
-      const n8nUrl = new URL('https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e');
-      n8nUrl.searchParams.append('jobId', jobId);
-      n8nUrl.searchParams.append('character', normalizedCharacter);
-      n8nUrl.searchParams.append('script', script.script_content);
-
-      console.log('Calling N8N webhook:', n8nUrl.toString());
-      
-      const response = await fetch(n8nUrl.toString(), { method: 'GET' });
-      
-      if (!response.ok) {
-        throw new Error(`N8N webhook failed: ${response.statusText}`);
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw new Error(`Failed to update database: ${updateError.message}`);
       }
 
-      console.log('N8N webhook triggered successfully');
+      // Fetch with timeout wrapper
+      const fetchWithTimeout = (url: string, options: RequestInit, timeout = 30000) => {
+        return Promise.race([
+          fetch(url, options),
+          new Promise<Response>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout after 30 seconds')), timeout)
+          )
+        ]);
+      };
+
+      // Call N8N webhook with POST request
+      const n8nUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e';
+      const payload = {
+        jobId,
+        character: normalizedCharacter,
+        script: script.script_content
+      };
+
+      console.log('Calling N8N webhook (POST):', { url: n8nUrl, payload: { ...payload, script: `${script.script_content.substring(0, 50)}...` } });
+      
+      const response = await fetchWithTimeout(n8nUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      }, 30000);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('N8N webhook error response:', { status: response.status, statusText: response.statusText, body: errorText });
+        throw new Error(`N8N webhook failed (${response.status}): ${response.statusText}`);
+      }
+
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('N8N webhook response:', responseData);
+      } catch (e) {
+        console.log('N8N webhook triggered (no JSON response)');
+      }
+
+      console.log('✓ Video generation started successfully');
       
       toast.success("Video generation started! Check back in a few minutes.");
       setConfirmDialogOpen(false);
       onUpdate();
     } catch (error) {
-      console.error("Error generating video:", error);
-      toast.error("Failed to start video generation. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error("❌ Video generation failed:", { error: errorMessage, jobId, character: normalizedCharacter });
       
-      // Reset status on error
+      toast.error(`Failed to start video generation: ${errorMessage}`);
+      
+      // Update status to failed with error message
       await supabase
         .from("content_calendar")
-        .update({ video_status: null, video_job_id: null })
+        .update({ 
+          video_status: 'failed', 
+          video_job_id: jobId,
+          video_error_message: errorMessage
+        })
         .eq("id", script.id);
+        
+      onUpdate();
     } finally {
       setVideoGenerating(false);
     }
@@ -315,6 +357,13 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                   <Video className="h-4 w-4 mr-2" />
                   View Generated Videos
                 </Button>
+              )}
+              
+              {script.video_status === 'failed' && script.video_error_message && (
+                <div className="w-full p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
+                  <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Video Generation Failed</p>
+                  <p className="text-xs text-red-500 dark:text-red-500">{script.video_error_message}</p>
+                </div>
               )}
               
               {(script.video_status !== 'generating' && script.video_status !== 'completed') && (

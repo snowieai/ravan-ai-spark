@@ -41,6 +41,7 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
           video_cost_estimate: number | null
+          video_error_message: string | null
           video_job_id: string | null
           video_status: string | null
           video_url: string | null
@@ -72,6 +73,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           video_cost_estimate?: number | null
+          video_error_message?: string | null
           video_job_id?: string | null
           video_status?: string | null
           video_url?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           video_cost_estimate?: number | null
+          video_error_message?: string | null
           video_job_id?: string | null
           video_status?: string | null
           video_url?: string | null

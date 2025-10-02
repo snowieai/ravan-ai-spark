@@ -22,6 +22,7 @@ interface ContentItem {
   submitted_for_approval_at: string;
   video_status?: string | null;
   video_job_id?: string | null;
+  video_error_message?: string | null;
 }
 
 export default function Approvals() {
