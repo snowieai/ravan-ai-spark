@@ -22,7 +22,7 @@ const Influencers = () => {
       status: 'Active',
       description: 'UAE\'s First AI Real Estate Agent',
       color: 'from-orange-500 to-amber-500',
-      image: '/lovable-uploads/27be5644-7569-4e58-9fa0-9631b580b5fe.png'
+      image: '/lovable-uploads/kaira-headshot.jpg'
     },
     {
       id: 'aisha',

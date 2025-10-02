@@ -84,7 +84,7 @@ const KairaDashboard = () => {
                 {/* Plain image container */}
                 <div className="relative rounded-xl overflow-hidden border-4 border-white shadow-2xl">
                   <img 
-                    src="/lovable-uploads/9c231dbd-f179-4bb6-af40-8bd0521105e8.png" 
+                    src="/lovable-uploads/kaira-headshot.jpg" 
                     alt="Kaira - AI Video Generation Specialist" 
                     className="w-full h-full object-cover"
                   />
