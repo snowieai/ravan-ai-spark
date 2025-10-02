@@ -23,6 +23,7 @@ export const MediaPlayer = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const media = mediaRef.current;
@@ -53,15 +54,53 @@ export const MediaPlayer = ({
     };
   }, [src]);
 
+  // Track fullscreen state (including iOS Safari events)
+  useEffect(() => {
+    const video = mediaRef.current as HTMLVideoElement | null;
+    const onFullChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onWebkitBegin = () => setIsFullscreen(true);
+    const onWebkitEnd = () => setIsFullscreen(false);
+
+    document.addEventListener('fullscreenchange', onFullChange);
+    // @ts-ignore - iOS Safari specific events
+    video?.addEventListener('webkitbeginfullscreen', onWebkitBegin as any);
+    // @ts-ignore - iOS Safari specific events
+    video?.addEventListener('webkitendfullscreen', onWebkitEnd as any);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullChange);
+      // @ts-ignore - iOS Safari specific events
+      video?.removeEventListener('webkitbeginfullscreen', onWebkitBegin as any);
+      // @ts-ignore - iOS Safari specific events
+      video?.removeEventListener('webkitendfullscreen', onWebkitEnd as any);
+    };
+  }, []);
+
   const handleFullscreen = () => {
-    if (kind === "video" && containerRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
+    if (kind !== 'video') return;
+    const video = mediaRef.current as HTMLVideoElement | null;
+    const container = containerRef.current;
+
+    const isFs = document.fullscreenElement || (document as any).webkitFullscreenElement;
+
+    try {
+      if (isFs) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        // @ts-ignore - WebKit fallback
+        else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
       } else {
-        containerRef.current.requestFullscreen().catch(err => {
-          console.error('Fullscreen error:', err);
-        });
+        if (video?.requestFullscreen) {
+          video.requestFullscreen();
+          // @ts-ignore - iOS Safari native video fullscreen
+        } else if ((video as any)?.webkitEnterFullscreen) {
+          // @ts-ignore
+          (video as any).webkitEnterFullscreen();
+        } else if (container?.requestFullscreen) {
+          container.requestFullscreen();
+        }
       }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
     }
   };
 
@@ -101,7 +140,9 @@ export const MediaPlayer = ({
         <Button
           size="icon"
           variant="secondary"
-          className="absolute top-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 backdrop-blur-sm shadow-lg rounded-md bg-black/60 hover:bg-black/80 border-none"
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          className={`absolute top-3 right-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 backdrop-blur-sm shadow-lg rounded-md bg-black/60 hover:bg-black/80 border-none ${isFullscreen ? 'hidden' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             handleFullscreen();
