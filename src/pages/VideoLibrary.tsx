@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Film, Search, Download, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { proxiedUrl } from "@/lib/media";
+import { MediaPlayer } from "@/components/MediaPlayer";
 
 interface VideoGeneration {
   id: string;

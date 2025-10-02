@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Download, ArrowLeft, Video, Image, Music, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { proxiedUrl } from "@/lib/media";
+import { MediaPlayer } from "@/components/MediaPlayer";
 
 interface VideoGeneration {
   id: string;
@@ -157,12 +158,9 @@ const VideoResults = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {generation.lipsync_videos.map((url, index) => (
                   <div key={index} className="space-y-2">
-                    <video 
-                      src={proxiedUrl(url)} 
-                      controls 
-                      preload="metadata"
-                      playsInline
-                      crossOrigin="anonymous"
+                    <MediaPlayer
+                      kind="video"
+                      src={proxiedUrl(url)}
                       className="w-full rounded-lg border border-border aspect-[9/16]"
                     />
                     <Button 
@@ -194,12 +192,9 @@ const VideoResults = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {generation.broll_videos.map((url, index) => (
                   <div key={index} className="space-y-2">
-                    <video 
-                      src={proxiedUrl(url)} 
-                      controls 
-                      preload="metadata"
-                      playsInline
-                      crossOrigin="anonymous"
+                    <MediaPlayer
+                      kind="video"
+                      src={proxiedUrl(url)}
                       className="w-full rounded-lg border border-border"
                     />
                     <Button 
@@ -265,11 +260,9 @@ const VideoResults = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <audio 
-                  src={proxiedUrl(generation.full_audio)} 
-                  controls 
-                  preload="metadata"
-                  crossOrigin="anonymous"
+                <MediaPlayer
+                  kind="audio"
+                  src={proxiedUrl(generation.full_audio)}
                   className="w-full"
                 />
                 <Button 
