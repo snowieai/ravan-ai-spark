@@ -184,7 +184,7 @@ const Influencers = () => {
               <CardContent className="p-8 relative z-10">
                 <div className="text-center">
                   {/* Profile Image */}
-                  <div className="w-full aspect-square mx-auto mb-6 rounded-lg overflow-hidden border-4 border-white shadow-lg">
+                  <div className="w-full aspect-[3/4] mx-auto mb-6 rounded-lg overflow-hidden border-4 border-white shadow-lg">
                     <img 
                       src={influencer.image} 
                       alt={`${influencer.name} Profile`}

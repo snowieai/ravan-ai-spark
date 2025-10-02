@@ -78,11 +78,11 @@ const KairaDashboard = () => {
             
             {/* Kaira Image with Simple Glow */}
             <div className="mb-8">
-              <div className="relative w-96 h-96 mx-auto">
+              <div className="relative w-80 mx-auto">
                 {/* Simple glow effect behind the image */}
                 <div className="absolute inset-0 bg-orange-400/30 rounded-2xl blur-xl"></div>
-                {/* Plain image container */}
-                <div className="relative rounded-xl overflow-hidden border-4 border-white shadow-2xl">
+                {/* Plain image container with 3:4 aspect ratio */}
+                <div className="relative rounded-xl overflow-hidden border-4 border-white shadow-2xl aspect-[3/4]">
                   <img 
                     src="/lovable-uploads/kaira-headshot.jpg" 
                     alt="Kaira - AI Video Generation Specialist" 
