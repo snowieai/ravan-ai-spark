@@ -239,7 +239,7 @@ const MayraCalendarThemes = () => {
   };
 
   const selectIdea = (idea: GeneratedIdea) => {
-    localStorage.setItem('selectedIdeaMayra', JSON.stringify(idea));
+    localStorage.setItem('selectedIdea', idea.title);
     navigate('/mayra-script');
   };
 
