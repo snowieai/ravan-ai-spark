@@ -47,10 +47,10 @@ serve(async (req) => {
 
     console.log('Found content:', content.id);
 
-    // Store video generation results
-    const { error: insertError } = await supabase
+    // Update or create video generation results (upsert)
+    const { error: upsertError } = await supabase
       .from('video_generations')
-      .insert({
+      .upsert({
         content_id: content.id,
         job_id: jobId,
         status: 'completed',
@@ -59,11 +59,14 @@ serve(async (req) => {
         lipsync_images: body.lipsync_images || [],
         lipsync_videos: body.lipsync_videos || [],
         full_audio: body.full_audio || null,
+      }, {
+        onConflict: 'job_id',
+        ignoreDuplicates: false
       });
 
-    if (insertError) {
-      console.error('Error inserting video generation:', insertError);
-      throw insertError;
+    if (upsertError) {
+      console.error('Error upserting video generation:', upsertError);
+      throw upsertError;
     }
 
     // Update content_calendar status

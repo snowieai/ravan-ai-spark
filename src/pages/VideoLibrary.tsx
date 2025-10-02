@@ -261,21 +261,30 @@ export default function VideoLibrary() {
                     {getStatusBadge(video.status)}
                   </div>
 
-                  {/* Thumbnail Preview */}
-                  {video.lipsync_images && video.lipsync_images.length > 0 && (
-                    <div className="mb-3 rounded-lg overflow-hidden bg-muted">
+                  {/* Thumbnail Preview - 9:16 aspect ratio (180x320) */}
+                  {video.lipsync_images && video.lipsync_images.length > 0 ? (
+                    <div className="mb-3 rounded-lg overflow-hidden bg-muted aspect-[9/16]">
                       <img
                         src={video.lipsync_images[0]}
                         alt="Video thumbnail"
-                        className="w-full h-40 object-cover"
+                        className="w-full h-full object-cover"
                       />
+                    </div>
+                  ) : (
+                    <div className="mb-3 rounded-lg overflow-hidden bg-muted aspect-[9/16] flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                   )}
 
-                  {/* Script Preview */}
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {video.content_calendar.topic}
-                  </p>
+                  {/* Job ID & Topic */}
+                  <div className="mb-3">
+                    <div className="text-xs font-mono text-primary mb-1">
+                      {video.job_id}
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {video.content_calendar.topic}
+                    </p>
+                  </div>
 
                   {/* Asset Count */}
                   <div className="flex gap-2 text-xs text-muted-foreground mb-4">

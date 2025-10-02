@@ -143,6 +143,20 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
         throw new Error(`Failed to update database: ${updateError.message}`);
       }
 
+      // Create video_generations entry immediately so it appears in Video Library
+      const { error: videoGenError } = await supabase
+        .from("video_generations")
+        .insert({
+          content_id: script.id,
+          job_id: jobId,
+          status: "processing",
+        });
+
+      if (videoGenError) {
+        console.error("Error creating video generation record:", videoGenError);
+        // Don't fail the whole process if this fails
+      }
+
       // Call Edge Function to trigger N8N (avoids CORS and guarantees server-side call)
       const { data: triggerData, error: triggerError } = await supabase.functions.invoke(
         'trigger-video-generation',
@@ -364,15 +378,10 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                     variant="secondary"
                     size="sm"
                     className="w-full"
-                    onClick={() => {
-                      const calc = calculateCost(script.script_content);
-                      setWordCount(calc.wordCount);
-                      setEstimatedDuration(calc.duration);
-                      setEstimatedCost(calc.cost);
-                      setCostDialogOpen(true);
-                    }}
+                    onClick={() => navigate("/video-library")}
                   >
-                    Retry Generate (force)
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Generation
                   </Button>
                 </div>
               )}
