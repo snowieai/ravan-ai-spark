@@ -383,6 +383,33 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                     <Eye className="h-4 w-4 mr-2" />
                     View Generation
                   </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+                    onClick={async () => {
+                      // Reset the video status
+                      const { error } = await supabase
+                        .from("content_calendar")
+                        .update({
+                          video_status: null,
+                          video_job_id: null,
+                          video_error_message: null,
+                        })
+                        .eq("id", script.id);
+
+                      if (error) {
+                        toast.error("Failed to reset video status");
+                        return;
+                      }
+
+                      toast.success("Video status reset! You can now regenerate.");
+                      onUpdate();
+                    }}
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Reset & Regenerate
+                  </Button>
                 </div>
               )}
               
