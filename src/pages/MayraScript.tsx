@@ -457,6 +457,17 @@ const MayraScript = () => {
     navigate('/mayra-dashboard');
   };
 
+  const handleRegenerateScripts = () => {
+    setScriptData(null);
+    setSelectedScript(null);
+    setEditingScript(null);
+    generateScript();
+    toast({
+      title: "Regenerating Scripts",
+      description: "Creating new A/B test versions for you...",
+    });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userId');
@@ -570,6 +581,26 @@ const MayraScript = () => {
           {/* Scripts Display */}
           {scriptData && (
             <>
+              <div className="flex justify-center mb-6">
+                <Button
+                  onClick={handleRegenerateScripts}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="border-yellow-300 text-yellow-600 hover:bg-yellow-50 px-6 py-3 rounded-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-5 h-5 mr-2" />
+                      Regenerate Scripts
+                    </>
+                  )}
+                </Button>
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Script A */}
                 <Card className={`bg-white/80 backdrop-blur-sm border-yellow-100 shadow-lg transition-all duration-300 cursor-default hover:shadow-2xl ${
