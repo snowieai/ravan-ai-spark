@@ -103,9 +103,9 @@ const MayraDashboard = () => {
                 </h1>
                 
                 {/* Mayra's Image */}
-                <div className="w-80 h-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="w-80 mx-auto mb-8 rounded-2xl overflow-hidden shadow-2xl aspect-[3/4]">
                   <img 
-                    src="/lovable-uploads/a7454496-f5af-4ef2-91e0-7ab34585589e.png" 
+                    src="/lovable-uploads/mayra-headshot.jpg"
                     alt="Mayra Profile"
                     className="w-full h-full object-cover"
                   />

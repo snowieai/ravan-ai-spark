@@ -46,7 +46,7 @@ const Influencers = () => {
       status: 'Active',
       description: 'Global AI Content Creator',
       color: 'from-yellow-500 to-amber-500',
-      image: '/lovable-uploads/a7454496-f5af-4ef2-91e0-7ab34585589e.png'
+      image: '/lovable-uploads/mayra-headshot.jpg'
     }
   ];
 
