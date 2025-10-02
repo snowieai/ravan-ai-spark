@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Maximize2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface MediaPlayerProps {
@@ -9,7 +9,6 @@ interface MediaPlayerProps {
   controls?: boolean;
   preload?: string;
   playsInline?: boolean;
-  crossOrigin?: "" | "anonymous" | "use-credentials";
 }
 
 export const MediaPlayer = ({
@@ -19,64 +18,29 @@ export const MediaPlayer = ({
   controls = true,
   preload = "metadata",
   playsInline = true,
-  crossOrigin = "anonymous",
 }: MediaPlayerProps) => {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const media = mediaRef.current;
     if (!media) return;
 
-    let metadataTimeout: number;
-    let hasLoadedMetadata = false;
-
-    const handleLoadStart = () => {
-      console.log(`[MediaPlayer] ${kind} loadstart:`, src);
-      setLoading(true);
-    };
-
     const handleLoadedMetadata = () => {
-      console.log(`[MediaPlayer] ${kind} metadata loaded:`, src);
-      hasLoadedMetadata = true;
       setLoading(false);
       setError(false);
-      clearTimeout(metadataTimeout);
     };
 
-    const handleError = async (e: Event) => {
-      console.error(`[MediaPlayer] ${kind} error:`, src, e);
-      
-      // If we haven't tried blob fallback yet
-      if (!blobUrl) {
-        console.log(`[MediaPlayer] Attempting blob fallback for:`, src);
-        try {
-          const response = await fetch(src);
-          if (!response.ok) throw new Error('Fetch failed');
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setBlobUrl(url);
-          setLoading(false);
-          console.log(`[MediaPlayer] Blob URL created successfully`);
-          return;
-        } catch (fetchError) {
-          console.error(`[MediaPlayer] Blob fallback failed:`, fetchError);
-        }
-      }
-      
+    const handleError = () => {
       setError(true);
       setLoading(false);
     };
 
-    // Set timeout to trigger blob fallback if metadata doesn't load
-    metadataTimeout = window.setTimeout(() => {
-      if (!hasLoadedMetadata && !error && !blobUrl) {
-        console.warn(`[MediaPlayer] Metadata timeout, trying blob fallback:`, src);
-        handleError(new Event('timeout'));
-      }
-    }, 3000);
+    const handleLoadStart = () => {
+      setLoading(true);
+    };
 
     media.addEventListener('loadstart', handleLoadStart);
     media.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -86,14 +50,26 @@ export const MediaPlayer = ({
       media.removeEventListener('loadstart', handleLoadStart);
       media.removeEventListener('loadedmetadata', handleLoadedMetadata);
       media.removeEventListener('error', handleError);
-      clearTimeout(metadataTimeout);
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
     };
-  }, [src, kind, error, blobUrl]);
+  }, [src]);
 
-  const currentSrc = blobUrl || src;
+  const handleFullscreen = () => {
+    if (kind === "video" && containerRef.current) {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        containerRef.current.requestFullscreen().catch(err => {
+          console.error('Fullscreen error:', err);
+        });
+      }
+    }
+  };
+
+  const handleVideoClick = () => {
+    if (kind === "video") {
+      handleFullscreen();
+    }
+  };
 
   if (error) {
     return (
@@ -113,7 +89,7 @@ export const MediaPlayer = ({
 
   if (kind === "video") {
     return (
-      <div className="relative">
+      <div ref={containerRef} className="relative group">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg z-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -121,13 +97,21 @@ export const MediaPlayer = ({
         )}
         <video
           ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          src={currentSrc}
+          src={src}
           controls={controls}
           preload={preload}
           playsInline={playsInline}
-          crossOrigin={crossOrigin}
-          className={className}
+          onClick={handleVideoClick}
+          className={`${className} cursor-pointer`}
         />
+        <Button
+          size="icon"
+          variant="secondary"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+          onClick={handleFullscreen}
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
       </div>
     );
   }
@@ -141,10 +125,9 @@ export const MediaPlayer = ({
       )}
       <audio
         ref={mediaRef as React.RefObject<HTMLAudioElement>}
-        src={currentSrc}
+        src={src}
         controls={controls}
         preload={preload}
-        crossOrigin={crossOrigin}
         className={className}
       />
     </div>
