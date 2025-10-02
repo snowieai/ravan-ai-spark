@@ -314,11 +314,8 @@ export default function VideoLibrary() {
                     </div>
                   )}
 
-                  {/* Job ID & Topic */}
+                  {/* Topic */}
                   <div className="mb-3">
-                    <div className="text-xs font-mono text-primary mb-1">
-                      {video.job_id}
-                    </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {video.content_calendar.topic}
                     </p>
