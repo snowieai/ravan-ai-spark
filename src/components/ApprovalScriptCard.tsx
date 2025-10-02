@@ -117,7 +117,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
         ]);
       };
 
-      // Call N8N webhook with POST request
+      // Call N8N webhook - try POST first, fallback to GET if CORS/method issues
       const n8nUrl = 'https://n8n.srv905291.hstgr.cloud/webhook/c200f67b-9361-4017-afc1-a7e525b36f3e';
       const payload = {
         jobId,
@@ -127,26 +127,40 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
 
       console.log('Calling N8N webhook (POST):', { url: n8nUrl, payload: { ...payload, script: `${script.script_content.substring(0, 50)}...` } });
       
-      const response = await fetchWithTimeout(n8nUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      }, 30000);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('N8N webhook error response:', { status: response.status, statusText: response.statusText, body: errorText });
-        throw new Error(`N8N webhook failed (${response.status}): ${response.statusText}`);
-      }
-
-      let responseData;
+      let response;
       try {
-        responseData = await response.json();
-        console.log('N8N webhook response:', responseData);
-      } catch (e) {
-        console.log('N8N webhook triggered (no JSON response)');
+        response = await fetchWithTimeout(n8nUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          mode: 'no-cors' // Allow cross-origin request without CORS
+        }, 30000);
+        
+        console.log('✓ N8N webhook POST successful');
+      } catch (postError) {
+        console.warn('POST request failed, trying GET method:', postError);
+        
+        // Fallback to GET request
+        const urlWithParams = new URL(n8nUrl);
+        urlWithParams.searchParams.append('jobId', jobId);
+        urlWithParams.searchParams.append('character', normalizedCharacter);
+        urlWithParams.searchParams.append('script', script.script_content);
+        
+        console.log('Calling N8N webhook (GET fallback):', urlWithParams.toString().substring(0, 200) + '...');
+        
+        try {
+          response = await fetchWithTimeout(urlWithParams.toString(), {
+            method: 'GET',
+            mode: 'no-cors'
+          }, 30000);
+          
+          console.log('✓ N8N webhook GET successful');
+        } catch (getError) {
+          console.error('Both POST and GET failed:', { postError, getError });
+          throw new Error(`N8N webhook unreachable. Please check your internet connection and N8N server status.`);
+        }
       }
 
       console.log('✓ Video generation started successfully');
