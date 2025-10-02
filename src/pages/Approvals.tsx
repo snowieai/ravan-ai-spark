@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, ArrowLeft, Film } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { LogOut, ArrowLeft, Film, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { ApprovalScriptCard } from "@/components/ApprovalScriptCard";
 
@@ -30,7 +30,7 @@ export default function Approvals() {
   const { user, isAdmin, signOut, loading: authLoading, refreshProfile } = useAuth();
   const [scripts, setScripts] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all");
+  const [isApprovedOpen, setIsApprovedOpen] = useState(false);
   const deniedToastShown = useRef(false);
 
   // Refresh profile on mount to ensure latest admin role is loaded
@@ -74,16 +74,15 @@ export default function Approvals() {
     navigate("/login");
   };
 
-  const filteredScripts = scripts.filter((script) => {
-    if (activeTab === "all") return true;
-    return script.approval_status === activeTab;
-  });
+  const pendingScripts = scripts.filter((s) => s.approval_status === "pending");
+  const approvedScripts = scripts.filter((s) => s.approval_status === "approved");
+  const rejectedScripts = scripts.filter((s) => s.approval_status === "rejected");
 
   const stats = {
     total: scripts.length,
-    pending: scripts.filter((s) => s.approval_status === "pending").length,
-    approved: scripts.filter((s) => s.approval_status === "approved").length,
-    rejected: scripts.filter((s) => s.approval_status === "rejected").length,
+    pending: pendingScripts.length,
+    approved: approvedScripts.length,
+    rejected: rejectedScripts.length,
   };
 
   return (
@@ -135,33 +134,79 @@ export default function Approvals() {
           </Card>
         </div>
 
-        {/* Tabs Filter */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {/* Scripts Grid */}
+        {/* Scripts Sections */}
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading scripts...</div>
-        ) : filteredScripts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-2xl mb-2">🎉</p>
-            <p className="text-muted-foreground">No scripts in this category</p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredScripts.map((script) => (
-              <ApprovalScriptCard
-                key={script.id}
-                script={script}
-                onUpdate={fetchScripts}
-              />
-            ))}
+          <div className="space-y-8">
+            {/* Pending Scripts - Always Visible at Top */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-2xl font-bold text-foreground">Pending Scripts</h2>
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  {stats.pending}
+                </Badge>
+              </div>
+              {pendingScripts.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">No pending scripts</p>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pendingScripts.map((script) => (
+                    <ApprovalScriptCard
+                      key={script.id}
+                      script={script}
+                      onUpdate={fetchScripts}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Approved Scripts - Collapsible */}
+            <Collapsible open={isApprovedOpen} onOpenChange={setIsApprovedOpen}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-bold text-foreground">Approved Scripts</h2>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                    {stats.approved}
+                  </Badge>
+                </div>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {isApprovedOpen ? (
+                      <>
+                        <ChevronUp className="h-4 w-4 mr-2" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4 mr-2" />
+                        Show
+                      </>
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                {approvedScripts.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground">No approved scripts</p>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {approvedScripts.map((script) => (
+                      <ApprovalScriptCard
+                        key={script.id}
+                        script={script}
+                        onUpdate={fetchScripts}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
       </div>
