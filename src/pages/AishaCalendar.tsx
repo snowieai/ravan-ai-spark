@@ -705,56 +705,92 @@ const AishaCalendar = () => {
                         </div>
                       </div>
                       
-                      <div className="space-y-1">
-                        {dayContent.map(item => (
-                          <div key={item.id}>
-                            <div 
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, item)}
-                              className={`text-xs p-1.5 rounded cursor-move border-l-2 ${priorityColors[item.priority]} ${statusColors[item.status]} hover:opacity-80 transition-opacity ${
-                                draggedItem?.id === item.id ? 'opacity-50' : ''
-                              }`}
-                              onClick={() => {
-                                setSelectedItem(item);
-                                setShowDetailDialog(true);
-                              }}
-                            >
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="truncate flex-1">{item.topic}</span>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-4 w-4 p-0"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <MoreVertical className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white z-50">
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
-                                Mark as Approved
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'in_production')}>
-                                Move to Production
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
-                                Mark as Published
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteContentItem(item.id);
-                                }}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                                </DropdownMenu>
+                      <div className="space-y-2">
+                        {dayContent.map((item) => (
+                          <div 
+                            key={item.id}
+                            id={`content-${item.id}`}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, item)}
+                            className={`p-2 bg-white rounded-md shadow-sm border-l-2 ${priorityColors[item.priority]} hover:shadow-md transition-shadow cursor-move ${
+                              draggedItem?.id === item.id ? 'opacity-50' : ''
+                            }`}
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setShowDetailDialog(true);
+                            }}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="text-xs">{contentTypeIcons[item.content_type]}</span>
+                                  <h4 className="font-medium text-gray-900 text-xs truncate">{item.topic}</h4>
+                                </div>
+                                
+                                <div className="flex items-center gap-1 mb-1 flex-wrap">
+                                  <Badge className={`text-xs px-1 py-0 ${statusColors[item.status]}`}>
+                                    {item.status.replace('_', ' ')}
+                                  </Badge>
+                                  <Badge className={`text-xs px-1 py-0 ${contentTypeColors[item.content_type]}`}>
+                                    {item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}
+                                  </Badge>
+                                  {item.video_status === 'completed' && (
+                                    <Badge className="text-xs px-1 py-0 bg-green-100 text-green-800">
+                                      ✅ Video Ready
+                                    </Badge>
+                                  )}
+                                  {item.video_status === 'generating' && (
+                                    <Badge className="text-xs px-1 py-0 bg-blue-100 text-blue-800 animate-pulse">
+                                      🎬 Generating...
+                                    </Badge>
+                                  )}
+                                  {item.video_status === 'failed' && (
+                                    <Badge className="text-xs px-1 py-0 bg-red-100 text-red-800">
+                                      ❌ Failed
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  {item.script_content && <span title="Script ready">📝</span>}
+                                  {item.inspiration_links && <span title="Inspiration saved">🔗</span>}
+                                  {item.notes && <span title="Has notes">📋</span>}
+                                </div>
                               </div>
+                              
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-5 w-5 p-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-white z-50">
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'approved')}>
+                                    Mark as Approved
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'in_production')}>
+                                    Move to Production
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => updateContentStatus(item.id, 'published')}>
+                                    Mark as Published
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteContentItem(item.id);
+                                    }}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         ))}
