@@ -23,6 +23,8 @@ interface ApprovalScriptCardProps {
     video_status?: string | null;
     video_job_id?: string | null;
     video_error_message?: string | null;
+    notes?: string | null;
+    inspiration_links?: string | null;
   };
   onUpdate: () => void;
 }
@@ -42,6 +44,14 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
   const [estimatedCost, setEstimatedCost] = useState(0);
   const [wordCount, setWordCount] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
+
+  // Get full script - fallback to notes if script_content is empty
+  const getFullScript = () => {
+    if (script.script_content && script.script_content.trim().length > 0) {
+      return script.script_content;
+    }
+    return script.notes || "";
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,10 +130,12 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
       const normalizedCharacter = script.influencer_name.charAt(0).toUpperCase() + 
                                   script.influencer_name.slice(1).toLowerCase();
       
+      const fullScript = getFullScript();
+      
       console.log('Starting video generation:', { 
         jobId, 
         character: normalizedCharacter,
-        scriptLength: script.script_content.length 
+        scriptLength: fullScript.length 
       });
       
       // Update database with generating status
@@ -164,7 +176,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
           body: {
             jobId,
             character: normalizedCharacter,
-            script: script.script_content,
+            script: fullScript,
           },
         }
       );
@@ -426,7 +438,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
               )}
               
               {script.video_status === 'failed' && script.video_error_message && (
-                <div className="w-full space-y-2">
+                  <div className="w-full space-y-2">
                   <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
                     <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Video Generation Failed</p>
                     <p className="text-xs text-red-500 dark:text-red-500">{script.video_error_message}</p>
@@ -435,7 +447,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                     variant="default"
                     size="sm"
                     onClick={() => {
-                      const calc = calculateCost(script.script_content);
+                      const calc = calculateCost(getFullScript());
                       setWordCount(calc.wordCount);
                       setEstimatedDuration(calc.duration);
                       setEstimatedCost(calc.cost);
@@ -454,7 +466,7 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
                   variant="default"
                   size="sm"
                   onClick={() => {
-                    const calc = calculateCost(script.script_content);
+                    const calc = calculateCost(getFullScript());
                     setWordCount(calc.wordCount);
                     setEstimatedDuration(calc.duration);
                     setEstimatedCost(calc.cost);
@@ -484,7 +496,38 @@ export function ApprovalScriptCard({ script, onUpdate }: ApprovalScriptCardProps
           <DialogHeader>
             <DialogTitle>Full Script - {script.influencer_name}</DialogTitle>
           </DialogHeader>
-          <div className="whitespace-pre-wrap text-sm">{script.script_content}</div>
+          <div className="space-y-4">
+            {getFullScript() ? (
+              <div className="whitespace-pre-wrap text-sm">{getFullScript()}</div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No script content available</p>
+            )}
+            
+            {script.inspiration_links && (
+              <div className="pt-4 border-t">
+                <p className="text-sm font-semibold mb-2">Inspiration Links:</p>
+                <div className="space-y-1">
+                  {script.inspiration_links
+                    .split(/[\n,\s]+/)
+                    .filter((link) => link.trim().length > 0 && (link.startsWith('http://') || link.startsWith('https://')))
+                    .map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                      >
+                        {link.trim()}
+                      </a>
+                    ))}
+                  {script.inspiration_links.split(/[\n,\s]+/).filter((link) => link.trim().length > 0 && (link.startsWith('http://') || link.startsWith('https://'))).length === 0 && (
+                    <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{script.inspiration_links}</pre>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

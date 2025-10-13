@@ -23,6 +23,8 @@ interface ContentItem {
   video_status?: string | null;
   video_job_id?: string | null;
   video_error_message?: string | null;
+  notes?: string | null;
+  inspiration_links?: string | null;
 }
 
 export default function Approvals() {
