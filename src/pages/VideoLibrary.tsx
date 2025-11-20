@@ -299,7 +299,7 @@ export default function VideoLibrary() {
                   </div>
 
                   {/* Thumbnail Preview - 9:16 aspect ratio (180x320) */}
-                  {video.lipsync_images && video.lipsync_images.length > 0 ? (
+                  {video.lipsync_images && video.lipsync_images.length > 0 && (
                     <div className="mb-3 rounded-lg overflow-hidden bg-muted aspect-[9/16]">
                       <img
                         src={proxiedUrl(video.lipsync_images[0])}
@@ -307,10 +307,6 @@ export default function VideoLibrary() {
                         crossOrigin="anonymous"
                         className="w-full h-full object-cover"
                       />
-                    </div>
-                  ) : (
-                    <div className="mb-3 rounded-lg overflow-hidden bg-muted aspect-[9/16] flex items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                   )}
 

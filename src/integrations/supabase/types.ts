@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_timers: {
+        Row: {
+          browser_tab_id: string
+          created_at: string
+          id: string
+          last_heartbeat: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          browser_tab_id: string
+          created_at?: string
+          id?: string
+          last_heartbeat?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          browser_tab_id?: string
+          created_at?: string
+          id?: string
+          last_heartbeat?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_timers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "focus_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_calendar: {
         Row: {
           admin_remarks: string | null
@@ -154,6 +189,33 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note_date: string
+          note_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_date: string
+          note_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_date?: string
+          note_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_summaries: {
         Row: {
           accomplishments: string
@@ -201,6 +263,48 @@ export type Database = {
           },
         ]
       }
+      daily_work_summaries: {
+        Row: {
+          created_at: string
+          generated_at: string
+          id: string
+          regenerated_count: number
+          summary_date: string
+          summary_markdown: string
+          total_focus_seconds: number
+          total_logs_count: number
+          updated_at: string
+          user_id: string
+          work_log_ids: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          regenerated_count?: number
+          summary_date: string
+          summary_markdown: string
+          total_focus_seconds?: number
+          total_logs_count?: number
+          updated_at?: string
+          user_id: string
+          work_log_ids?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string
+          id?: string
+          regenerated_count?: number
+          summary_date?: string
+          summary_markdown?: string
+          total_focus_seconds?: number
+          total_logs_count?: number
+          updated_at?: string
+          user_id?: string
+          work_log_ids?: string[] | null
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string
@@ -241,6 +345,48 @@ export type Database = {
           id?: string
           role?: string
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_sessions: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          ended_at: string | null
+          id: string
+          paused_at: string | null
+          preset_minutes: number
+          started_at: string
+          status: Database["public"]["Enums"]["focus_session_status"]
+          total_pause_duration: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          paused_at?: string | null
+          preset_minutes: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["focus_session_status"]
+          total_pause_duration?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          paused_at?: string | null
+          preset_minutes?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["focus_session_status"]
+          total_pause_duration?: number
           updated_at?: string
           user_id?: string
         }
@@ -328,6 +474,7 @@ export type Database = {
           date: string
           description: string
           id: string
+          payment_method: string | null
           type: string
           updated_at: string
           user_id: string
@@ -339,6 +486,7 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          payment_method?: string | null
           type?: string
           updated_at?: string
           user_id: string
@@ -350,6 +498,7 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          payment_method?: string | null
           type?: string
           updated_at?: string
           user_id?: string
@@ -415,6 +564,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      session_check_ins: {
+        Row: {
+          check_in_time: string
+          check_in_type: string
+          created_at: string
+          id: string
+          user_id: string
+          work_description: string
+          work_session_id: string
+        }
+        Insert: {
+          check_in_time?: string
+          check_in_type?: string
+          created_at?: string
+          id?: string
+          user_id: string
+          work_description: string
+          work_session_id: string
+        }
+        Update: {
+          check_in_time?: string
+          check_in_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          work_description?: string
+          work_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_check_ins_work_session_id_fkey"
+            columns: ["work_session_id"]
+            isOneToOne: false
+            referencedRelation: "work_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -526,6 +713,39 @@ export type Database = {
           },
         ]
       }
+      user_work_settings: {
+        Row: {
+          created_at: string
+          daily_productive_goal_hours: number
+          hourly_alarm_enabled: boolean
+          id: string
+          notification_sound_enabled: boolean
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_productive_goal_hours?: number
+          hourly_alarm_enabled?: boolean
+          id?: string
+          notification_sound_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_productive_goal_hours?: number
+          hourly_alarm_enabled?: boolean
+          id?: string
+          notification_sound_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_generations: {
         Row: {
           broll_images: string[] | null
@@ -606,15 +826,110 @@ export type Database = {
         }
         Relationships: []
       }
+      work_logs: {
+        Row: {
+          ai_summary: string | null
+          client_project: string | null
+          created_at: string
+          description: string
+          duration_seconds: number
+          focus_session_id: string | null
+          id: string
+          log_type: Database["public"]["Enums"]["work_log_type"]
+          occurred_at: string
+          outcome: Database["public"]["Enums"]["work_log_outcome"] | null
+          tags: string[] | null
+          task_title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          client_project?: string | null
+          created_at?: string
+          description: string
+          duration_seconds?: number
+          focus_session_id?: string | null
+          id?: string
+          log_type?: Database["public"]["Enums"]["work_log_type"]
+          occurred_at?: string
+          outcome?: Database["public"]["Enums"]["work_log_outcome"] | null
+          tags?: string[] | null
+          task_title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          client_project?: string | null
+          created_at?: string
+          description?: string
+          duration_seconds?: number
+          focus_session_id?: string | null
+          id?: string
+          log_type?: Database["public"]["Enums"]["work_log_type"]
+          occurred_at?: string
+          outcome?: Database["public"]["Enums"]["work_log_outcome"] | null
+          tags?: string[] | null
+          task_title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_logs_focus_session_id_fkey"
+            columns: ["focus_session_id"]
+            isOneToOne: false
+            referencedRelation: "focus_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_sessions: {
+        Row: {
+          break_duration_seconds: number
+          created_at: string
+          ended_at: string | null
+          id: string
+          session_notes: string | null
+          started_at: string
+          status: string
+          total_work_seconds: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          break_duration_seconds?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_notes?: string | null
+          started_at?: string
+          status?: string
+          total_work_seconds?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          break_duration_seconds?: number
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_notes?: string | null
+          started_at?: string
+          status?: string
+          total_work_seconds?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: { _role: string; _user_id: string }
-        Returns: boolean
-      }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
     }
     Enums: {
       content_status:
@@ -625,6 +940,9 @@ export type Database = {
         | "published"
         | "cancelled"
         | "pending_approval"
+      focus_session_status: "active" | "paused" | "completed" | "cancelled"
+      work_log_outcome: "progressed" | "completed" | "blocked"
+      work_log_type: "session_end" | "hourly_checkpoint" | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -761,6 +1079,9 @@ export const Constants = {
         "cancelled",
         "pending_approval",
       ],
+      focus_session_status: ["active", "paused", "completed", "cancelled"],
+      work_log_outcome: ["progressed", "completed", "blocked"],
+      work_log_type: ["session_end", "hourly_checkpoint", "manual"],
     },
   },
 } as const
